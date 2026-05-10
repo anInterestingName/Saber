@@ -42,7 +42,8 @@ app.use(ElementPlus, {
 app.use(Avue, {
   axios,
   calcHeight: -165,
-  locale: messages[language]
+  locale: language,
+  i18n: (key, options) => i18n.global.t(key, options),
 })
 app.use(avueUeditor, { axios })
 app.mount('#app')
