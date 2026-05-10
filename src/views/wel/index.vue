@@ -2,7 +2,7 @@
   <basic-container>
     <third-register></third-register>
     <p style="text-align: center">
-      <img src="https://img.shields.io/badge/Release-V4.9.0-green.svg" alt="Downloads" />
+      <img src="https://img.shields.io/badge/Release-V4.10.0-green.svg" alt="Downloads" />
       <img src="https://img.shields.io/badge/JDK-17+-green.svg" alt="Build Status" />
       <img src="https://img.shields.io/badge/Spring%20Cloud-2025-blue.svg" alt="Coverage Status" />
       <img src="https://img.shields.io/badge/Spring%20Boot-3.5-blue.svg" alt="Downloads" />
@@ -206,6 +206,13 @@
         <el-col :span="24">
           <basic-container>
             <el-collapse v-model="logActiveNames" @change="handleChange">
+              <el-collapse-item title="4.10.0发布 新增TenantGuard租户守卫工具" name="46">
+                <div>1.[升级]Avue 至 3.9.x，适配新版 i18n 接入方式与表头样式</div>
+                <div>2.[新增]TenantGuard 租户守卫工具，规避线程工具指定租户ID时的越权风险</div>
+                <div>3.[新增]APPLICATION_AI_NAME 应用常量，统一 AI 模块命名规范</div>
+                <div>4.[修复]avue-crud 行 hover 状态下固定列背景色丢失，统一序号列与操作栏视觉表现</div>
+                <div>5.[优化]更新登录页品牌 logo 资源</div>
+              </el-collapse-item>
               <el-collapse-item title="4.9.0发布 新增全栈AI开发Skills集合，新增全自动视图序列化机制" name="45">
                 <div>1.[升级]Spring 至 6.2.17</div>
                 <div>2.[升级]SpringBoot 至 3.5.13</div>
@@ -751,7 +758,7 @@ export default {
   data() {
     return {
       activeNames: ['1', '2', '3', '5'],
-      logActiveNames: ['45'],
+      logActiveNames: ['46'],
     };
   },
   computed: {
