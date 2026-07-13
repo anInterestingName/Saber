@@ -4,17 +4,8 @@
   </div>
 </template>
 
-<script>
-  export default {
-    name: "wel",
-    data() {
-      return {};
-    },
-    computed: {},
-    created() {
-    },
-    methods: {}
-  };
+<script setup lang="ts">
+defineOptions({ name: 'wel' });
 </script>
 
 <style scoped="scoped" lang="scss">

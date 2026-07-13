@@ -14,10 +14,7 @@
   </basic-container>
 </template>
 
-<script>
-export default {
-  methods: {}
-};
+<script setup lang="ts">
 </script>
 
 <style>

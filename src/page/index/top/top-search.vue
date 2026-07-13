@@ -16,6 +16,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { validateNull } from "@/utils/validate";
 export default {
   data () {
     return {
@@ -54,7 +55,7 @@ export default {
       const findMenu = list => {
         for (let i = 0; i < list.length; i++) {
           const ele = Object.assign({}, list[i]);
-          if (this.validatenull(ele[this.childrenKey])) {
+          if (validateNull(ele[this.childrenKey])) {
             this.menuList.push(ele);
           } else {
             findMenu(ele[this.childrenKey]);

@@ -51,3 +51,16 @@
 .avue-icon i, .avue-icon svg{
   line-height: 20px;
 }
+
+// 统一 avue-crud 表头背景色
+.avue-crud .el-table th.el-table__cell,
+.avue-crud .el-table__header-wrapper tr th.el-table-fixed-column--left,
+.avue-crud .el-table__header-wrapper tr th.el-table-fixed-column--right {
+  background-color: #fafafa;
+}
+
+// 统一 avue-crud 行 hover 背景色
+.avue-crud .el-table__body-wrapper tr.hover-row td.el-table-fixed-column--left,
+.avue-crud .el-table__body-wrapper tr.hover-row td.el-table-fixed-column--right {
+  background-color: var(--el-table-row-hover-bg-color);
+}

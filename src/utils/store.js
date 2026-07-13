@@ -1,5 +1,5 @@
 import {
-  validatenull
+  validateNull
 } from 'utils/validate';
 import website from '@/config/website'
 
@@ -14,7 +14,7 @@ export const setStore = (params = {}) => {
     type,
   } = params;
   name = keyName + name
-  let obj = {
+  const obj = {
     dataType: typeof (content),
     content: content,
     type: type,
@@ -36,8 +36,8 @@ export const getStore = (params = {}) => {
   let obj = {},
     content;
   obj = window.sessionStorage.getItem(name);
-  if (validatenull(obj)) obj = window.localStorage.getItem(name);
-  if (validatenull(obj)) return;
+  if (validateNull(obj)) obj = window.localStorage.getItem(name);
+  if (validateNull(obj)) return;
   try {
     obj = JSON.parse(obj);
   } catch {
@@ -46,13 +46,13 @@ export const getStore = (params = {}) => {
   if (debug) {
     return obj;
   }
-  if (obj.dataType == 'string') {
+  if (obj.dataType === 'string') {
     content = obj.content;
-  } else if (obj.dataType == 'number') {
+  } else if (obj.dataType === 'number') {
     content = Number(obj.content);
-  } else if (obj.dataType == 'boolean') {
+  } else if (obj.dataType === 'boolean') {
     content = eval(obj.content);
-  } else if (obj.dataType == 'object') {
+  } else if (obj.dataType === 'object') {
     content = obj.content;
   }
   return content;
@@ -78,8 +78,8 @@ export const removeStore = (params = {}) => {
  * 获取全部localStorage
  */
 export const getAllStore = (params = {}) => {
-  let list = [];
-  let {
+  const list = [];
+  const {
     type
   } = params;
   if (type) {
@@ -111,7 +111,7 @@ export const getAllStore = (params = {}) => {
  * 清空全部localStorage
  */
 export const clearStore = (params = {}) => {
-  let { type } = params;
+  const { type } = params;
   if (type) {
     window.sessionStorage.clear();
   } else {

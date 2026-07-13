@@ -2,10 +2,13 @@
   <basic-container>
     <third-register></third-register>
     <p style="text-align: center">
-      <img src="https://img.shields.io/badge/Release-V4.9.0-green.svg" alt="Downloads" />
-      <img src="https://img.shields.io/badge/JDK-17+-green.svg" alt="Build Status" />
-      <img src="https://img.shields.io/badge/Spring%20Cloud-2025-blue.svg" alt="Coverage Status" />
-      <img src="https://img.shields.io/badge/Spring%20Boot-3.5-blue.svg" alt="Downloads" />
+      <img src="https://img.shields.io/badge/Release-V5.0.0-green.svg" alt="Downloads" />
+      <img src="https://img.shields.io/badge/JDK-21+-green.svg" alt="Build Status" />
+      <img
+        src="https://img.shields.io/badge/Spring%20Cloud-2025.1-blue.svg"
+        alt="Coverage Status"
+      />
+      <img src="https://img.shields.io/badge/Spring%20Boot-4.1-blue.svg" alt="Downloads" />
       <a target="_blank" href="https://bladex.cn">
         <img
           src="https://img.shields.io/badge/Saber%20Author-Small%20Chill-ff69b4.svg"
@@ -206,7 +209,52 @@
         <el-col :span="24">
           <basic-container>
             <el-collapse v-model="logActiveNames" @change="handleChange">
-              <el-collapse-item title="4.9.0发布 新增全栈AI开发Skills集合，新增全自动视图序列化机制" name="45">
+              <el-collapse-item
+                title="5.0.0发布 重构升级 SpringBoot4 SpringCloud2025 JDK21 TypeScript"
+                name="47"
+              >
+                <div>1.[升级]JDK 至 Java21 LTS</div>
+                <div>2.[升级]Spring 至 7.0.8</div>
+                <div>3.[升级]SpringBoot 至 4.1.0</div>
+                <div>4.[升级]SpringBootAdmin 至 4.1.1</div>
+                <div>5.[升级]SpringCloud 至 2025.1.2</div>
+                <div>6.[升级]SpringCloud Alibaba 至 2025.1.0.0</div>
+                <div>7.[升级]Nacos 至 3.2.2</div>
+                <div>8.[升级]MybatisPlus 至 3.5.17</div>
+                <div>9.[升级]MybatisSpring 至 4.0.0</div>
+                <div>10.[升级]SpringDoc 至 3.0.3</div>
+                <div>11.[升级]Guava 至 33.6.0</div>
+                <div>12.[升级]mica-auto 至 4.0.1，适配 Boot4 注解处理器</div>
+                <div>13.[升级]maven-compiler-plugin 至 3.15.0</div>
+                <div>14.[替换]Web 容器由 Undertow 切换为 Tomcat11</div>
+                <div>15.[替换]接口文档由 Knife4j 改用 SpringDoc 原生 UI</div>
+                <div>16.[替换]Druid 切换为 druid-spring-boot-4-starter</div>
+                <div>17.[替换]spring-boot-starter-aop 替换为 aspectj</div>
+                <div>18.[新增]锁定 Jackson2 兼容栈，规避 Boot4 默认 Jackson3 差异</div>
+                <div>19.[新增]Swagger @ApiOrder 注解，支持接口文档自定义排序</div>
+                <div>20.[新增]SysCache、DictCache、UserCache 系统缓存工具类</div>
+                <div>21.[新增]全局异常适配 SF7 方法级校验与 404、413 处理</div>
+                <div>22.[新增]Saber 新增 validData、findColumn 自研工具函数</div>
+                <div>23.[优化]MybatisPlus IService 迁移至 spring.service 包</div>
+                <div>24.[优化]适配 Boot4 自动配置拆包，迁移底层模块 import</div>
+                <div>25.[优化]Servlet 编码配置前缀迁移为 spring.servlet.encoding</div>
+                <div>26.[优化]Spring7 空值注解统一迁移至 JSpecify 规范</div>
+                <div>27.[优化]重构代码生成模板，分离 backend 与 frontend 目录</div>
+                <div>28.[优化]Saber 前端页面全量重构为 script setup + TypeScript</div>
+              </el-collapse-item>
+              <el-collapse-item title="4.10.0发布 新增TenantGuard租户守卫工具" name="46">
+                <div>1.[升级]Avue 至 3.9.x，适配新版 i18n 接入方式与表头样式</div>
+                <div>2.[新增]TenantGuard 租户守卫工具，规避线程工具指定租户ID时的越权风险</div>
+                <div>3.[新增]APPLICATION_AI_NAME 应用常量，统一 AI 模块命名规范</div>
+                <div>
+                  4.[修复]avue-crud 行 hover 状态下固定列背景色丢失，统一序号列与操作栏视觉表现
+                </div>
+                <div>5.[优化]更新登录页品牌 logo 资源</div>
+              </el-collapse-item>
+              <el-collapse-item
+                title="4.9.0发布 新增全栈AI开发Skills集合，新增全自动视图序列化机制"
+                name="45"
+              >
                 <div>1.[升级]Spring 至 6.2.17</div>
                 <div>2.[升级]SpringBoot 至 3.5.13</div>
                 <div>3.[升级]SpringBootAdmin 至 3.5.8</div>
@@ -739,30 +787,19 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
+<script setup lang="ts">
+import { ref } from 'vue';
 import thirdRegister from '@/components/third-register/main.vue';
 
-export default {
-  name: 'wel',
-  components: {
-    thirdRegister,
-  },
-  data() {
-    return {
-      activeNames: ['1', '2', '3', '5'],
-      logActiveNames: ['45'],
-    };
-  },
-  computed: {
-    ...mapGetters(['userInfo']),
-  },
-  created() {},
-  methods: {
-    handleChange(val) {
-      console.log(val);
-    },
-  },
+defineOptions({ name: 'wel' });
+
+// 折叠面板默认展开项
+const activeNames = ref(['1', '2', '3', '5']);
+const logActiveNames = ref(['47']);
+
+// 折叠面板展开状态变化回调
+const handleChange = (val: string | number | Array<string | number>) => {
+  console.log(val);
 };
 </script>
 

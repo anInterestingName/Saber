@@ -42,7 +42,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { validatenull } from "@/utils/validate";
+import { validateNull } from "@/utils/validate";
 import { registerGuest } from "@/api/user";
 
 export default {
@@ -69,7 +69,7 @@ export default {
   mounted () {
     console.log(this.userInfo)
     // 若未登录则弹出框进行绑定
-    if (validatenull(this.userInfo.userId) || this.userInfo.userId < 0) {
+    if (validateNull(this.userInfo.userId) || this.userInfo.userId < 0) {
       this.form.name = this.userInfo.account;
       this.form.account = this.userInfo.account;
       this.accountBox = true;

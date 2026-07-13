@@ -7,12 +7,9 @@
   </basic-container>
 </template>
 
-<script>
-export default {
-  methods: {
-    handleNewError () {
-      console.log(a); // eslint-disable-line
-    }
-  }
+<script setup lang="ts">
+// 触发一个未定义变量引用错误
+const handleNewError = () => {
+  console.log(a); // eslint-disable-line
 };
 </script>

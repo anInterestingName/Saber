@@ -162,9 +162,27 @@ Saber/
 
 ## 4. 开发规范
 
-### 4.1 统一使用 Options API
+### 4.1 Vue 范式：Composition API + TypeScript
 
-本工程目前**全量使用 Options API**，暂未引入 `<script setup>` / Composition API。新增或修改页面请保持 Options API 风格，与现有代码保持一致。若确有必要引入 Composition API，请先与用户确认并评估风险（混用会降低可维护性，与 `mixins/crud.js` 的机制也存在冲突）。
+本工程**页面层已统一为 `<script setup lang="ts">` Composition API + TypeScript**（`src/views/` 全量迁移完成，可参考 `src/views/system/dict.vue`）。新增或修改页面一律使用此范式，禁止再写 Options API（`data()`/`methods`/`computed` 选项、`mapGetters`、`this.$xxx`）。
+
+> 注：`src/components/`、`src/page/`、`src/mac/` 等尚未迁移，仍为 Options API，属渐进迁移中的混用状态；改动到这些目录时可顺手迁移，但不强制。`src/views/` 未使用 `mixins/crud.js`，option 一律内联在 `.vue` 内。
+
+**轻量 TS**：仅 `.vue` 加 `lang="ts"` + 内联类型，依赖 Vite/esbuild 转译，暂未引入 `tsconfig.json` / `vue-tsc` / `type-check`（`pnpm build` 即转译不做类型检查）。禁止 explicit `any`。类型选型原则：**有确定形状的**用 `interface`——实体 / 表单用 `ref<XxxEntity[]>` / `Partial<XxxEntity>`，搜索袋 `query`/`params` 亦用 `Partial<XxxEntity>`（映射实体字段）；**真·动态无固定形状的**（Avue 列 / 节点、纯 `v-model` 绑定的对话框表单模型、未使用的框架回调参数如校验器 `rule`）用 `Record<string, unknown>` / `unknown`。`reactive` 不用泛型参数，改用接口标注变量（Vue 官方建议）：`const opt: { column: unknown[] } = reactive({ column: [] })`。
+
+**本工程 Composition 约定（务必遵循，与现有 views 一致）**：
+
+| 事项 | 写法 |
+| --- | --- |
+| Vue / Vuex API | **一律显式 import**（工程虽配了 auto-import，但 `dts:false` 会导致 IDE/类型服务报「找不到 ref」，故显式引入更稳）：`import { ref, reactive, computed, watch, nextTick } from 'vue'`、`import { useStore } from 'vuex'`。只 import 实际用到的符号 |
+| 消息 / 确认框 | `import { ElMessage, ElMessageBox } from 'element-plus'`（替代 `this.$message` / `this.$confirm`） |
+| Avue 数据工具 | `import { validData, findColumn } from '@/utils/util'`（自研工具：值兜底 + Avue option 列查找，替代被移除的全局 mixin `this.validData` / `this.findObject`；见 `src/utils/util.js`，`findColumn` 未命中返回 `null`，取用需 `if (column)` 守卫）。空值校验 `validateNull` 用 `@/utils/validate` |
+| 全局配置 | `import website from '@/config/website'`（替代 `this.website`） |
+| Vuex getter | `const store = useStore()` + `const permission = computed(() => store.getters.permission)` |
+| 组件/DOM 引用 | 模板 `ref="xxxRef"` + `const xxxRef = ref()`；Element Plus 实例用 `ref<InstanceType<typeof ElXxx>>()`；Avue 实例（无 TS 类型）用无参 `ref()` |
+| 分页 `page` | 模板 `v-model:page="page"` 时 **必须 `ref`**（avue 会 emit `update:page` 触发重赋值）；仅 `:page="page"` 单向绑定时用 `reactive` 即可 |
+| `@on-load` 回调 | 形参与外层 `page` 同名会遮蔽——`total` 需写回**外层** `page`（reactive 直接改 / ref 用 `page.value.total`），读分页参数则用形参（建议形参改名如 `pageData`） |
+| 方法 / 事件处理器 | 一律 `const fn = (...) => {}` 箭头函数，事件参数按 Avue 约定标注类型（`row: XxxForm`、`done: () => void` 等） |
 
 ### 4.2 命名规范
 
@@ -195,12 +213,12 @@ Saber/
 - `<basic-container>`、`<basic-block>`
 - Element Plus 图标组件全量注册（`@element-plus/icons-vue`）
 
-Options API 中通过 `this` 访问的全局属性：
+`main.js` 挂到 `app.config.globalProperties` 的全局属性（模板中可直接用；`<script setup>` 脚本内无 `this`，请改用对应 import）：
 
-- `this.website`（`config/website.js` 的全局配置）
-- `this.$dayjs`（日期库）
-- `this.getScreen`（屏幕尺寸工具）
-- `this.axios`（`window.axios`，也可直接 `import request from '@/axios'`）
+- `website`（`config/website.js`）→ 脚本内 `import website from '@/config/website'`
+- `$dayjs`（日期库）→ 脚本内 `import dayjs from 'dayjs'`
+- `getScreen`（屏幕尺寸工具）→ 脚本内按需从 `@/utils/util` 引入
+- `axios`（`window.axios`）→ 脚本内 `import request from '@/axios'`
 
 ---
 

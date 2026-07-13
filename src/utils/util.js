@@ -1,6 +1,27 @@
-import { validatenull } from './validate'
+import { validateNull } from './validate';
 import sha256 from 'crypto-js/sha256';
 import Base64 from 'crypto-js/enc-base64';
+
+/**
+ * 取值兜底：布尔值原样返回，其余值为空时回退到默认值（缺省 false）。
+ * 常用于把可能缺失的权限位、配置项归一到确定的默认值。
+ */
+export const validData = (val, defaultVal = false) => {
+  if (typeof val === 'boolean') {
+    return val;
+  }
+  return validateNull(val) ? defaultVal : val;
+};
+/**
+ * 在 Avue option 的 column 配置中按 prop 查找列对象。
+ * 兼容扁平列数组 [{ prop }] 与分组列 [{ column: [{ prop }] }]；返回列对象引用，未找到返回 null。
+ */
+export const findColumn = (arr, prop) => {
+  if (!Array.isArray(arr) || arr.length === 0) {
+    return null;
+  }
+  return arr.flatMap(item => item.column || [item]).find(col => col.prop === prop) || null;
+};
 //表单序列化
 export const serialize = data => {
   let list = [];
@@ -10,8 +31,8 @@ export const serialize = data => {
   return list.join('&');
 };
 export const getObjType = obj => {
-  var toString = Object.prototype.toString;
-  var map = {
+  const toString = Object.prototype.toString;
+  const map = {
     '[object Boolean]': 'boolean',
     '[object Number]': 'number',
     '[object String]': 'string',
@@ -32,8 +53,8 @@ export const getObjType = obj => {
  * 对象深拷贝
  */
 export const deepClone = data => {
-  var type = getObjType(data);
-  var obj;
+  const type = getObjType(data);
+  let obj;
   if (type === 'array') {
     obj = [];
   } else if (type === 'object') {
@@ -43,11 +64,11 @@ export const deepClone = data => {
     return data;
   }
   if (type === 'array') {
-    for (var i = 0, len = data.length; i < len; i++) {
+    for (let i = 0, len = data.length; i < len; i++) {
       obj.push(deepClone(data[i]));
     }
   } else if (type === 'object') {
-    for (var key in data) {
+    for (const key in data) {
       obj[key] = deepClone(data[key]);
     }
   }
@@ -81,11 +102,11 @@ export const encryption = (params) => {
     key
   } = params;
   let result = JSON.parse(JSON.stringify(data));
-  if (type == 'Base64') {
+  if (type === 'Base64') {
     param.forEach(ele => {
       result[ele] = Base64.stringify(result[ele]);
     })
-  } else if (type == 'Aes') {
+  } else if (type === 'Aes') {
     param.forEach(ele => {
       result[ele] = sha256(result[ele], key)
     })
@@ -98,7 +119,7 @@ export const encryption = (params) => {
 /**
  * 浏览器判断是否全屏
  */
-export const fullscreenToggel = () => {
+export const fullscreenToggle = () => {
   if (fullscreenEnable()) {
     exitFullScreen();
   } else {
@@ -108,7 +129,7 @@ export const fullscreenToggel = () => {
 /**
  * esc监听全屏
  */
-export const listenfullscreen = (callback) => {
+export const listenFullscreen = (callback) => {
   function listen () {
     callback()
   }
@@ -129,8 +150,7 @@ export const listenfullscreen = (callback) => {
  * 浏览器判断是否全屏
  */
 export const fullscreenEnable = () => {
-  var isFullscreen = document.isFullScreen || document.mozIsFullScreen || document.webkitIsFullScreen
-  return isFullscreen;
+  return document.isFullScreen || document.mozIsFullScreen || document.webkitIsFullScreen;
 }
 
 /**
@@ -163,12 +183,13 @@ export const exitFullScreen = () => {
 
 export const findParent = (menu, id) => {
   for (let i = 0; i < menu.length; i++) {
-    if (menu[i].children.length != 0) {
+    if (menu[i].children.length !== 0) {
       for (let j = 0; j < menu[i].children.length; j++) {
-        if (menu[i].children[j].id == id) {
+        // WHY: 节点 id 可能字符串/数字混用，需宽松匹配
+        if (menu[i].children[j].id === id) {
           return menu[i];
         } else {
-          if (menu[i].children[j].children.length != 0) {
+          if (menu[i].children[j].children.length !== 0) {
             return findParent(menu[i].children[j].children, id);
           }
         }
@@ -197,8 +218,8 @@ export const loadStyle = url => {
  */
 export const diff = (obj1, obj2) => {
   delete obj1.close;
-  var o1 = obj1 instanceof Object;
-  var o2 = obj2 instanceof Object;
+  const o1 = obj1 instanceof Object;
+  const o2 = obj2 instanceof Object;
   if (!o1 || !o2) { /*  判断不是对象  */
     return obj1 === obj2;
   }
@@ -208,9 +229,9 @@ export const diff = (obj1, obj2) => {
     //Object.keys() 返回一个由对象的自身可枚举属性(key值)组成的数组,例如：数组返回下表：let arr = ["a", "b", "c"];console.log(Object.keys(arr))->0,1,2;
   }
 
-  for (var attr in obj1) {
-    var t1 = obj1[attr] instanceof Object;
-    var t2 = obj2[attr] instanceof Object;
+  for (const attr in obj1) {
+    const t1 = obj1[attr] instanceof Object;
+    const t2 = obj2[attr] instanceof Object;
     if (t1 && t2) {
       return diff(obj1[attr], obj2[attr]);
     } else if (obj1[attr] !== obj2[attr]) {
@@ -222,13 +243,13 @@ export const diff = (obj1, obj2) => {
 /**
  * 根据字典的value显示label
  */
-export const findByvalue = (dic, value) => {
+export const findByValue = (dic, value) => {
   let result = '';
-  if (validatenull(dic)) return value;
-  if (typeof (value) == 'string' || typeof (value) == 'number' || typeof (value) == 'boolean') {
+  if (validateNull(dic)) return value;
+  if (typeof (value) === 'string' || typeof (value) === 'number' || typeof (value) === 'boolean') {
     let index = 0;
     index = findArray(dic, value);
-    if (index != -1) {
+    if (index !== -1) {
       result = dic[index].label;
     } else {
       result = value;
@@ -238,7 +259,7 @@ export const findByvalue = (dic, value) => {
     let index = 0;
     value.forEach(ele => {
       index = findArray(dic, ele);
-      if (index != -1) {
+      if (index !== -1) {
         result.push(dic[index].label);
       } else {
         result.push(value);
@@ -253,7 +274,8 @@ export const findByvalue = (dic, value) => {
  */
 export const findArray = (dic, value) => {
   for (let i = 0; i < dic.length; i++) {
-    if (dic[i].value == value) {
+    // WHY: 字典值可能字符串/数字混用
+    if (dic[i].value === value) {
       return i;
     }
   }
@@ -312,6 +334,6 @@ export const getTopUrl = () => {
 export const getQueryString = (name) => {
   let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
   let r = window.location.search.substr(1).match(reg);
-  if (r != null) return unescape(decodeURI(r[2]));
+  if (r !== null) return unescape(decodeURI(r[2]));
   return null;
 }

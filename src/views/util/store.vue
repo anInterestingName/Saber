@@ -51,50 +51,58 @@
 
 </template>
 
-<script>
-import {
-  setStore,
-  getStore,
-  removeStore,
-  clearStore,
-  getAllStore
-} from "@/utils/store";
+<script setup lang="ts">
+import { setStore, getStore, removeStore, clearStore, getAllStore } from '@/utils/store';
+import { ElMessage } from 'element-plus';
 
-export default {
-  name: "store",
-  methods: {
-    setItem (params = {}) {
-      const { name, value, type } = params;
-      setStore({
-        name: name,
-        content: value,
-        type: type
-      });
-      this.$message(`设置数据 ${name} = ${value}`);
-    },
-    getItem (params = {}) {
-      const { name, type } = params;
-      const content = getStore({
-        name: name,
-        type: type
-      });
-      this.$message(`获取数据 ${name} = ${content}`);
-    },
-    delItem (params = {}) {
-      const { name, type } = params;
-      removeStore({ name, type });
-      this.$message(`删除数据 ${name}`);
-    },
-    clearAll (params = {}) {
-      clearStore(params);
-      this.$message(`清除全部数据完成`);
-    },
-    getAll (params = {}) {
-      const list = getAllStore(params);
-      console.log(list);
-      this.$message(`结果已经打印到控制台`);
-    }
-  }
+defineOptions({ name: 'store' });
+
+// 存储操作参数
+interface StoreParams {
+  name?: string;
+  value?: string;
+  type?: string;
+}
+
+// 写入数据（持久化 / session）
+const setItem = (params: StoreParams = {}) => {
+  const { name, value, type } = params;
+  setStore({
+    name: name,
+    content: value,
+    type: type,
+  });
+  ElMessage(`设置数据 ${name} = ${value}`);
+};
+
+// 读取指定数据
+const getItem = (params: StoreParams = {}) => {
+  const { name, type } = params;
+  const content = getStore({
+    name: name,
+    type: type,
+  });
+  ElMessage(`获取数据 ${name} = ${content}`);
+};
+
+// 删除指定数据
+const delItem = (params: StoreParams = {}) => {
+  const { name, type } = params;
+  removeStore({ name, type });
+  ElMessage(`删除数据 ${name}`);
+};
+
+// 获取全部数据并打印到控制台
+const getAll = (params: StoreParams = {}) => {
+  const list = getAllStore(params);
+  console.log(list);
+  ElMessage(`结果已经打印到控制台`);
+};
+
+// 清空全部数据
+const clearAll = (params: StoreParams = {}) => {
+  clearStore(params);
+  ElMessage(`清除全部数据完成`);
 };
 </script>
 
