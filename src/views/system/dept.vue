@@ -3,7 +3,7 @@
     <avue-crud :option="option"
                :table-loading="loading"
                :data="data"
-               ref="crud"
+               ref="crudRef"
                v-model="form"
                :permission="permissionList"
                :before-open="beforeOpen"
@@ -36,249 +36,287 @@
   </basic-container>
 </template>
 
-<script>
-import { add, getDept, getDeptTree, getList, remove, update } from "@/api/system/dept";
-import { mapGetters } from "vuex";
+<script setup lang="ts">
+import { ref, reactive, computed } from 'vue';
+import { useStore } from 'vuex';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { add, getDept, getDeptTree, getList, remove, update } from '@/api/system/dept';
+import { validData, findColumn } from '@/utils/util';
 import website from '@/config/website';
 import { baseUrl } from '@/config/env';
-export default {
-  data () {
-    return {
-      form: {},
-      selectionList: [],
-      loading: true,
-      query: {},
-      page: {
-        pageSize: 10,
-        currentPage: 1,
-        total: 0
+
+// 数据实体
+interface DeptEntity {
+  id: string;
+  deptName?: string;
+  tenantId?: string;
+  fullName?: string;
+  parentId?: string;
+  sort?: number;
+  remark?: string;
+}
+
+// 新增与编辑共用的表单模型，字段均可选
+type DeptForm = Partial<DeptEntity>;
+
+// 权限
+const store = useStore();
+const userInfo = computed(() => store.getters.userInfo);
+const permission = computed(() => store.getters.permission);
+
+// 表格实例与数据状态
+const crudRef = ref();
+const form = ref<DeptForm>({});
+const data = ref<DeptEntity[]>([]);
+const selectionList = ref<DeptEntity[]>([]);
+const query = ref<Partial<DeptEntity>>({});
+const loading = ref(true);
+
+// 分页参数
+const page = reactive({
+  pageSize: 10,
+  currentPage: 1,
+  total: 0,
+});
+
+// 选中行 id 集合，供批量删除使用
+const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
+
+// 表格配置
+const option = reactive({
+  searchShow: true,
+  searchMenuSpan: 6,
+  tip: false,
+  tree: true,
+  border: true,
+  index: true,
+  selection: true,
+  viewBtn: true,
+  menuWidth: 350,
+  column: [
+    {
+      label: '部门名称',
+      prop: 'deptName',
+      search: true,
+      rules: [{
+        required: true,
+        message: '请输入部门名称',
+        trigger: 'blur',
+      }],
+    },
+    {
+      label: '所属租户',
+      prop: 'tenantId',
+      type: 'tree',
+      dicUrl: baseUrl + '/blade-system/tenant/select',
+      addDisplay: false,
+      editDisplay: false,
+      viewDisplay: website.tenantMode,
+      span: 24,
+      props: {
+        label: 'tenantName',
+        value: 'tenantId',
       },
-      option: {
-        searchShow: true,
-        searchMenuSpan: 6,
-        tip: false,
-        tree: true,
-        border: true,
-        index: true,
-        selection: true,
-        viewBtn: true,
-        menuWidth: 350,
-        column: [
-          {
-            label: "部门名称",
-            prop: "deptName",
-            search: true,
-            rules: [{
-              required: true,
-              message: "请输入部门名称",
-              trigger: "blur"
-            }]
-          },
-          {
-            label: "所属租户",
-            prop: "tenantId",
-            type: "tree",
-            dicUrl: baseUrl + "/blade-system/tenant/select",
-            addDisplay: false,
-            editDisplay: false,
-            viewDisplay: website.tenantMode,
-            span: 24,
-            props: {
-              label: "tenantName",
-              value: "tenantId"
-            },
-            hide: !website.tenantMode,
-            search: website.tenantMode,
-            rules: [{
-              required: true,
-              message: "请输入所属租户",
-              trigger: "click"
-            }]
-          },
-          {
-            label: "部门全称",
-            prop: "fullName",
-            search: true,
-            rules: [{
-              required: true,
-              message: "请输入部门全称",
-              trigger: "blur"
-            }]
-          },
-          {
-            label: "上级部门",
-            prop: "parentId",
-            dicData: [],
-            type: "tree",
-            hide: true,
-            props: {
-              label: "title"
-            },
-            rules: [{
-              required: false,
-              message: "请选择上级部门",
-              trigger: "click"
-            }]
-          },
-          {
-            label: "排序",
-            prop: "sort",
-            type: "number",
-            rules: [{
-              required: true,
-              message: "请输入排序",
-              trigger: "blur"
-            }]
-          },
-          {
-            label: "备注",
-            prop: "remark",
-            span: 24,
-            hide: true,
-            rules: [{
-              required: false,
-              message: "请输入备注",
-              trigger: "blur"
-            }]
-          }
-        ]
+      hide: !website.tenantMode,
+      search: website.tenantMode,
+      rules: [{
+        required: true,
+        message: '请输入所属租户',
+        trigger: 'click',
+      }],
+    },
+    {
+      label: '部门全称',
+      prop: 'fullName',
+      search: true,
+      rules: [{
+        required: true,
+        message: '请输入部门全称',
+        trigger: 'blur',
+      }],
+    },
+    {
+      label: '上级部门',
+      prop: 'parentId',
+      dicData: [],
+      type: 'tree',
+      hide: true,
+      props: {
+        label: 'title',
       },
-      data: []
-    };
-  },
-  computed: {
-    ...mapGetters(["userInfo", "permission"]),
-    permissionList () {
-      return {
-        addBtn: this.validData(this.permission.dept_add, false),
-        viewBtn: this.validData(this.permission.dept_view, false),
-        delBtn: this.validData(this.permission.dept_delete, false),
-        editBtn: this.validData(this.permission.dept_edit, false)
-      };
+      rules: [{
+        required: false,
+        message: '请选择上级部门',
+        trigger: 'click',
+      }],
     },
-    ids () {
-      let ids = [];
-      this.selectionList.forEach(ele => {
-        ids.push(ele.id);
-      });
-      return ids.join(",");
+    {
+      label: '排序',
+      prop: 'sort',
+      type: 'number',
+      rules: [{
+        required: true,
+        message: '请输入排序',
+        trigger: 'blur',
+      }],
+    },
+    {
+      label: '备注',
+      prop: 'remark',
+      span: 24,
+      hide: true,
+      rules: [{
+        required: false,
+        message: '请输入备注',
+        trigger: 'blur',
+      }],
+    },
+  ],
+});
+
+// 行操作按钮权限
+const permissionList = computed(() => ({
+  addBtn: validData(permission.value.dept_add, false),
+  viewBtn: validData(permission.value.dept_view, false),
+  delBtn: validData(permission.value.dept_delete, false),
+  editBtn: validData(permission.value.dept_edit, false),
+}));
+
+// 加载列表数据，并刷新上级部门树
+const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Partial<DeptEntity> = {}) => {
+  loading.value = true;
+  getList(pageData.currentPage, pageData.pageSize, Object.assign(params, query.value)).then(res => {
+    data.value = res.data.data;
+    loading.value = false;
+    getDeptTree().then(res => {
+      const column = findColumn(option.column, 'parentId');
+      if (column) column.dicData = res.data.data;
+    });
+  });
+};
+
+// 条件检索
+const searchChange = (params: Partial<DeptEntity>, done: () => void) => {
+  query.value = params;
+  page.currentPage = 1;
+  onLoad(page, params);
+  done();
+};
+
+// 重置检索条件
+const searchReset = () => {
+  query.value = {};
+  onLoad(page);
+};
+
+// 切换页码
+const currentChange = (currentPage: number) => {
+  page.currentPage = currentPage;
+};
+
+// 调整每页条数
+const sizeChange = (pageSize: number) => {
+  page.pageSize = pageSize;
+};
+
+// 记录当前选中行
+const selectionChange = (list: DeptEntity[]) => {
+  selectionList.value = list;
+};
+
+// 新增子部门，预填并锁定上级部门
+const handleAdd = (row: DeptEntity) => {
+  crudRef.value.modelValue.parentId = row.id;
+  crudRef.value.option.column.filter((item: Record<string, unknown>) => {
+    if (item.prop === 'parentId') {
+      item.value = row.id;
+      item.addDisabled = true;
     }
-  },
-  methods: {
-    handleAdd (row) {
-      this.$refs.crud.modelValue.parentId = row.id;
-      this.$refs.crud.option.column.filter(item => {
-        if (item.prop === "parentId") {
-          item.value = row.id;
-          item.addDisabled = true;
-        }
+  });
+  crudRef.value.rowAdd();
+};
+
+// 新增保存
+const rowSave = (row: DeptForm, done: () => void, loading: () => void) => {
+  add(row).then(() => {
+    done();
+    onLoad(page);
+    ElMessage({
+      type: 'success',
+      message: '操作成功!',
+    });
+  }, error => {
+    window.console.log(error);
+    loading();
+  });
+};
+
+// 编辑保存
+const rowUpdate = (row: DeptForm, index: number, done: () => void, loading: () => void) => {
+  update(row).then(() => {
+    done();
+    onLoad(page);
+    ElMessage({
+      type: 'success',
+      message: '操作成功!',
+    });
+  }, error => {
+    window.console.log(error);
+    loading();
+  });
+};
+
+// 删除单行
+const rowDel = (row: DeptEntity) => {
+  ElMessageBox.confirm('确定将选择数据删除?', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      return remove(row.id);
+    })
+    .then(() => {
+      onLoad(page);
+      ElMessage({
+        type: 'success',
+        message: '操作成功!',
       });
-      this.$refs.crud.rowAdd();
-    },
-    rowSave (row, done, loading) {
-      add(row).then(() => {
-        done();
-        this.onLoad(this.page);
-        this.$message({
-          type: "success",
-          message: "操作成功!"
-        });
-      }, error => {
-        window.console.log(error);
-        loading();
-      });
-    },
-    rowUpdate (row, index, done, loading) {
-      update(row).then(() => {
-        done();
-        this.onLoad(this.page);
-        this.$message({
-          type: "success",
-          message: "操作成功!"
-        });
-      }, error => {
-        window.console.log(error);
-        loading();
-      });
-    },
-    rowDel (row) {
-      this.$confirm("确定将选择数据删除?", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          return remove(row.id);
-        })
-        .then(() => {
-          this.onLoad(this.page);
-          this.$message({
-            type: "success",
-            message: "操作成功!"
-          });
-        });
-    },
-    handleDelete () {
-      if (this.selectionList.length === 0) {
-        this.$message.warning("请选择至少一条数据");
-        return;
-      }
-      this.$confirm("确定将选择数据删除?", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          return remove(this.ids);
-        })
-        .then(() => {
-          this.onLoad(this.page);
-          this.$message({
-            type: "success",
-            message: "操作成功!"
-          });
-          this.$refs.crud.toggleSelection();
-        });
-    },
-    searchReset () {
-      this.query = {};
-      this.onLoad(this.page);
-    },
-    searchChange (params, done) {
-      this.query = params;
-      this.page.currentPage = 1;
-      this.onLoad(this.page, params);
-      done();
-    },
-    selectionChange (list) {
-      this.selectionList = list;
-    },
-    beforeOpen (done, type) {
-      if (["edit", "view"].includes(type)) {
-        getDept(this.form.id).then(res => {
-          this.form = res.data.data;
-        });
-      }
-      done();
-    },
-    currentChange (currentPage) {
-      this.page.currentPage = currentPage;
-    },
-    sizeChange (pageSize) {
-      this.page.pageSize = pageSize;
-    },
-    onLoad (page, params = {}) {
-      this.loading = true;
-      getList(page.currentPage, page.pageSize, Object.assign(params, this.query)).then(res => {
-        this.data = res.data.data;
-        this.loading = false;
-        getDeptTree().then(res => {
-          const column = this.findObject(this.option.column, "parentId");
-          column.dicData = res.data.data;
-        });
-      });
-    }
+    });
+};
+
+// 批量删除选中行
+const handleDelete = () => {
+  if (selectionList.value.length === 0) {
+    ElMessage.warning('请选择至少一条数据');
+    return;
   }
+  ElMessageBox.confirm('确定将选择数据删除?', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      return remove(ids.value);
+    })
+    .then(() => {
+      onLoad(page);
+      ElMessage({
+        type: 'success',
+        message: '操作成功!',
+      });
+      crudRef.value.toggleSelection();
+    });
+};
+
+// 编辑或查看前加载部门详情
+const beforeOpen = (done: () => void, type: string) => {
+  if (['edit', 'view'].includes(type)) {
+    getDept(form.value.id).then(res => {
+      form.value = res.data.data;
+    });
+  }
+  done();
 };
 </script>
 

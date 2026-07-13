@@ -2,15 +2,15 @@
  * Created by jiachenpan on 16/11/18.
  */
 
-export function isvalidUsername(str) {
-    const valid_map = ['admin', 'editor']
-    return valid_map.indexOf(str.trim()) >= 0
+export function isValidUsername(str) {
+    const validMap = ['admin', 'editor']
+    return validMap.indexOf(str.trim()) >= 0
 }
 
 /* 合法uri*/
-export function validateURL(textval) {
-    const urlregex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/
-    return urlregex.test(textval)
+export function validateURL(val) {
+    const urlRegex = /^(https?|ftp):\/\/([a-zA-Z0-9.-]+(:[a-zA-Z0-9.&%$-]+)*@)*((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(:[0-9]+)*(\/($|[a-zA-Z0-9.,?'\\+&%$#=~_-]+))*$/
+    return urlRegex.test(val)
 }
 /**
  * 邮箱
@@ -57,20 +57,20 @@ export function validateUpperCase(str) {
 }
 
 /* 大小写字母*/
-export function validatAlphabets(str) {
+export function validateAlphabets(str) {
     const reg = /^[A-Za-z]+$/
     return reg.test(str)
 }
 /*验证pad还是pc*/
-export const vaildatePc = function() {
+export const validatePc = function() {
         const userAgentInfo = navigator.userAgent;
-        const Agents = ["Android", "iPhone",
+        const agents = ["Android", "iPhone",
             "SymbianOS", "Windows Phone",
             "iPad", "iPod"
         ];
         let flag = true;
-        for (var v = 0; v < Agents.length; v++) {
-            if (userAgentInfo.indexOf(Agents[v]) > 0) {
+        for (let v = 0; v < agents.length; v++) {
+            if (userAgentInfo.indexOf(agents[v]) > 0) {
                 flag = false;
                 break;
             }
@@ -90,11 +90,11 @@ export function validateEmail(email) {
 /**
  * 判断身份证号码
  */
-export function cardid(code) {
+export function cardId(code) {
     let list = [];
     let result = true;
     let msg = '';
-    var city = {
+    const city = {
         11: "北京",
         12: "天津",
         13: "河北",
@@ -131,8 +131,8 @@ export function cardid(code) {
         82: "澳门",
         91: "国外 "
     };
-    if (!validatenull(code)) {
-        if (code.length == 18) {
+    if (!validateNull(code)) {
+        if (code.length === 18) {
             if (!code || !/(^\d{18}$)|(^\d{17}(\d|X|x)$)/.test(code)) {
                 msg = "证件号码格式错误";
             } else if (!city[code.substr(0, 2)]) {
@@ -142,18 +142,17 @@ export function cardid(code) {
                 code = code.split('');
                 //∑(ai×Wi)(mod 11)
                 //加权因子
-                var factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+                const factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
                 //校验位
-                var parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2, 'x'];
-                var sum = 0;
-                var ai = 0;
-                var wi = 0;
-                for (var i = 0; i < 17; i++) {
-                    ai = code[i];
-                    wi = factor[i];
+                const parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2, 'x'];
+                let sum = 0;
+                for (let i = 0; i < 17; i++) {
+                    const ai = code[i];
+                    const wi = factor[i];
                     sum += ai * wi;
                 }
-                if (parity[sum % 11] != code[17]) {
+                // WHY: 校验位为数字/字符混合（parity 含 'X'/'x'，code[17] 为字符），需宽松比对，改严格会误判
+                if (parity[sum % 11] !== code[17]) {
                     msg = "证件号码校验位错误";
                 } else {
                     result = false;
@@ -174,14 +173,14 @@ export function cardid(code) {
 /**
  * 判断手机号码是否正确
  */
-export function isvalidatemobile(phone) {
+export function isValidateMobile(phone) {
     let list = [];
     let result = true;
     let msg = '';
-    var isPhone = /^0\d{2,3}-?\d{7,8}$/;
-    //增加134 减少|1349[0-9]{7}，增加181,增加145，增加17[678]  
-    if (!validatenull(phone)) {
-        if (phone.length == 11) {
+    const isPhone = /^0\d{2,3}-?\d{7,8}$/;
+    //增加134 减少|1349[0-9]{7}，增加181,增加145，增加17[678]
+    if (!validateNull(phone)) {
+        if (phone.length === 11) {
             if (isPhone.test(phone)) {
                 msg = '手机号码格式不正确';
             } else {
@@ -200,19 +199,19 @@ export function isvalidatemobile(phone) {
 /**
  * 判断姓名是否正确
  */
-export function validatename(name) {
-    var regName = /^[\u4e00-\u9fa5]{2,4}$/;
+export function validateName(name) {
+    const regName = /^[\u4e00-\u9fa5]{2,4}$/;
     if (!regName.test(name)) return false;
     return true;
 }
 /**
  * 判断是否为整数
  */
-export function validatenum(num, type) {
+export function validateNum(num, type) {
     let regName = /[^\d.]/g;
-    if (type == 1) {
+    if (type === 1) {
         if (!regName.test(num)) return false;
-    } else if (type == 2) {
+    } else if (type === 2) {
         regName = /[^\d]/g;
         if (!regName.test(num)) return false;
     }
@@ -221,11 +220,11 @@ export function validatenum(num, type) {
 /**
  * 判断是否为小数
  */
-export function validatenumord(num, type) {
+export function validateNumOrd(num, type) {
     let regName = /[^\d.]/g;
-    if (type == 1) {
+    if (type === 1) {
         if (!regName.test(num)) return false;
-    } else if (type == 2) {
+    } else if (type === 2) {
         regName = /[^\d.]/g;
         if (!regName.test(num)) return false;
     }
@@ -234,19 +233,19 @@ export function validatenumord(num, type) {
 /**
  * 判断是否为空
  */
-export function validatenull(val) {
-    if (typeof val == 'boolean') {
+export function validateNull(val) {
+    if (typeof val === 'boolean') {
         return false;
     }
-    if (typeof val == 'number') {
+    if (typeof val === 'number') {
         return false;
     }
     if (val instanceof Array) {
-        if (val.length == 0) return true;
+        if (val.length === 0) return true;
     } else if (val instanceof Object) {
         if (JSON.stringify(val) === '{}') return true;
     } else {
-        if (val == 'null' || val == null || val == 'undefined' || val == undefined || val == '') return true;
+        if (val === 'null' || val === null || val === 'undefined' || val === undefined || val === '') return true;
         return false;
     }
     return false;

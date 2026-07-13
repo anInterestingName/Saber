@@ -40,14 +40,14 @@
 </template>
 
 <script>
-import { isvalidatemobile } from "utils/validate";
+import { isValidateMobile } from "utils/validate";
 import { mapGetters } from "vuex";
 export default {
   name: "codelogin",
   data () {
     const validatePhone = (rule, value, callback) => {
-      if (isvalidatemobile(value)[0]) {
-        callback(new Error(isvalidatemobile(value)[1]));
+      if (isValidateMobile(value)[0]) {
+        callback(new Error(isValidateMobile(value)[1]));
       } else {
         callback();
       }

@@ -1,6 +1,6 @@
 import router from './router/'
 import store from './store'
-import { validatenull } from '@/utils/validate'
+import { validateNull } from '@/utils/validate'
 import { getToken } from '@/utils/auth'
 import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style

@@ -4,20 +4,20 @@
 </template>
 <script>
 import { mapGetters } from "vuex";
-import { fullscreenToggel, listenfullscreen } from "utils/util";
+import { fullscreenToggle, listenFullscreen } from "utils/util";
 export default {
   computed: {
     ...mapGetters(["isFullScren"])
   },
   mounted () {
-    listenfullscreen(this.setScreen);
+    listenFullscreen(this.setScreen);
   },
   methods: {
     setScreen () {
       this.$store.commit("SET_FULLSCREN");
     },
     handleScreen () {
-      fullscreenToggel();
+      fullscreenToggle();
     },
   }
 }

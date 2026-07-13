@@ -35,7 +35,7 @@
 <script>
 import index from '@/mixins/index'
 import wechat from './wechat.vue'
-import { validatenull } from 'utils/validate'
+import { validateNull } from 'utils/validate'
 import { mapGetters } from "vuex";
 import tags from "./tags.vue";
 import search from "./search.vue";
@@ -73,7 +73,7 @@ export default {
       this.$store.dispatch("GetMenu", item.id).then(data => {
         if (data.length !== 0) {
           this.$router.$avueRouter.formatRoutes(data, true);
-          if (!validatenull(item.path)) {
+          if (!validateNull(item.path)) {
             this.$router.push({ path: item.path });
           }
         }

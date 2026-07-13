@@ -135,15 +135,12 @@
   </basic-container>
 </template>
 
-<script>
-  export default {
-    data() {
-      return {
-        width: 200,
-        height: 120,
-      }
-    }
-  }
+<script setup lang="ts">
+import { ref } from 'vue';
+
+// 磁贴宽高
+const width = ref(200);
+const height = ref(120);
 </script>
 
 <style lang="scss">

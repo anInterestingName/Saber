@@ -39,7 +39,7 @@ import userLogin from "./userlogin.vue";
 import codeLogin from "./codelogin.vue";
 import thirdLogin from "./thirdlogin.vue";
 import faceLogin from "./facelogin.vue";
-import { validatenull } from "@/utils/validate";
+import { validateNull } from "@/utils/validate";
 import topLang from "@/page/index/top/top-lang.vue";
 export default {
   name: "login",
@@ -60,7 +60,7 @@ export default {
     $route () {
       const params = this.$route.query;
       this.socialForm = params
-      if (!validatenull(this.socialForm.state)) {
+      if (!validateNull(this.socialForm.state)) {
         const loading = this.$loading({
           lock: true,
           text: `${this.socialForm.state === "WX" ? "微信" : "QQ"

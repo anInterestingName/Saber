@@ -1,4 +1,4 @@
-import { validatenull } from "@/utils/validate";
+import { validateNull } from "@/utils/validate";
 import { getStore } from "@/utils/store.js";
 export default {
   data () {
@@ -25,7 +25,7 @@ export default {
         let date1 = this.$dayjs(token.datetime);
         let date2 = this.$dayjs();
         const date = date2.diff(date1, 'seconds');
-        if (validatenull(date)) return;
+        if (validateNull(date)) return;
         if (date >= this.website.tokenTime && !this.refreshLock) {
           this.refreshLock = true;
           this.$store

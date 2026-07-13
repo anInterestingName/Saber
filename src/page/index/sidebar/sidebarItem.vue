@@ -1,6 +1,6 @@
 <template>
   <template v-for="item in menu">
-    <el-menu-item v-if="validatenull(item[childrenKey]) && validRoles(item)"
+    <el-menu-item v-if="validateNull(item[childrenKey]) && validRoles(item)"
                   :index="getPath(item)"
                   @click="open(item)"
                   :key="item[labelKey]">
@@ -9,7 +9,7 @@
         <span :alt="item[pathKey]">{{getTitle(item)}}</span>
       </template>
     </el-menu-item>
-    <el-sub-menu v-else-if="!validatenull(item[childrenKey])&&validRoles(item)"
+    <el-sub-menu v-else-if="!validateNull(item[childrenKey])&&validRoles(item)"
                  :index="getPath(item)"
                  :key="item[labelKey]">
       <template #title>
@@ -20,7 +20,7 @@
                 :key="child[labelKey]">
         <el-menu-item :index="getPath(child)"
                       @click="open(child)"
-                      v-if="validatenull(child[childrenKey])">
+                      v-if="validateNull(child[childrenKey])">
           <i :class="child[iconKey]"></i>
           <template #title>
             <span>{{getTitle(child)}}</span>
@@ -35,7 +35,7 @@
 </template>
 <script>
 import { mapGetters } from "vuex";
-import { validatenull } from 'utils/validate'
+import { validateNull } from 'utils/validate'
 import website from '@/config/website'
 export default {
   name: "sidebarItem",
@@ -66,7 +66,7 @@ export default {
     }
   },
   methods: {
-    validatenull,
+    validateNull,
     getPath (item) {
       return item[this.pathKey]
     },

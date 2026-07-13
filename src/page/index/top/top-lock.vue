@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { validatenull } from "utils/validate";
+import { validateNull } from "utils/validate";
 import { mapGetters } from "vuex";
 export default {
   name: "top-lock",
@@ -57,7 +57,7 @@ export default {
       });
     },
     handleLock () {
-      if (validatenull(this.lockPasswd)) {
+      if (validateNull(this.lockPasswd)) {
         this.box = true;
         return;
       }

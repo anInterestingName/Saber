@@ -2,8 +2,7 @@
   <basic-container>测试页</basic-container>
 </template>
 
-<script>
-  export default {};
+<script setup lang="ts">
 </script>
 
 <style>
