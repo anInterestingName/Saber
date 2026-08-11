@@ -158,7 +158,7 @@ const formScope = ref<ScopeForm>({});
 const dataScope = ref<ScopeEntity[]>([]);
 const selectionListScope = ref<ScopeEntity[]>([]);
 const drawerVisible = ref(false);
-const direction = ref('rtl');
+const direction = ref<'ltr' | 'rtl' | 'ttb' | 'btt'>('rtl');
 const scopeMenuId = ref<string | number>(0);
 const scopeMenuName = ref('菜单');
 const scopeLoading = ref(false);
@@ -462,7 +462,7 @@ const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Par
 };
 
 // 菜单侧：懒加载子级菜单
-const treeLoad = (tree: MenuEntity, treeNode: unknown, resolve: (data: MenuEntity[]) => void) => {
+const treeLoad = (tree: MenuEntity, treeNode: object, resolve: (data: MenuEntity[]) => void) => {
   const nodeParentId = tree.id;
   getLazyMenuList(nodeParentId).then(res => {
     resolve(res.data.data);

@@ -27,7 +27,7 @@
         <top-lang></top-lang>
       </div>
       <div class="top-bar__item"
-           v-if="setting.fullscren">
+           v-if="setting.fullscreen">
         <top-full></top-full>
       </div>
       <div class="top-bar__item"

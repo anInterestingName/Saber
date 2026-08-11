@@ -1,7 +1,16 @@
 import request from '@/axios';
 import website from "@/config/website";
 
-export const loginByUsername = (tenantId, account, password, type, key, code) => request({
+// password 之后的入参按登录链路各自缺省：type 仅切换角色部门时下发，key / code 仅验证码模式下发；
+// 手机验证码链路（store 的 LoginByPhone）只透传前两位，故 password 亦为可选
+export const loginByUsername = (
+  tenantId,
+  account,
+  password?: string,
+  type?: string,
+  key?: string,
+  code?: string
+) => request({
   url: '/blade-auth/token',
   method: 'post',
   headers: {

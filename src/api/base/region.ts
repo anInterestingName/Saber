@@ -12,7 +12,7 @@ export const getList = (current, size, params) => {
   })
 }
 
-export const getLazyTree = (parentCode, params) => {
+export const getLazyTree = (parentCode, params?: object) => {
   return request({
     url: '/blade-system/region/lazy-tree',
     method: 'get',

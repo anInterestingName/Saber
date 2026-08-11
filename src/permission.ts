@@ -6,12 +6,17 @@ import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 NProgress.configure({ showSpinner: false });
 const lockPage = '/lock'; //锁屏页
+
+// 懒加载路由组件：本工程的路由组件只有两种登记形态——静态导入的模块对象，
+// 与 import() 产出的模块加载器，函数形态即后者，加载完成后回写 default.name 供 keep-alive 按标签地址缓存
+type LazyRouteComponent = () => Promise<{ default: { name?: string } }>;
+
 router.beforeEach((to, from, next) => {
   // 获取匹配的路由数组
   const matchedRoutes = to.matched;
   const component = matchedRoutes.length > 0 ? matchedRoutes[matchedRoutes.length - 1].components.default : null;
   if (component && typeof (component) == 'function') {
-    component().then(mod => {
+    (component as LazyRouteComponent)().then(mod => {
       mod.default.name = to.fullPath
     });
   }
@@ -37,7 +42,8 @@ router.beforeEach((to, from, next) => {
         const meta = to.meta || {}
         const query = to.query || {}
         if (meta.target) {
-          window.open(query.url.replace(/#/g, "&"))
+          // 外链地址由菜单 query 下发，路由 query 的值域为 string | string[]，按外链约定断言为字符串
+          window.open((query.url as string).replace(/#/g, "&"))
           return
         } else if (meta.isTab !== false) {
           store.commit('ADD_TAG', {

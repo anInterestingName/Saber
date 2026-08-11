@@ -63,6 +63,7 @@ export default {
       msgText: "",
       msgTime: "",
       msgKey: false,
+      timer: null,
       loginForm: {
         phone: "",
         code: ""
@@ -78,6 +79,9 @@ export default {
     this.msgTime = this.config.MSGTIME;
   },
   mounted () { },
+  unmounted () {
+    clearInterval(this.timer);
+  },
   computed: {
     ...mapGetters(["tagWel"]),
     config () {
@@ -94,14 +98,14 @@ export default {
       if (this.msgKey) return;
       this.msgText = this.msgTime + this.config.MSGSCUCCESS;
       this.msgKey = true;
-      const time = setInterval(() => {
+      this.timer = setInterval(() => {
         this.msgTime--;
         this.msgText = this.msgTime + this.config.MSGSCUCCESS;
         if (this.msgTime == 0) {
           this.msgTime = this.config.MSGTIME;
           this.msgText = this.config.MSGINIT;
           this.msgKey = false;
-          clearInterval(time);
+          clearInterval(this.timer);
         }
       }, 1000);
     },

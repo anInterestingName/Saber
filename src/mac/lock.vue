@@ -6,7 +6,7 @@
       <img src="https://avatar.gitee.com/uploads/61/632261_smallweigit.jpg!avatar100?1518660401"
            alt="">
     </div>
-    <div class="message">{{userInfo.username}}</div>
+    <div class="message">{{userInfo.userName}}</div>
     <div class="form">
       <div class="item"
            style="width:320px"

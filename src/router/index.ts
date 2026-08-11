@@ -6,7 +6,7 @@ import i18n from '@/lang'
 import Store from '@/store/'
 //创建路由
 const Router = createRouter({
-  base: import.meta.env.VITE_APP_BASE,
+  // 基础路径由 createWebHistory 承载，vue-router 4 的 RouterOptions 已无 base 选项
   history: createWebHistory(import.meta.env.VITE_APP_BASE),
   routes: [...PageRouter, ...ViewsRouter]
 })

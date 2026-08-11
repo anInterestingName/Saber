@@ -8,7 +8,7 @@ export default {
         stack: err.stack,
         info
       })
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.group('>>>>>> 错误信息 >>>>>>')
         console.log(info)
         console.groupEnd();

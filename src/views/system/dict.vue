@@ -28,7 +28,7 @@
         <el-button text
                    type="primary"
                    icon="el-icon-plus"
-                   @click.stop="handleAdd(scope.row,scope.index)"
+                   @click.stop="handleAdd(scope.row)"
                    v-if="userInfo.authority.includes('admin')">新增子项
         </el-button>
       </template>
@@ -42,6 +42,7 @@ import { useStore } from 'vuex';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { add, getDict, getDictTree, getList, remove, update } from '@/api/system/dict';
 import { validData, findColumn } from '@/utils/util';
+import type { ColumnSchema } from '@/types/column';
 
 // 数据实体
 interface DictEntity {
@@ -212,7 +213,7 @@ const selectionChange = (list: DictEntity[]) => {
 const handleAdd = (row: DictEntity) => {
   crudRef.value.modelValue.code = row.code;
   crudRef.value.modelValue.parentId = row.id;
-  crudRef.value.option.column.filter((item: Record<string, unknown>) => {
+  crudRef.value.option.column.filter((item: ColumnSchema) => {
     if (item.prop === 'code') {
       item.value = row.code;
       item.addDisabled = true;

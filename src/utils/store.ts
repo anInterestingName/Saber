@@ -1,13 +1,32 @@
-import {
-  validateNull
-} from 'utils/validate';
-import website from '@/config/website'
+import { validateNull } from 'utils/validate';
+import website from '@/config/website';
 
 const keyName = website.key + '-';
+
+/** 可入库的存储内容：与 JSON 序列化能力对齐 */
+type StoreContent = string | number | boolean | object | null;
+
+/** 存取参数：type 有值走 sessionStorage，否则走 localStorage */
+interface StoreParams {
+  name?: string;
+  content?: StoreContent;
+  type?: string;
+  /** 为 true 时返回带 dataType/datetime 的原始存储对象 */
+  debug?: boolean;
+}
+
+/** 序列化后落库的存储结构 */
+interface StoreRecord {
+  dataType?: string;
+  content?: StoreContent;
+  type?: string;
+  datetime?: number;
+}
+
 /**
  * 存储localStorage
  */
-export const setStore = (params = {}) => {
+export const setStore = (params: StoreParams = {}) => {
   let {
     name,
     content,
@@ -27,21 +46,23 @@ export const setStore = (params = {}) => {
  * 获取localStorage
  */
 
-export const getStore = (params = {}) => {
+export const getStore = (params: StoreParams = {}) => {
   let {
     name,
     debug
   } = params;
   name = keyName + name
-  let obj = {},
+  // 原实现用同一个 obj 先后承载原始串与解析结果，类型上无法兼容，拆为 raw / obj 两个变量，取值链路不变
+  let raw,
     content;
-  obj = window.sessionStorage.getItem(name);
-  if (validateNull(obj)) obj = window.localStorage.getItem(name);
-  if (validateNull(obj)) return;
+  raw = window.sessionStorage.getItem(name);
+  if (validateNull(raw)) raw = window.localStorage.getItem(name);
+  if (validateNull(raw)) return;
+  let obj: StoreRecord;
   try {
-    obj = JSON.parse(obj);
+    obj = JSON.parse(raw);
   } catch {
-    return obj;
+    return raw;
   }
   if (debug) {
     return obj;
@@ -51,16 +72,16 @@ export const getStore = (params = {}) => {
   } else if (obj.dataType === 'number') {
     content = Number(obj.content);
   } else if (obj.dataType === 'boolean') {
-    content = eval(obj.content);
+    content = obj.content;
   } else if (obj.dataType === 'object') {
     content = obj.content;
   }
   return content;
-}
+};
 /**
  * 删除localStorage
  */
-export const removeStore = (params = {}) => {
+export const removeStore = (params: StoreParams = {}) => {
   let {
     name,
     type
@@ -77,13 +98,13 @@ export const removeStore = (params = {}) => {
 /**
  * 获取全部localStorage
  */
-export const getAllStore = (params = {}) => {
+export const getAllStore = (params: StoreParams = {}) => {
   const list = [];
   const {
     type
   } = params;
   if (type) {
-    for (let i = 0; i <= window.sessionStorage.length; i++) {
+    for (let i = 0; i < window.sessionStorage.length; i++) {
       list.push({
         name: window.sessionStorage.key(i),
         content: getStore({
@@ -93,7 +114,7 @@ export const getAllStore = (params = {}) => {
       })
     }
   } else {
-    for (let i = 0; i <= window.localStorage.length; i++) {
+    for (let i = 0; i < window.localStorage.length; i++) {
       list.push({
         name: window.localStorage.key(i),
         content: getStore({
@@ -110,7 +131,7 @@ export const getAllStore = (params = {}) => {
 /**
  * 清空全部localStorage
  */
-export const clearStore = (params = {}) => {
+export const clearStore = (params: StoreParams = {}) => {
   const { type } = params;
   if (type) {
     window.sessionStorage.clear();

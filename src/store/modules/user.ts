@@ -7,6 +7,19 @@ import { formatPath } from '@/router/avue-router'
 import { ElMessage } from 'element-plus'
 import { encrypt } from '@/utils/sm2'
 
+/** 登录入参：三条登录链路（账号/第三方/手机号）共用一个载荷袋，字段按链路各取所需 */
+interface LoginPayload {
+  tenantId?: string;
+  username?: string;
+  password?: string;
+  type?: string;
+  key?: string;
+  code?: string;
+  source?: string;
+  state?: string;
+  phone?: string;
+}
+
 const user = {
   state: {
     userInfo: getStore({ name: 'userInfo' }) || [],
@@ -20,8 +33,8 @@ const user = {
   },
   actions: {
     //根据用户名登录
-    LoginByUsername ({ commit }, userInfo = {}) {
-      return new Promise((resolve, reject) => {
+    LoginByUsername ({ commit }, userInfo: LoginPayload = {}) {
+      return new Promise<void>((resolve, reject) => {
         loginByUsername(userInfo.tenantId, userInfo.username, encrypt(userInfo.password), userInfo.type, userInfo.key, userInfo.code).then(res => {
           const data = res.data;
           if (data.success) {
@@ -43,8 +56,8 @@ const user = {
       })
     },
     //根据第三方信息登录
-    LoginBySocial ({ commit }, userInfo) {
-      return new Promise((resolve) => {
+    LoginBySocial ({ commit }, userInfo: LoginPayload) {
+      return new Promise<void>((resolve) => {
         loginBySocial(userInfo.tenantId, userInfo.source, userInfo.code, userInfo.state).then(res => {
           const data = res.data;
           if (data.success) {
@@ -54,7 +67,7 @@ const user = {
             commit('DEL_ALL_TAG');
             commit('CLEAR_LOCK');
           } else {
-            Message({
+            ElMessage({
               message: data.msg,
               type: 'error'
             })
@@ -64,8 +77,8 @@ const user = {
       })
     },
     //根据手机号登录
-    LoginByPhone ({ commit }, userInfo) {
-      return new Promise((resolve) => {
+    LoginByPhone ({ commit }, userInfo: LoginPayload) {
+      return new Promise<void>((resolve) => {
         loginByUsername(userInfo.phone, userInfo.code).then(res => {
           const data = res.data.data;
           commit('SET_TOKEN', data);
@@ -102,7 +115,7 @@ const user = {
     },
     // 登出
     LogOut ({ commit }) {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         logout().then(() => {
           commit('SET_TOKEN', '');
           commit('SET_REFRESH_TOKEN', '');
@@ -121,7 +134,7 @@ const user = {
     },
     //注销session
     FedLogOut ({ commit }) {
-      return new Promise(resolve => {
+      return new Promise<void>(resolve => {
         commit('SET_TOKEN', '')
         commit('SET_REFRESH_TOKEN', '');
         commit('SET_MENUALL_NULL', []);
@@ -157,7 +170,7 @@ const user = {
       })
     },
     GetButtons ({ commit }) {
-      return new Promise((resolve) => {
+      return new Promise<void>((resolve) => {
         getButtons().then(res => {
           const data = res.data.data;
           commit('SET_PERMISSION', data);

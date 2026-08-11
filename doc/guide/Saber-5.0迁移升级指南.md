@@ -1,7 +1,10 @@
 # Saber 前端 · Vue3 Composition API + TypeScript 迁移升级指南
 
 > 适用工程：SpringBlade 开源前端版 **Saber**（Vue 3 + Element Plus + @smallwei/avue + Vite）
-> 对应变更：`src/views/` 页面层由 **Options API** 全量迁移为 **`<script setup lang="ts">` Composition API + 轻量 TypeScript**
+> 对应变更：第一阶段 —— `src/views/` 页面层由 **Options API** 全量迁移为 **`<script setup lang="ts">` Composition API + 轻量 TypeScript**；
+> 第二阶段 —— 引入 **vue-tsc 类型检查门禁**（tsconfig + `pnpm run type-check`）并修复门禁暴露的存量缺陷（§9）；
+> 第三阶段 —— **基础设施层**（api / utils / config / store / router / lang / option / mixins 及入口文件）由 `.js` 全量转为 `.ts`（§10）；
+> 第四阶段 —— **构建配置层 TS 化**（`vite.config.mjs` → `vite.config.mts`），引入 Node 语境独立检查工程 `tsconfig.node.json`（§11）
 > 文档性质：升级指导 / 迁移规范。既供工程师直接阅读执行，也供 AI 依此拆解任务、逐文件推进迁移。
 
 ---
@@ -17,6 +20,11 @@
 
 因此升级本身**不需要安装新依赖**，风险集中在「代码书写范式」与「若干工具函数重命名」两处，下文分节详述。
 
+> ⚠️ 演进说明：「零工具链改动」是**第一阶段**（范式迁移）的状态。第二阶段已引入 `tsconfig.json` 与
+> `vue-tsc` 类型门禁（`pnpm run type-check`）；第三阶段将基础设施层全量转为 `.ts`；第四阶段将
+> `vite.config.mjs` 转为 `vite.config.mts` 并引入 `tsconfig.node.json`。四个阶段中
+> 构建链路始终为 esbuild 纯转译**不变**，详见 §9、§10、§11。
+
 ---
 
 ## 1. 升级概述
@@ -27,8 +35,9 @@
 | 目标范式 | `<script setup lang="ts">` + Composition API + 轻量 TS |
 | option 组织 | 一律**内联**在 `.vue` 内（`src/views/` **不使用** `mixins/crud.js`） |
 | 参照样板 | `src/views/system/dict.vue`（系统管理类）、`src/views/authority/role.vue`（权限/树类） |
-| 尚未迁移 | `src/components/`、`src/page/`、`src/mac/` 仍为 Options API（属渐进迁移的允许混用状态） |
-| 工具链 | 无新增；`pnpm build` = esbuild 转译，不做类型检查 |
+| 尚未迁移 | `src/components/`、`src/page/`、`src/mac/` 下的 `.vue` 仍为 Options API（属渐进迁移的允许混用状态） |
+| 基础设施层 | 第三阶段已由 `.js` 全量转为 `.ts`（§10）；仅 `mixins/crud.js` 与 `vite/plugins/*.js` 保留 JS |
+| 工具链 | 第一阶段无新增；第二阶段引入 `vue-tsc` 类型门禁（§9.1）；第四阶段构建配置层转 `.mts` 并引入 `tsconfig.node.json` 独立检查工程（§11）。`pnpm build` 始终为 esbuild 纯转译 |
 
 迁移后的强约束（对应 `CLAUDE.md §4.1`）：
 
@@ -89,7 +98,7 @@ grep -rn "validatenull\|fullscreenToggel\|listenfullscreen\|findByvalue\|isvalid
 
 ### 2.3 全局属性访问方式变化
 
-`main.js` 仍在 `app.config.globalProperties` 上挂载 `website` / `$dayjs` / `getScreen`，**模板中可直接使用**；但 `<script setup>` 脚本内**没有 `this`**，需改用 import：
+`main.ts`（第三阶段前为 `main.js`）仍在 `app.config.globalProperties` 上挂载 `website` / `$dayjs` / `getScreen`，**模板中可直接使用**；但 `<script setup>` 脚本内**没有 `this`**，需改用 import：
 
 | 模板可用（不变） | 脚本内替代写法 |
 | --- | --- |
@@ -180,10 +189,10 @@ import website from '@/config/website';
 
 本工程实际分布（可作对照）：`v-model:page` → `ref` 的有 `topmenu.vue`、`reportlist.vue`；其余列表页均为 `:page` 单向 + `reactive`。
 
-`reactive` 标注示例：
+`reactive` 不使用泛型参数、也不额外标注（列的类型在回调形参处用 `ColumnSchema` 承接，见 §9.3）：
 
 ```ts
-const option: { column: unknown[] } = reactive({ column: [] });
+const option = reactive({ column: [] });
 ```
 
 ### 4.3 组件 / DOM 引用
@@ -242,9 +251,12 @@ const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Par
 | --- | --- |
 | 有确定形状的实体 / 表单 | `interface XxxEntity`；列表 `ref<XxxEntity[]>`、表单 `Partial<XxxEntity>` |
 | 搜索袋 `query` / `params` | `Partial<XxxEntity>`（映射实体字段） |
-| 真·动态无固定形状（Avue 列 / 节点、纯 `v-model` 的对话框模型、未使用的框架回调参数如校验器 `rule`） | `Record<string, unknown>` / `unknown` |
+| Avue 列配置（`option.column` 回调形参、`findColumn` 返回值） | `@/types/column` 的 `ColumnSchema`（§9.2） |
+| 框架回调中不取用的对象形参（校验器 `rule`、懒加载 `treeNode`、上传回调 `res` 等） | `object` |
+| 纯 `v-model` 绑定的对话框 / 表单模型 | 按 option 实际字段自建 `interface` |
+| 有确定取值域 | 字面量联合，如 `ref<'ltr' \| 'rtl' \| 'ttb' \| 'btt'>('rtl')` |
 
-禁止 explicit `any`。`reactive` 不使用泛型参数，改用接口标注变量。
+禁止 explicit `any`；第二阶段起同时禁止 `Record<string, unknown>` 与裸 `unknown`（§9.3）。`reactive` 不使用泛型参数。
 
 ---
 
@@ -308,7 +320,7 @@ const selectionList = ref<DictEntity[]>([]);
 const loading = ref(true);
 const query = ref<Partial<DictEntity>>({});
 const page = reactive({ pageSize: 10, currentPage: 1, total: 0 });
-const option: { column: unknown[] } = reactive({ column: [] });
+const option = reactive({ column: [] });
 const crudRef = ref();
 
 const permissionList = computed(() => ({
@@ -362,6 +374,8 @@ const rowSave = (row: DictForm, done: () => void, loading: () => void) => { /* .
 | 6 | `reactive` 整体替换失效 | `state = {...}` 会断开响应；改用 `Object.assign(state, ...)` 或改用 `ref`。 |
 | 7 | `watch` 源写成 `.value` | `watch(count.value, ...)` 只取初值不响应；应 `watch(count, ...)` 或 getter `watch(() => form.value.x, ...)`。 |
 | 8 | 残留 Options 痕迹 | `this.` / `mapGetters` / `data()` / `methods:` 均应清除。 |
+| 9 | 运行期按扩展名寻址未同步 | 基础设施层转 `.ts` 后，`import.meta.glob` 查表等**运行期路径拼接**仍写 `.js` 会取到 `undefined`，且 `type-check` / `build` **都发现不了**（详见 §10.5）。 |
+| 10 | Node 全局类型泄入浏览器工程 | 为让 `vite.config.mts` 通过检查而把 `@types/node` 加进 `tsconfig.json` 的 `types` 数组，会使 `process` 等 Node 全局在全部 `src/` 代码中不再报错，门禁放过「浏览器代码误用 Node API」类缺陷；应走独立的 `tsconfig.node.json`（详见 §11.2）。 |
 
 ---
 
@@ -371,8 +385,10 @@ const rowSave = (row: DictForm, done: () => void, loading: () => void) => { /* .
 
 ```
 [ ] pnpm run build 通过（exit 0）
+[ ] pnpm run type-check 通过（全仓 0 类型错误，含 Node 语境工程，见 §9.1 / §11）
 [ ] 无 this.xxx 残留（src/views/）
 [ ] 无 explicit any（: any / as any / <any>）
+[ ] 无 Record<string, unknown> / 裸 unknown 残留（src/views/，见 §9.3）
 [ ] 无 mapGetters / export default {} 残留（src/views/）
 [ ] 无旧工具函数名残留（validatenull / fullscreenToggel / listenfullscreen / findByvalue ...）
 ```
@@ -388,6 +404,269 @@ const rowSave = (row: DictForm, done: () => void, loading: () => void) => { /* .
 [ ] 单条 / 批量删除（含未选警告）正常
 [ ] 权限按钮显隐符合预期
 [ ] 树 / 穿梭框 / 权限分配类页面勾选与回填正常
+```
+
+---
+
+## 9. 第二阶段升级：类型检查门禁与存量缺陷修复
+
+> 第一阶段完成范式迁移后，`src/views/` 的 TS 代码仅由 esbuild 转译、从未被真正检查过，
+> 类型错误只能在编辑器中零散暴露。第二阶段补上这块短板：引入独立的类型检查门禁，
+> 并修复门禁与代码审查暴露的存量缺陷。业务逻辑、接口、路由、权限模型仍然**零变更**。
+
+### 9.1 类型检查工具链
+
+| 项目 | 说明 |
+| --- | --- |
+| 新增 `tsconfig.json` | 类型检查专用配置；构建仍由 esbuild 纯转译（`pnpm build` 不读取检查开关），检查与构建**解耦** |
+| 移除 `jsconfig.json` | jsconfig 本质是 `allowJs` 默认开启的 tsconfig 子集，二者共存会产生解析歧义；由 tsconfig 接管，路径别名已补全（`~` / `components` / `styles` / `utils`） |
+| 新增 devDependencies | `typescript`、`vue-tsc`、`@vue/runtime-core`（钉与 vue 一致版本，原因见 §9.2） |
+| 新增命令 | `pnpm run type-check`（`vue-tsc --noEmit`），要求**全仓 0 错误** |
+
+> ⚠️ 演进说明：第四阶段起 `type-check` 扩展为双工程检查——`vue-tsc --noEmit && tsc --noEmit -p tsconfig.node.json`（§11）。
+> 命令名与「全仓 0 错误」的要求不变。
+
+**JS 共存策略（关键）**：`allowJs: true` + `checkJs: false` —— `.js` 文件允许被 TS 侧引用、参与类型推断，
+但**自身零检查、零要求**。
+
+> ⚠️ 本段描述的是**第二阶段的状态**：彼时 `api/` `utils/` `store/` `router/` `option/` `mixins/` 仍为 JS 形态。
+> **第三阶段已将其全量转为 `.ts`**（§10），`allowJs` 保留下来只为承接 `mixins/crud.js` 一个文件。
+
+> ⚠️ `.js` 文件的 JSDoc 会参与签名推断：可选参数必须写成 `@param {number} [defaultValue]`（方括号语法），
+> 否则 TS 视为必填，省参调用点报 `TS2554`（本次 `func.toInt` 即因此修正）。转为 `.ts` 后改用原生可选形参
+> `defaultValue?: number`，JSDoc 中的类型标记随之移除。
+
+### 9.2 新增类型基建（2 个纯类型文件，不参与构建产物）
+
+**`src/env.d.ts`** —— 类型环境声明：`vite/client` 与 element-plus 全局组件类型、`main.ts` 挂载的
+globalProperties（`$dayjs` / `website` / `getScreen`）、avue-router 挂载的 `Router.$avueRouter`、
+axios 自定义配置字段（`meta` / `cryptoToken`）、`window.axios` / `window.$crudCommon`。
+
+> ⚠️ `ComponentCustomProperties` 的扩展目标必须是 `@vue/runtime-core` 而非 `vue`：
+> `@smallwei/avue` 已在 `@vue/runtime-core` 上建立声明合并标识，此后对 `vue` 的扩展不会并入同一接口
+> （vue-router@4.6 的声明在 `vue` 上因此失效，`$route` / `$router` / `$store` 均在 env.d.ts 补齐）。
+> 为使根目录可解析该模块，`@vue/runtime-core` 以 devDependency 钉在与 vue 一致的版本（pnpm 只提升直接依赖）。
+
+**`src/types/column.ts`** —— 共享列配置类型 `ColumnSchema`，供 `option.column` 各类回调形参与
+`findColumn` 返回值使用。**只声明工程实际读写的字段**（`prop` / `value` / `display` / `disabled` /
+`addDisabled` / `dicData`），新增消费时按需补充，不做全量映射。
+
+### 9.3 类型选型规则收紧
+
+第二阶段起，除禁止 explicit `any` 外，同时**禁止 `Record<string, unknown>` 与裸 `unknown`** ——
+它们只是把「没想清楚形状」写进代码。替代写法：
+
+| 场景 | 写法 |
+| --- | --- |
+| 列配置（`column` 回调形参、`findColumn` 返回值） | `import type { ColumnSchema } from '@/types/column'` |
+| 框架回调里不取用的对象形参（校验器 `rule`、懒加载 `treeNode`、上传回调 `res` 等） | `object`（诚实表达「确是对象、只是不读」，无需断言） |
+| 纯 `v-model` 绑定的表单模型 | 按 option 实际字段自建 `interface`（如 `ExcelForm` / `DebugForm`） |
+| 有确定取值域 | 字面量联合，如 `ref<'ltr' \| 'rtl' \| 'ttb' \| 'btt'>('rtl')` |
+
+### 9.4 门禁暴露并修复的缺陷清单
+
+类型检查跑通的过程本身就是一次审计。以下按性质分列，供二次开发工程升级时对照排查。
+
+**A. 类型报错修复（vue-tsc 报错驱动，11 处）**
+
+| 位置 | 问题 | 修复 |
+| --- | --- | --- |
+| `system/dept.vue` / `dict.vue` / `menu.vue` | 模板 `handleAdd(scope.row, scope.index)` 传 2 参而函数只收 1 参（TS2554） | 去掉从未被消费的 `index` 实参 |
+| `api/logs.js` | 视图传 3 参（含查询条件）而函数只收 2 参——**条件检索静默失效** | 补 `params` 形参并透传后端 |
+| `authority/apiscope.vue` / `datascope.vue` | `direction` 推断为 `string`，el-drawer 要求字面量联合（TS2322） | `ref<'ltr' \| 'rtl' \| 'ttb' \| 'btt'>('rtl')` |
+| `utils/func.js` | `toInt` 第二参 JSDoc 未标可选，省参调用报 TS2554 | `@param {number} [defaultValue]` |
+| `util/permission.vue` | `@expand-change` 绑定的处理器从未存在（死绑定，TS2339） | 移除绑定 |
+| `util/logs.vue` | 演示页刻意引用未定义变量（TS2304） | `@ts-expect-error`（**全仓唯一允许的压制**） |
+
+**B. 存量运行时缺陷修复（逐处经本仓证据确认）**
+
+| 位置 | 缺陷 | 影响 / 说明 |
+| --- | --- | --- |
+| `validate.js cardId` | 校验位严格比对（数字 ≠ 字符），**合法身份证被全量误判**；parity 表多一位永取不到的 `'x'` | 归一为字符串大写后比对 |
+| `validate.js isValidateMobile` | 误用座机正则且判断逻辑颠倒，任意 11 位数字均放行 | **行为收紧**：手机号须 `1[3-9]` 开头 |
+| `util.js` 全屏三函数 | `requestFullScreen` 等大小写错误 / 不存在的 API，现代浏览器全屏失效 | 标准 API 优先、前缀分支兜底旧内核 |
+| `util.js findByValue` | 数组翻译未命中时误回填整个数组 | 回填当前元素 `ele` |
+| `utils/store.js` | boolean 反序列化走 `eval`；两处 `<=` 循环越界产出 `name: null` 脏条目 | 直取值 / 修正边界 |
+| `mixins/crud.js` | `rowDel` 默认取 `api['del']`，但全仓 API 删除函数均名 `remove`，调用必抛 TypeError | 默认改 `remove`；二开工程若确有 `del` 导出，经 `option.del` 显式指定 |
+| `mac/login.vue` | 提交未声明的 `this.loginForm`（data 中为 `form`），macOS 主题登录必然失败 | 改提交 `this.form` |
+| `mac/lock.vue` / `mac/index.vue` / `page/lock/index.vue` | `userInfo.username` 为旧字段（顶栏已于早期提交改为 `userName`，此三处漏改） | 锁屏 / mac 主题正确显示用户名 |
+| `mac/index.vue` / `page/lock/index.vue` / `codelogin.vue` | `setInterval` 未清理，组件销毁后定时器泄漏 | `timer` 状态 + `unmounted` 清理 |
+| `components/basic-video/plugin.js` | 监听不存在的 `loadmetadata` 事件，视频流就绪后不会自动播放 | 改 `loadedmetadata` |
+| `mockProdServer.js` | 引用不存在的 `mock/` 目录，坏引用死文件 | 删除 |
+
+### 9.5 第二阶段验证清单
+
+```
+[ ] pnpm run type-check 通过（全仓 0 类型错误；唯一允许的压制是 util/logs.vue 的 @ts-expect-error）
+[ ] pnpm run build 通过（构建链路与产物不受类型门禁影响）
+[ ] pnpm run dev 正常启动
+[ ] 无 Record<string, unknown> / 裸 unknown 残留（src/views/）
+```
+
+---
+
+## 10. 第三阶段升级：基础设施层全量 TS 化
+
+> 前两个阶段后，`src/views/` 已是 TS 而其依赖的 `api/` `utils/` `store/` `router/` 仍是 JS——
+> 页面拿到的返回值、工具函数签名一律推断为 `any`，类型门禁形同虚设于「页面边界之外」。
+> 第三阶段把基础设施层一并转为 `.ts`，让检查面覆盖到调用链两端。
+> **业务逻辑、接口、路由、权限模型仍然零变更**：所有代码改动均为类型检查强制，无一处出于主观判断。
+
+### 10.1 迁移范围
+
+| 层 | 文件数 | 说明 |
+| --- | --- | --- |
+| `src/api/**` | 18 | 接口层 |
+| `src/utils/**` | 7 | auth / crypto / func / sm2 / store / util / validate |
+| `src/store/**` | 6 | index / getters / modules(user, common, tags, logs) |
+| `src/router/**` | 4 | index / avue-router / page / views |
+| `src/lang/**` | 4 | index / zh / en / ja |
+| `src/config/**` | 3 | website / env / iconList |
+| 入口文件 | 4 | main / axios / permission / error |
+| 其余 | 3 | option/crud/index、mixins/index、components/basic-video/plugin |
+| **合计** | **49** | 另新增 `src/types/menu.ts` |
+
+`index.html` 的入口脚本同步改为 `/src/main.ts`。
+
+**刻意保留为 `.js` 的两处**：
+
+| 文件 | 保留原因 |
+| --- | --- |
+| `src/mixins/crud.js` | Options API 混入工厂，其 `this` 上的 `listBefore` / `addAfter` / `delAfter` 等钩子由**消费组件**提供而非混入自身声明，`defineComponent` 无法表达该契约；由 `allowJs: true` + `checkJs: false` 承接 |
+| `vite/plugins/*.js` | Node 语境的构建插件，不在浏览器工程的检查面内；第四阶段起改由 `tsconfig.node.json` 承接（§11） |
+
+### 10.2 迁移手法：重命名为主、标注为辅
+
+检查档维持 `strict: false`，因此**隐式 `any` 不报错，形参无需标注**——18 个 api 文件里 14 个是零改动纯重命名。
+只在类型检查真正拦下来的位置补标注，**不为标注而标注**：
+
+| 触发的报错 | 补法 | 实例 |
+| --- | --- | --- |
+| `TS2554` 实参少于形参 | 尾部形参标可选 | `getDeptTree(tenantId?: string)`、`getLazyTree(parentCode, params?: object)` |
+| `TS2339` 解构 `{}` 上不存在的属性 | 为参数袋建 `interface` | `utils/store.ts` 的 `StoreParams` / `StoreRecord`、`store/modules/user.ts` 的 `LoginPayload` |
+| `TS2794` `resolve()` 不传参 | `Promise` 补 `void` 泛型 | `new Promise<void>((resolve, reject) => ...)` |
+| `TS2339` 浏览器私有 API | 收进 `env.d.ts` 全局声明 | `Document.webkitIsFullScreen`、`HTMLElement.mozRequestFullScreen`、`Screen.left/top` |
+| 动态导入模块形状未知 | `import.meta.glob<T>()` 泛型 | `avue-router.ts` 的 `modules` |
+
+> ⚠️ **不要为了消错而改业务写法**。本阶段全部代码改动可逐条追溯到一个具体的 TS 报错码；
+> 凡是「看着不对但编译器没报」的地方一律不动（详见 §10.4）。
+
+### 10.3 结构等价改写（运行时行为不变，但代码形态必须改）
+
+以下 4 处无法靠加标注解决，须改写结构，改写后运行时对象形态与调用语义完全一致：
+
+| 位置 | 原因 | 改写 |
+| --- | --- | --- |
+| `router/avue-router.ts` | TS 中函数类型上挂 `install` 属性不成立（`RouterPlugin.install = ...` 报 `TS2339`） | 插件本体由「函数对象」改为「对象字面量含 `install` 方法」；`this` 指向、闭包捕获、`safe` 自引用均不变 |
+| `utils/store.ts` `getStore` | 原用同一个 `obj` 先后承载原始串与 `JSON.parse` 结果，两种类型不兼容 | 拆为 `raw` / `obj` 两个变量，取值链路与 `catch` 回退语义不变 |
+| `utils/util.ts` `findByValue` | 原 `result` 初值为 `''`（推断 `string`）却在数组分支被赋数组 | 改为分支内直接 `return`，三条出参路径取值与原实现逐一对齐 |
+| `router/page/index.ts`、`router/views/index.ts` | 字面量推断出的联合类型与 `RouteRecordRaw` 的重定向分支互斥（`TS2322`） | 显式标注 `const routes: RouteRecordRaw[]`，末尾 `export default routes` |
+
+### 10.4 本阶段的取舍原则：只改编译不过的，不改「看着不对的」
+
+TS 化过程会顺带暴露一批存量疑点。本阶段**刻意不修**其中任何一条——修不修属业务决策，不应搭迁移的便车。
+以下为已识别但**保持原样**的清单，供二次开发工程自行评估：
+
+| 位置 | 现象 | 为何不改 |
+| --- | --- | --- |
+| `utils/util.ts` `findArray` / `findParent` | 第一阶段 `==`→`===` 规范化后（见附录 B），字典配置或菜单主键存在 string / number 混用时不再命中 | 改相等语义会直接影响字典回显与菜单查找，属业务决策。**已同步修正原本与代码矛盾的注释**（旧注释写「需宽松匹配」却是 `===`），并注明调用方需自行归一类型 |
+| `store/modules/user.ts` `LoginByPhone` | 调用 `loginByUsername(userInfo.phone, userInfo.code)`——手机号落在 `tenantId` 位、验证码落在 `account` 位 | 开源版无短信授权端点，该链路本就未接通；改调用等于新增功能 |
+| `utils/store.ts` `getAllStore` | 枚举到的键已含 `saber-` 前缀，回传 `getStore` 时被二次拼接，`content` 恒为 `undefined` | 仅影响 `views/util/store.vue` 演示页，属独立缺陷 |
+| `store/modules/user.ts` `GetMenu` | 遗留 `console.log(menu)` | 与迁移无关 |
+
+**唯一的例外**是 `store/modules/user.ts` 的 `LoginBySocial`：其失败分支调用了未导入的 `Message`（`TS2552`），
+JS 下必抛 `ReferenceError`，TS 下直接编译不过——**无法保留原样**，改为同文件已导入的 `ElMessage`。
+
+同类被迫改动还有两处，均无运行时差异：
+
+- `error.ts`：`process.env.NODE_ENV === 'development'` → `import.meta.env.DEV`（浏览器工程无 `process` 类型，Vite 下二者取值等价）
+- `router/index.ts`：删除 `createRouter` 的 `base` 选项（vue-router 4 的 `RouterOptions` 已无此项，一直是空转）
+
+### 10.5 ⚠️ 陷阱：运行期按扩展名寻址的代码不会被门禁发现
+
+`mixins/crud.js` 通过 `import.meta.glob` 的键**按扩展名**取模块：
+
+```js
+// 迁移前：键全是 .js，正常命中
+import.meta.glob(`../api/**/**`)[`../api/${option.name}.js`]
+```
+
+基础设施层转 `.ts` 后，glob 产出的键变成 `../api/system/dict.ts`，而查表用的仍是 `.js` ——
+取到 `undefined`，`created()` 里 `optionObj()` 抛 `TypeError: optionObj is not a function`。
+
+**这类缺陷 `type-check` 与 `build` 都发现不了**：它是运行期字符串查表，不是静态 import；
+且 `crud.js` 本身在 `checkJs: false` 之外。修法是按 `.ts` 取、保留 `.js` 回退：
+
+```js
+const pickModule = (modules, path) => modules[`${path}.ts`] || modules[`${path}.js`]
+let optionObj = pickModule(import.meta.glob(`../option/**/**`), `../option/${option.name}`)
+let apiObj = pickModule(import.meta.glob(`../api/**/**`), `../api/${option.name}`)
+```
+
+> 二次开发工程升级时务必自查：凡是拼接文件路径的地方（`import.meta.glob` 查表、`require.context`、
+> 动态 `import()` 的模板字符串），扩展名都要同步，且**必须真正跑一遍**才能验证。
+
+### 10.6 第三阶段验证清单
+
+```
+[ ] pnpm run type-check 通过（全仓 0 错误；唯一压制仍是 util/logs.vue 的 @ts-expect-error）
+[ ] pnpm run build 通过
+[ ] pnpm run dev 启动后逐个拉取关键模块，确认无转译错误：
+      main.ts / axios.ts / router/avue-router.ts / store/modules/user.ts / permission.ts
+[ ] src/ 下仅剩 mixins/crud.js 一个 .js 文件
+[ ] 全仓搜索 `.js'` / `.js\`` 字面量，确认无遗漏的运行期路径拼接（§10.5）
+[ ] 登录 → 菜单加载 → 标签页 → 锁屏 → 全屏 → 语言切换 逐项人工回归
+```
+
+---
+
+## 11. 第四阶段升级：构建配置层 TS 化与 Node 语境检查工程
+
+> 前三个阶段把检查面铺满了 `src/`，但构建配置层始终游离在外：`vite.config.mjs` 与
+> `vite/plugins/*.js` 虽被列入 tsconfig 的 include，却因 `checkJs: false` 不被实际检查，
+> `process` / `__dirname` 等 Node 全局在浏览器工程里也无从正确声明。第四阶段把主配置转为
+> `.mts` 纳入真实检查，并为 Node 语境建立独立的检查工程，与浏览器工程互相隔离。
+> 构建产物与开发服务器默认行为**零变更**。
+
+### 11.1 迁移内容
+
+| 项目 | 说明 |
+| --- | --- |
+| `vite.config.mjs` → `vite.config.mts` | 补 `ConfigEnv` / `UserConfig` 类型标注；server 配置抽出为 `serverConfig`，端口与代理目标改由环境变量驱动（见 §11.2） |
+| 新增 `tsconfig.node.json` | Node 语境独立检查工程：`types: ["node"]`、`lib: ["esnext"]`（无 DOM），include 仅 `vite.config.mts` 与 `vite/**/*.js`，由 `tsc --noEmit -p tsconfig.node.json` 独立执行 |
+| `tsconfig.json` | include 移除 `vite.config.mjs` 与 `vite/**/*.js`，构建配置层整体移交 node 工程，浏览器工程检查面自此不含任何 Node 语境文件 |
+| `package.json` | `type-check` 扩展为 `vue-tsc --noEmit && tsc --noEmit -p tsconfig.node.json`；devDependencies 新增 `@types/node` |
+| `.env.development` | 新增 `VITE_APP_PORT`（开发服务器端口）与 `VITE_APP_PROXY_TARGET`（`/api` 代理目标）两键 |
+
+`vite/plugins/*.js` 维持 JS 形态，由 node 工程的 `allowJs: true` + `checkJs: false` 承接——
+与 `mixins/crud.js` 在浏览器工程中的待遇一致：允许被引用参与推断，自身零检查。
+
+### 11.2 关键决策
+
+**为什么建独立的 `tsconfig.node.json`，而不是把 `@types/node` 加进浏览器工程**：`types` 数组
+中的包注入的是**全局**声明——`@types/node` 一旦进入 `tsconfig.json`，`process` / `Buffer` 等
+Node 全局在全部 `src/` 代码中都不再报错，门禁将放过「浏览器代码误用 Node API」这类真实缺陷；
+反向同理，DOM lib 也不应泄入构建配置层（node 工程的 `lib` 刻意不含 `dom`）。两个语境各建工程、
+互相隔离，各自的检查面才都严格。
+
+**扩展名为何取 `.mts` 而非 `.ts`**：`package.json` 未声明 `"type": "module"`，`.mts` 后缀向
+tsc 与 Node 显式声明 ESM 语义，模块判定无歧义，也与原 `.mjs` 的语义一脉相承。
+
+**`__dirname` 在 ESM 配置中为何可用**：Vite 加载配置文件时会将其打包并注入 `__dirname` /
+`__filename`，`@types/node` 亦有对应全局声明，类型与运行时行为一致。这是 Vite 对配置文件的
+特殊处理，**不可类推**到工程内其他 Node ESM 脚本。
+
+**server 配置环境变量化**：端口与代理目标原为硬编码，现改由 `VITE_APP_PORT` /
+`VITE_APP_PROXY_TARGET` 驱动，且保留原值兜底（`2888` / `http://localhost`）——二开工程升级后
+即使 `.env` 未补这两个键，开发服务器行为也与升级前完全一致。
+
+### 11.3 第四阶段验证清单
+
+```
+[ ] pnpm install 后 pnpm run type-check 通过（vue-tsc 与 tsc 双工程均 0 错误）
+[ ] pnpm run build 通过（构建链路不读取任何检查开关，产物不变）
+[ ] pnpm run dev 启动端口与 VITE_APP_PORT 一致，/api 代理指向 VITE_APP_PROXY_TARGET
+[ ] tsconfig.json 的 include 不再包含 vite 配置层，其 types 数组中无 @types/node（§7 陷阱 10）
 ```
 
 ---
@@ -413,7 +692,10 @@ const rowSave = (row: DictForm, done: () => void, loading: () => void) => { /* .
 
 ---
 
-## 附录 B · 迁移文件清单（基准提交 `177a56e8`，47 个文件）
+## 附录 B · 第一阶段迁移文件清单（基准提交 `177a56e8`，47 个文件）
+
+> 本清单为**第一阶段**（页面层范式迁移）的范围快照。其中标注「仍为 JS」的基础设施文件
+> 已在第三阶段全量转为 `.ts`（§10.1），阅读时请以 §10 为准。
 
 **A. 视图层全量迁移（Options → Composition + TS）**
 
@@ -491,7 +773,7 @@ const selectionList = ref<XxxEntity[]>([]);
 const loading = ref(true);
 const query = ref<Partial<XxxEntity>>({});
 const page = reactive({ pageSize: 10, currentPage: 1, total: 0 });
-const option: { column: unknown[] } = reactive({ /* ... */ column: [] });
+const option = reactive({ /* ... */ column: [] });
 const crudRef = ref();
 
 const permissionList = computed(() => ({
@@ -542,5 +824,3 @@ const selectionChange = (list: XxxEntity[]) => { selectionList.value = list; };
 ```
 
 > 本模板综合自 `dict.vue` / `role.vue` 等实际迁移结果，用于新页面起步与迁移比对；字段名、接口签名以各模块实际实现为准。
-</content>
-</invoke>

@@ -1,0 +1,23 @@
+{
+  // Node 语境独立工程：构建配置层的类型检查，与浏览器工程（tsconfig.json）互相隔离，
+  // 避免 @types/node 的全局声明泄入 src 检查面（也避免 DOM lib 泄入本层）。
+  // 由 type-check 脚本以 `tsc --noEmit -p tsconfig.node.json` 独立执行。
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext"],
+    "types": ["node"],
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "strict": false,
+    "skipLibCheck": true,
+    // vite/ 插件层仍为 .js：允许被引用参与推断，但不对其做检查
+    "allowJs": true,
+    "checkJs": false,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
+  },
+  "include": ["vite.config.mts", "vite/**/*.js"]
+}

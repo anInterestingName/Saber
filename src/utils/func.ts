@@ -26,11 +26,8 @@ export default class func {
    * @returns {boolean}
    */
   static isEmpty (val) {
-    if (
-      val === null ||
-      typeof val === 'undefined' ||
-      (typeof val === 'string' && val === '' && val !== 'undefined')
-    ) {
+    // 原实现在空串分支上多挂了一个恒真的 val !== 'undefined'，去掉后判定完全等价
+    if (val === null || typeof val === 'undefined' || val === '') {
       return true;
     }
     return false;
@@ -39,10 +36,9 @@ export default class func {
   /**
    * 强转int型
    * @param val
-   * @param defaultValue
-   * @returns {number}
+   * @param defaultValue 转换失败时的回退值，缺省 -1
    */
-  static toInt (val, defaultValue) {
+  static toInt (val, defaultValue?: number): number {
     if (this.isEmpty(val)) {
       return defaultValue === undefined ? -1 : defaultValue;
     }

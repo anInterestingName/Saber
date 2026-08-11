@@ -14,7 +14,8 @@ export const validData = (val, defaultVal = false) => {
 };
 /**
  * 在 Avue option 的 column 配置中按 prop 查找列对象。
- * 兼容扁平列数组 [{ prop }] 与分组列 [{ column: [{ prop }] }]；返回列对象引用，未找到返回 null。
+ * 兼容扁平列数组 [{ prop }] 与分组列 [{ column: [{ prop }] }]。
+ * @returns {import('@/types/column').ColumnSchema|null} 找到的 column 对象引用，未找到返回 null
  */
 export const findColumn = (arr, prop) => {
   if (!Array.isArray(arr) || arr.length === 0) {
@@ -150,30 +151,36 @@ export const listenFullscreen = (callback) => {
  * 浏览器判断是否全屏
  */
 export const fullscreenEnable = () => {
-  return document.isFullScreen || document.mozIsFullScreen || document.webkitIsFullScreen;
-}
+  return !!(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.webkitIsFullScreen
+  );
+};
 
 /**
- * 浏览器全屏
+ * 浏览器全屏（带前缀的分支用于兼容旧内核）
  */
 export const reqFullScreen = () => {
-  if (document.documentElement.requestFullScreen) {
-    document.documentElement.requestFullScreen();
-  } else if (document.documentElement.webkitRequestFullScreen) {
-    document.documentElement.webkitRequestFullScreen();
-  } else if (document.documentElement.mozRequestFullScreen) {
-    document.documentElement.mozRequestFullScreen();
+  const el = document.documentElement;
+  if (el.requestFullscreen) {
+    el.requestFullscreen();
+  } else if (el.webkitRequestFullscreen) {
+    el.webkitRequestFullscreen();
+  } else if (el.mozRequestFullScreen) {
+    el.mozRequestFullScreen();
   }
 };
 /**
  * 浏览器退出全屏
  */
 export const exitFullScreen = () => {
-  if (document.documentElement.requestFullScreen) {
-    document.exitFullScreen();
-  } else if (document.documentElement.webkitRequestFullScreen) {
-    document.webkitCancelFullScreen();
-  } else if (document.documentElement.mozRequestFullScreen) {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.mozCancelFullScreen) {
     document.mozCancelFullScreen();
   }
 };
@@ -185,7 +192,8 @@ export const findParent = (menu, id) => {
   for (let i = 0; i < menu.length; i++) {
     if (menu[i].children.length !== 0) {
       for (let j = 0; j < menu[i].children.length; j++) {
-        // WHY: 节点 id 可能字符串/数字混用，需宽松匹配
+        // 节点 id 按严格相等比对（第一阶段 == → === 规范化的一部分）：
+        // 菜单主键为雪花 ID，后端下发 string 时调用方须先归一，否则匹配不到
         if (menu[i].children[j].id === id) {
           return menu[i];
         } else {
@@ -244,37 +252,29 @@ export const diff = (obj1, obj2) => {
  * 根据字典的value显示label
  */
 export const findByValue = (dic, value) => {
-  let result = '';
   if (validateNull(dic)) return value;
-  if (typeof (value) === 'string' || typeof (value) === 'number' || typeof (value) === 'boolean') {
-    let index = 0;
-    index = findArray(dic, value);
-    if (index !== -1) {
-      result = dic[index].label;
-    } else {
-      result = value;
-    }
-  } else if (value instanceof Array) {
-    result = [];
-    let index = 0;
-    value.forEach(ele => {
-      index = findArray(dic, ele);
-      if (index !== -1) {
-        result.push(dic[index].label);
-      } else {
-        result.push(value);
-      }
-    });
-    result = result.toString();
+  // 单值与数组两条回显链路的返回形态不同（原值/逗号串），分支内直接出参而非复用同一变量
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    const index = findArray(dic, value);
+    return index !== -1 ? dic[index].label : value;
   }
-  return result;
+  if (value instanceof Array) {
+    const labels = [];
+    value.forEach(ele => {
+      const index = findArray(dic, ele);
+      labels.push(index !== -1 ? dic[index].label : ele);
+    });
+    return labels.toString();
+  }
+  return '';
 };
 /**
  * 根据字典的value查找对应的index
  */
 export const findArray = (dic, value) => {
   for (let i = 0; i < dic.length; i++) {
-    // WHY: 字典值可能字符串/数字混用
+    // 字典项 value 按严格相等比对（第一阶段 == → === 规范化的一部分）：
+    // 字典配置与行值存在 string / number 混用时不会命中，需在字典配置侧统一类型
     if (dic[i].value === value) {
       return i;
     }

@@ -95,6 +95,7 @@ import {
 import iconList from '@/config/iconList';
 import func from '@/utils/func';
 import { validData } from '@/utils/util';
+import type { ColumnSchema } from '@/types/column';
 
 // 菜单数据实体
 interface MenuEntity {
@@ -159,7 +160,7 @@ const formScope = ref<ScopeForm>({});
 const dataScope = ref<ScopeEntity[]>([]);
 const selectionListScope = ref<ScopeEntity[]>([]);
 const drawerVisible = ref(false);
-const direction = ref('rtl');
+const direction = ref<'ltr' | 'rtl' | 'ttb' | 'btt'>('rtl');
 const scopeMenuId = ref<string | number>(0);
 const scopeMenuCode = ref('');
 const scopeMenuName = ref('菜单');
@@ -501,7 +502,7 @@ const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Par
 };
 
 // 菜单侧：懒加载子级菜单
-const treeLoad = (tree: MenuEntity, treeNode: unknown, resolve: (data: MenuEntity[]) => void) => {
+const treeLoad = (tree: MenuEntity, treeNode: object, resolve: (data: MenuEntity[]) => void) => {
   const parentMenuId = tree.id;
   getLazyMenuList(parentMenuId).then(res => {
     resolve(res.data.data);
@@ -675,7 +676,7 @@ const initScope = () => {
     column = '';
     name = '自定义';
   }
-  crudScopeRef.value.option.column.filter((item: Record<string, unknown>) => {
+  crudScopeRef.value.option.column.filter((item: ColumnSchema) => {
     if (watchModeValue) {
       if (item.prop === 'scopeName') {
         formScope.value.scopeName = `${scopeMenuName.value} [${name}]`;

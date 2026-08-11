@@ -121,7 +121,7 @@ SpringBlade
 ## 安全手册
 | 简介        | 地址                                                                                                 |
 |-----------|----------------------------------------------------------------------------------------------------|
-| Blade安全手册 | [https://www.kancloud.cn/smallchill/blade-safety](https://www.kancloud.cn/smallchill/blade-safety) |
+| Blade安全手册 | [https://www.yuque.com/bladex/safety](https://www.yuque.com/bladex/safety) |
 
 ## 技术文档
 

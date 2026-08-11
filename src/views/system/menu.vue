@@ -28,7 +28,7 @@
         <el-button text
                    type="primary"
                    icon="el-icon-plus"
-                   @click.stop="handleAdd(scope.row,scope.index)"
+                   @click.stop="handleAdd(scope.row)"
                    v-if="userInfo.authority.includes('admin')">新增子项
         </el-button>
       </template>
@@ -49,6 +49,7 @@ import { add, getList, getMenu, remove, update } from '@/api/system/menu';
 import iconList from '@/config/iconList';
 import { baseUrl } from '@/config/env';
 import { validData } from '@/utils/util';
+import type { ColumnSchema } from '@/types/column';
 
 // 数据实体
 interface MenuEntity {
@@ -320,7 +321,7 @@ const selectionChange = (list: MenuEntity[]) => {
 // 在指定行下新增子级菜单
 const handleAdd = (row: MenuEntity) => {
   crudRef.value.modelValue.parentId = row.id;
-  crudRef.value.option.column.filter((item: Record<string, unknown>) => {
+  crudRef.value.option.column.filter((item: ColumnSchema) => {
     if (item.prop === 'parentId') {
       item.value = row.id;
       item.addDisabled = true;

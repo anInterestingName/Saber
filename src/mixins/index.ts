@@ -1,5 +1,5 @@
 import { validateNull } from "@/utils/validate";
-import { getStore } from "@/utils/store.js";
+import { getStore } from "@/utils/store";
 export default {
   data () {
     return {
