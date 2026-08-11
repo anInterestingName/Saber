@@ -16,7 +16,7 @@
           <div class="lock-form animate__animated animate__bounceInDown">
             <div class="animate__animated"
                  :class="{'shake':passwdError,'animate__bounceOut':pass}">
-              <h3 style="color:#333">{{userInfo.username}}</h3>
+              <h3 style="color:#333">{{userInfo.userName}}</h3>
               <el-input placeholder="请输入登录密码"
                         type="password"
                         class="input-with-select animated"
@@ -46,16 +46,20 @@ export default {
       time: "",
       passwd: "",
       passwdError: false,
-      pass: false
+      pass: false,
+      timer: null
     };
   },
   created () {
     this.getTime();
-    setInterval(() => {
+    this.timer = setInterval(() => {
       this.getTime();
     }, 1000);
   },
   mounted () { },
+  unmounted () {
+    clearInterval(this.timer);
+  },
   computed: {
     ...mapGetters(["userInfo", "tag", "lockPasswd"])
   },

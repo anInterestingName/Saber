@@ -2,7 +2,7 @@
   <basic-container>
     <third-register></third-register>
     <p style="text-align: center">
-      <img src="https://img.shields.io/badge/Release-V5.0.0-green.svg" alt="Downloads" />
+      <img src="https://img.shields.io/badge/Release-V5.0.1-green.svg" alt="Downloads" />
       <img src="https://img.shields.io/badge/JDK-21+-green.svg" alt="Build Status" />
       <img
         src="https://img.shields.io/badge/Spring%20Cloud-2025.1-blue.svg"
@@ -42,7 +42,7 @@
               <div>4.追求企业开发更加高效，部署更加方便，生产更加稳定</div>
               <div>5.GVP-码云最有价值开源项目</div>
               <div>
-                6.BladeX授权地址:<a target="_blank" href="https://bladex.cn/#/vip">点击授权</a>
+                6.BladeX授权地址:<a target="_blank" href="https://bladex.cn/pricing">点击授权</a>
               </div>
             </el-collapse-item>
             <el-collapse-item title="为何需要BladeX" name="3">
@@ -123,12 +123,10 @@
               <div>25.未完待续...</div>
             </el-collapse-item>
             <el-collapse-item title="软件定制开发合作" name="5">
-              <div>1.接BladeX系列架构的定制服务</div>
+              <div>1.承接BladeX系列架构的定制服务</div>
+              <div>2.承接大模型、Agent、Skills等AI相关的定制开发服务</div>
               <div>
-                2.接3个月以内工期的react、vue、springboot、springcloud、app、小程序等软件定制服务
-              </div>
-              <div>
-                3.有意向请联系官方商务微信：<a target="_blank" href="https://bladex.cn/#/contract"
+                3.有意向请联系官方商务微信：<a target="_blank" href="https://bladex.cn/contact/"
                   >点击查看</a
                 >
               </div>
@@ -172,14 +170,14 @@
                 <el-tag
                   type="success"
                   style="cursor: pointer"
-                  onclick="window.open('https://sns.bladex.cn/note/view/1.html')"
+                  onclick="window.open('https://www.yuque.com/bladex/springblade')"
                   >免费版</el-tag
                 >
                 <el-divider direction="vertical" />
                 <el-tag
                   type="danger"
                   style="cursor: pointer"
-                  onclick="window.open('https://www.kancloud.cn/@smallchill')"
+                  onclick="window.open('https://bladex.cn/pricing')"
                   >收费版</el-tag
                 >
               </span>
@@ -199,7 +197,7 @@
                   type="danger"
                   effect="dark"
                   style="cursor: pointer"
-                  onclick="window.open('https://bladex.cn/#/vip')"
+                  onclick="window.open('https://bladex.cn/pricing')"
                   >商业版</el-tag
                 >
               </span>
@@ -209,6 +207,26 @@
         <el-col :span="24">
           <basic-container>
             <el-collapse v-model="logActiveNames" @change="handleChange">
+              <el-collapse-item
+                title="5.0.1发布 增强角色判定与角色分配归属校验，建立全 TS 工程化底座"
+                name="48"
+              >
+                <div>1.[升级]前端基础设施层 49 个模块由 .js 全量迁移为 .ts</div>
+                <div>2.[升级]vite.config 迁移为 .mts，端口与代理目标改由环境变量驱动</div>
+                <div>3.[升级]vue、element-plus、axios 等核心依赖，移除已停用的 mock 体系</div>
+                <div>4.[升级]代码生成器模板升级 TS 与 Composition API 产出</div>
+                <div>5.[新增]vue-tsc 类型门禁，与 esbuild 构建链路解耦</div>
+                <div>6.[新增]env.d.ts 与 types 类型、Router 扩展与 axios 自定义配置</div>
+                <div>7.[新增]tsconfig.node.json 独立承载 Node 语境类型检查</div>
+                <div>8.[新增]用户新增、修改与角色分配校验角色租户归属</div>
+                <div>9.[新增]禁止创建超管角色，取消角色别名越权风险</div>
+                <div>10.[优化]角色判定由子串包含改为按分隔符切分全等比对</div>
+                <div>11.[优化]字典管理权限注解由类级下沉至方法级</div>
+                <div>12.[优化]类型选型规则收紧，禁用 explicit any 与 Record 宽泛类型</div>
+                <div>13.[修复]TenantGuard 超管新增数据时租户归属落库为空</div>
+                <div>14.[修复]代码生成器入口参数错误与 Skills 文档 ApiOrder 用法</div>
+                <div>15.[修复]证件与手机号校验误判、全屏 API 失效、存储层反序列化越界</div>
+              </el-collapse-item>
               <el-collapse-item
                 title="5.0.0发布 重构升级 SpringBoot4 SpringCloud2025 JDK21 TypeScript"
                 name="47"
@@ -795,7 +813,7 @@ defineOptions({ name: 'wel' });
 
 // 折叠面板默认展开项
 const activeNames = ref(['1', '2', '3', '5']);
-const logActiveNames = ref(['47']);
+const logActiveNames = ref(['48']);
 
 // 折叠面板展开状态变化回调
 const handleChange = (val: string | number | Array<string | number>) => {

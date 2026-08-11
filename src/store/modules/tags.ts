@@ -1,6 +1,6 @@
 import { setStore, getStore } from 'utils/store'
 import website from '@/config/website'
-const tagWel = website.fistPage;
+const tagWel = website.firstPage;
 const navs = {
   state: {
     tagList: getStore({ name: 'tagList' }) || [],
@@ -28,7 +28,7 @@ const navs = {
     },
     DEL_TAG_OTHER: (state) => {
       state.tagList = state.tagList.filter(item => {
-        return [state.tag.fullPath, website.fistPage.path].includes(item.fullPath)
+        return [state.tag.fullPath, website.firstPage.path].includes(item.fullPath)
       })
       setStore({ name: 'tagList', content: state.tagList })
     }

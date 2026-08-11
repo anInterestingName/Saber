@@ -140,6 +140,7 @@ import { baseUrl } from '@/config/env';
 import { validData, findColumn } from '@/utils/util';
 import { getToken } from '@/utils/auth';
 import func from '@/utils/func';
+import type { ColumnSchema } from '@/types/column';
 
 // 数据实体
 interface UserEntity {
@@ -171,6 +172,12 @@ interface RoleTreeNode {
   id: string;
   title?: string;
   children?: RoleTreeNode[];
+}
+
+// Excel 导入表单
+interface ExcelForm {
+  excelFile?: string;
+  excelTemplate?: string;
 }
 
 // 权限
@@ -210,10 +217,10 @@ const props = reactive({
 
 // 导入弹窗状态
 const excelBox = ref(false);
-const excelForm = ref<Record<string, unknown>>({});
+const excelForm = ref<ExcelForm>({});
 
 // 校验密码是否填写
-const validatePass = (rule: unknown, value: string, callback: (error?: Error) => void) => {
+const validatePass = (rule: object, value: string, callback: (error?: Error) => void) => {
   if (value === '') {
     callback(new Error('请输入密码'));
   } else {
@@ -221,7 +228,7 @@ const validatePass = (rule: unknown, value: string, callback: (error?: Error) =>
   }
 };
 // 校验确认密码是否与密码一致
-const validatePass2 = (rule: unknown, value: string, callback: (error?: Error) => void) => {
+const validatePass2 = (rule: object, value: string, callback: (error?: Error) => void) => {
   if (value === '') {
     callback(new Error('请再次输入密码'));
   } else if (value !== form.value.password) {
@@ -751,8 +758,7 @@ const handleImport = () => {
 };
 
 // 导入完成后关闭弹窗并刷新列表
-const uploadAfter = (res: unknown, done: () => void, loading: () => void, column: unknown) => {
-  window.console.log(column);
+const uploadAfter = (res: object, done: () => void, loading: () => void, column: ColumnSchema) => {
   done();
   excelBox.value = false;
   refreshChange();

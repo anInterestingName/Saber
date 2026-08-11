@@ -1,6 +1,9 @@
 export default (app, option = {}) => {
-  let optionObj = import.meta.glob(`../option/**/**`)[`../option/${option.name}.js`]
-  let apiObj = import.meta.glob(`../api/**/**`)[`../api/${option.name}.js`]
+  // 按路径自动装配 option 与 api。基础设施层已全量 .ts 化，故优先取 .ts 键；
+  // 保留 .js 回退，兼容二开工程中尚未迁移的存量 option / api 文件
+  const pickModule = (modules, path) => modules[`${path}.ts`] || modules[`${path}.js`]
+  let optionObj = pickModule(import.meta.glob(`../option/**/**`), `../option/${option.name}`)
+  let apiObj = pickModule(import.meta.glob(`../api/**/**`), `../api/${option.name}`)
   let mixins = {
     data () {
       return {
@@ -119,7 +122,7 @@ export default (app, option = {}) => {
       },
       rowDel (row, index) {
         const callback = () => {
-          this.api[option.del || 'del'](row[this.rowKey], row).then((data) => {
+          this.api[option.del || 'remove'](row[this.rowKey], row).then((data) => {
             this.getList();
             if (this.delAfter) {
               this.delAfter(data, row, index)

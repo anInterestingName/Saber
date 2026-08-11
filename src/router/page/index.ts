@@ -1,5 +1,7 @@
 import Store from '@/store/'
-export default [{
+import type { RouteRecordRaw } from 'vue-router'
+// 显式标注为路由记录数组：字面量推断出的联合类型会与 RouteRecordRaw 的重定向分支互斥而无法赋值
+const routes: RouteRecordRaw[] = [{
   path: '/login',
   name: '登录页',
   component: () =>
@@ -60,3 +62,5 @@ export default [{
   name: '主页',
   redirect: '/wel'
 }]
+
+export default routes

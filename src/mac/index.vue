@@ -7,7 +7,7 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item>
-              <div>{{userInfo.username}}</div>
+              <div>{{userInfo.userName}}</div>
             </el-dropdown-item>
             <el-dropdown-item>
               <div @click="switchTheme">退出主题</div>
@@ -69,7 +69,8 @@ export default {
   data () {
     return {
       app: false,
-      timeString: ""
+      timeString: "",
+      timer: null
     }
   },
   computed: {
@@ -117,6 +118,9 @@ export default {
     this.startTimer()
     this.$store.dispatch("GetMenu")
   },
+  unmounted () {
+    clearInterval(this.timer)
+  },
   methods: {
     switchTheme () {
       this.$store.commit('SET_THEME_NAME', '')
@@ -131,7 +135,7 @@ export default {
       });
     },
     startTimer () {
-      setInterval(() => {
+      this.timer = setInterval(() => {
         this.timeString = this.$dayjs().format('YYYY年MM月DD日 HH:mm')
       }, 1000)
     },

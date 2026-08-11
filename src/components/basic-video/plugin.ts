@@ -1,4 +1,9 @@
 export default class RecordVideo {
+  // 不标注为 HTMLVideoElement：init 里对 srcObject 做的是旧内核特性探测，
+  // 标注后 else 分支会被收窄成 never，与该分支要保留的运行时兜底相悖
+  video;
+  mediaRecorder: MediaRecorder | null;
+  chunks: Blob[];
 
   /**
    * 构造函数
@@ -20,7 +25,7 @@ export default class RecordVideo {
     // 返回Promise对象
     // resolve 正常处理
     // reject 处理异常情况
-    return new Promise((resovle, reject) => {
+    return new Promise<void>((resolve, reject) => {
       navigator
         .mediaDevices
         .getUserMedia({
@@ -38,18 +43,23 @@ export default class RecordVideo {
             this.video.srcObject = stream;
           } else {
             // 兼容旧的浏览器
-            this.video.src = window.URL.createObjectURL(stream);
+            // WHY: createObjectURL(MediaStream) 是已从规范移除的旧重载，lib.dom 不再收录；
+            // 其与现存签名无类型交集，只能经 unknown 中转按旧内核实际签名断言，运行时行为不变
+            const createLegacyObjectURL = window.URL.createObjectURL as unknown as (
+              stream: MediaStream
+            ) => string;
+            this.video.src = createLegacyObjectURL(stream);
           }
 
           // 当视频的元数据已经加载时触发
-          this.video.addEventListener('loadmetadata', () => {
+          this.video.addEventListener('loadedmetadata', () => {
             this.video.play();
           });
           this.mediaRecorder = new MediaRecorder(stream);
           this.mediaRecorder.addEventListener('dataavailable', e => {
             this.chunks.push(e.data);
           });
-          resovle();
+          resolve();
         })
         // 异常抓取，包括用于禁用麦克风、摄像头
         .catch(error => {

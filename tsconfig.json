@@ -1,0 +1,42 @@
+{
+  // 类型检查专用配置：构建仍由 Vite/esbuild 纯转译完成（pnpm build 不读取本文件的检查开关），
+  // 类型门禁独立为 `pnpm run type-check`（vue-tsc --noEmit），与构建解耦。
+  "compilerOptions": {
+    // 语言目标与模块语义对齐 Vite 的 esbuild 转译行为
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "useDefineForClassFields": true,
+    // 只检查不产出，产物一律由 Vite 生成
+    "noEmit": true,
+    // esbuild 按单文件转译，须保证每个文件可独立编译（禁 const enum 跨文件内联等）
+    "isolatedModules": true,
+    // JS 共存策略：api/utils/option/store/router 等仍为 .js —— 允许被引用参与推断，但不对其做检查
+    "allowJs": true,
+    "checkJs": false,
+    // 非严格档起步，与既有代码的检查基线一致；
+    // 后续如需收紧，优先逐项开启 noImplicitAny → strictNullChecks，而非一次性 strict
+    "strict": false,
+    "skipLibCheck": true,
+    // 环境类型显式引入（两包均为 `types` 子路径做了 exports 导出）：
+    // vite/client 提供 import.meta.env 与 *.css 等资源模块声明，
+    // element-plus/global 提供全局注册的 <el-xxx> 组件类型
+    "types": ["vite/client", "element-plus/global"],
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "baseUrl": "./",
+    // 与 vite.config.mts 的 resolve.alias 保持一致
+    "paths": {
+      "@/*": ["src/*"],
+      "~/*": ["*"],
+      "components/*": ["src/components/*"],
+      "styles/*": ["src/styles/*"],
+      "utils/*": ["src/utils/*"]
+    }
+  },
+  // .vue 必须显式列出：tsconfig 的默认 include 不覆盖 .vue，缺失会使其落入编辑器隐式工程；
+  // 构建配置层属 Node 语境，由 tsconfig.node.json 独立检查，不在本工程内
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.vue"],
+  "exclude": ["node_modules", "dist"]
+}

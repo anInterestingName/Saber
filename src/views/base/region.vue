@@ -217,9 +217,16 @@ const regionOption = reactive({
   ],
 });
 
+// 区划调试表单
+interface DebugForm {
+  province?: string;
+  city?: string;
+  district?: string;
+}
+
 // 调试弹窗状态
 const debugBox = ref(false);
-const debugForm = ref<Record<string, unknown>>({});
+const debugForm = ref<DebugForm>({});
 
 // 调试表单配置
 const debugOption = reactive({

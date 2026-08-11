@@ -42,20 +42,21 @@
 ```
 Saber/
 ├── src/
-│   ├── main.js                  # 应用入口（全局组件注册、插件挂载）
+│   ├── main.ts                  # 应用入口（全局组件注册、插件挂载）
 │   ├── App.vue                  # 根组件
-│   ├── permission.js            # 路由守卫（鉴权、标签页、锁屏）
-│   ├── axios.js                 # HTTP 拦截器（Token 注入、错误统一处理、401 登出）
-│   ├── error.js                 # 全局错误处理
-│   ├── mockProdServer.js        # Mock 服务（生产构建可选）
+│   ├── permission.ts            # 路由守卫（鉴权、标签页、锁屏）
+│   ├── axios.ts                 # HTTP 拦截器（Token 注入、错误统一处理、401 登出）
+│   ├── error.ts                 # 全局错误处理
+│   ├── env.d.ts                 # 类型环境声明（全局属性、Router 扩展、axios 自定义配置）
+│   ├── types/                   # 自建类型（column / menu）
 │   ├── api/                     # API 接口层（按业务模块组织）
 │   │   ├── system/              # 系统管理（菜单/字典/部门/角色/租户等）
 │   │   ├── desk/                # 工作台（通知等）
 │   │   ├── tool/                # 开发工具（代码生成/数据源）
 │   │   ├── base/                # 基础数据（区域等）
 │   │   ├── report/              # 报表
-│   │   ├── user.js              # 认证与用户（登录/刷新/登出/验证码）
-│   │   └── logs.js              # 日志上报
+│   │   ├── user.ts              # 认证与用户（登录/刷新/登出/验证码）
+│   │   └── logs.ts              # 日志上报
 │   ├── views/                   # 业务页面（按模块目录组织）
 │   │   ├── system/              # 用户/角色/菜单/字典/部门/租户/岗位/应用/参数/顶部菜单
 │   │   ├── authority/           # 角色权限/数据权限/接口权限
@@ -70,16 +71,16 @@ Saber/
 │   ├── option/                  # Avue 表格/表单配置（可选抽离）
 │   │   └── crud/                # 配合 mixins/crud.js 动态加载
 │   ├── config/                  # 全局配置
-│   │   ├── website.js           # 核心配置（认证、菜单、OAuth2、租户、授权地址）
-│   │   ├── env.js               # 接口基础地址（来自 Vite 环境变量）
-│   │   └── iconList.js          # 图标元数据
+│   │   ├── website.ts           # 核心配置（认证、菜单、OAuth2、租户、授权地址）
+│   │   ├── env.ts               # 接口基础地址（来自 Vite 环境变量）
+│   │   └── iconList.ts          # 图标元数据
 │   ├── store/                   # Vuex 状态管理
-│   │   ├── index.js             # Store 入口
-│   │   ├── getters.js           # 全局 getter
+│   │   ├── index.ts             # Store 入口
+│   │   ├── getters.ts           # 全局 getter
 │   │   └── modules/             # user / common / tags / logs
 │   ├── router/                  # 路由系统
-│   │   ├── index.js             # Router 入口
-│   │   ├── avue-router.js       # 动态路由核心（菜单→路由、iframe 转换、Token 透传）
+│   │   ├── index.ts             # Router 入口
+│   │   ├── avue-router.ts       # 动态路由核心（菜单→路由、iframe 转换、Token 透传）
 │   │   ├── page/                # 页面级路由（登录、锁屏、错误页）
 │   │   └── views/               # 视图路由（首页、控制台、util Demo）
 │   ├── components/              # 全局公共组件（basic-container/basic-block/iframe 等）
@@ -90,7 +91,9 @@ Saber/
 │   ├── mac/                     # macOS 风格主题外壳（index/login/lock）
 │   └── page/                    # 页面布局框架（主布局、登录、锁屏）
 ├── vite/                        # Vite 插件配置（auto-import / compression / setup-extend）
-├── vite.config.mjs              # Vite 主配置（端口 2888、别名、代理）
+├── vite.config.mts              # Vite 主配置（别名、开发服务器端口与代理，端口/代理目标由 .env 驱动）
+├── tsconfig.json                # 类型检查配置（与构建解耦，服务 vue-tsc 门禁）
+├── tsconfig.node.json           # Node 语境类型检查配置（vite.config.mts 与 vite/ 插件层）
 ├── .env.development             # 开发环境变量
 ├── .env.production              # 生产环境变量
 ├── .prettierrc.json             # Prettier 配置
@@ -122,7 +125,7 @@ Saber/
 
 ### 3.3 API 接口规范
 
-- 所有 API 通过 `src/axios.js` 封装的 Axios 实例发起，按业务模块组织于 `src/api/`
+- 所有 API 通过 `src/axios.ts` 封装的 Axios 实例发起，按业务模块组织于 `src/api/`
 - 命名约定：列表 `getList(current, size, params)`、详情 `getDetail(id)` / `getXxx(id)`、新增 `add(row)`、更新 `update(row)`、删除 `remove(ids)`、树形 `getXxxTree()`
 - `add` 与 `update` 通常指向同一后端接口（如 `/blade-system/{module}/submit`），由后端根据 `id` 是否存在区分，这是 BladeX 的固定写法，保持一致即可
 - 后端微服务前缀：`/blade-auth/`、`/blade-system/`、`/blade-desk/`、`/blade-develop/`、`/blade-log/`、`/blade-report/`
@@ -131,23 +134,23 @@ Saber/
 ### 3.4 认证机制
 
 - **OAuth2**：请求头 `Authorization: Basic <Base64(clientId:clientSecret)>`，客户端标识来自 `website.clientId` / `website.clientSecret`
-- **Token**：请求头 `Blade-Auth: bearer <token>`，`config.cryptoToken === true` 时切换为 `crypto <AES(token)>` 加密模式（见 `utils/crypto.js`）
-- **Token 存储**：通过 `js-cookie` 管理，Key 分别为 `saber3-access-token`、`saber3-refresh-token`（`utils/auth.js`，注意这是 Cookie 的固定 Key，请勿随意修改避免与已存在会话冲突）
-- **密码加密**：登录密码使用 SM2 国密加密（`utils/sm2.js`），公钥在 `website.auth.publicKey`，需与后端 `Sm2KeyGenerator` 生成的密钥对保持一致
+- **Token**：请求头 `Blade-Auth: bearer <token>`，`config.cryptoToken === true` 时切换为 `crypto <AES(token)>` 加密模式（见 `utils/crypto.ts`）
+- **Token 存储**：通过 `js-cookie` 管理，Key 分别为 `saber3-access-token`、`saber3-refresh-token`（`utils/auth.ts`，注意这是 Cookie 的固定 Key，请勿随意修改避免与已存在会话冲突）
+- **密码加密**：登录密码使用 SM2 国密加密（`utils/sm2.ts`），公钥在 `website.auth.publicKey`，需与后端 `Sm2KeyGenerator` 生成的密钥对保持一致
 - **401 处理**：响应拦截器检测到 `status === 401` 时派发 `FedLogOut` 并跳转 `/login`
 - **验证码**：`website.captchaMode` 开启时，登录请求头带 `Captcha-Key` / `Captcha-Code`，`grantType` 为 `captcha`
 
 ### 3.5 路由系统
 
 - **静态路由**：`router/page/`（登录、锁屏、错误页）+ `router/views/`（首页、控制台、util Demo）
-- **动态路由**：`avue-router.js` 将后端菜单数据（来自 `/blade-system/menu/routes`）转换为 Vue Router 路由，经 `formatPath` 处理后通过 `router.addRoute` 注入
+- **动态路由**：`avue-router.ts` 将后端菜单数据（来自 `/blade-system/menu/routes`）转换为 Vue Router 路由，经 `formatPath` 处理后通过 `router.addRoute` 注入
 - **组件自动装配**：动态路由的 `component` 字段按 `views/{path}.vue` 约定通过 `import.meta.glob` 解析
 - **外链自动转 iframe**：`href` 匹配 `http(s)://` 时自动挂载 `components/iframe/main.vue`，同时将 `${token}` 占位符替换为当前 Token 实现透传
 - **macOS 皮肤**：`isMacOs` 为真时使用 `page/index/layout.vue` 之外的 `mac/` 布局
 
 ### 3.6 权限控制
 
-- **路由守卫**：`permission.js` 控制登录态校验、锁屏跳转、标签页写入
+- **路由守卫**：`permission.ts` 控制登录态校验、锁屏跳转、标签页写入
 - **按钮权限**：`store.getters.permission`，结构为 `{ dict_add: true, dict_delete: true, ... }`，命名约定 `{module}_{action}`，模板中 `v-if="permission.dict_delete"`
 - **管理员判断**：`userInfo.authority.includes('admin')`，用于展示超管专属操作
 - **权限树**：`getButtons` 拉取 `/blade-system/menu/buttons` 的按钮码集合，扁平化后写入 store
@@ -155,8 +158,8 @@ Saber/
 ### 3.7 多租户与国际化
 
 - **多租户**：`website.tenantMode` 控制开关，管理组租户编号 `000000`，登录时带 `tenantId`，后续请求由后端根据 Token 自动识别
-- **i18n**：默认支持 `zh-cn` / `en` / `ja` 三种语言，Element Plus 与 Avue 的 locale 同步切换（见 `lang/index.js`）
-- 新增页面文案时，若菜单 `meta.i18n` 指向语言 Key，务必在 `lang/{zh,en,ja}.js` 的 `route.*` 下补齐对应条目
+- **i18n**：默认支持 `zh-cn` / `en` / `ja` 三种语言，Element Plus 与 Avue 的 locale 同步切换（见 `lang/index.ts`）
+- 新增页面文案时，若菜单 `meta.i18n` 指向语言 Key，务必在 `lang/{zh,en,ja}.ts` 的 `route.*` 下补齐对应条目
 
 ---
 
@@ -164,11 +167,24 @@ Saber/
 
 ### 4.1 Vue 范式：Composition API + TypeScript
 
-本工程**页面层已统一为 `<script setup lang="ts">` Composition API + TypeScript**（`src/views/` 全量迁移完成，可参考 `src/views/system/dict.vue`）。新增或修改页面一律使用此范式，禁止再写 Options API（`data()`/`methods`/`computed` 选项、`mapGetters`、`this.$xxx`）。
+本工程**页面层已统一为 `<script setup lang="ts">` Composition API + TypeScript**（`src/views/` 全量迁移完成，可参考 `src/views/system/dict.vue`），**基础设施层（api / utils / config / store / router / lang / option / mixins 及 main、axios、permission、error 等入口文件）亦已全量 `.ts` 化**。新增或修改一律使用此范式，禁止再写 Options API（`data()`/`methods`/`computed` 选项、`mapGetters`、`this.$xxx`），新增基础设施模块一律建 `.ts` 而非 `.js`。
 
-> 注：`src/components/`、`src/page/`、`src/mac/` 等尚未迁移，仍为 Options API，属渐进迁移中的混用状态；改动到这些目录时可顺手迁移，但不强制。`src/views/` 未使用 `mixins/crud.js`，option 一律内联在 `.vue` 内。
+> 注：`src/components/`、`src/page/`、`src/mac/` 下的 `.vue` 尚未迁移，仍为 Options API，属渐进迁移中的混用状态；改动到这些目录时可顺手迁移，但不强制。`src/views/` 未使用 `mixins/crud.js`，option 一律内联在 `.vue` 内。
+>
+> 仍保留为 `.js` 的仅两处，均为刻意保留：`src/mixins/crud.js`（Options API 混入工厂，其 `this` 上的 `listBefore`/`addAfter` 等钩子由消费组件提供，类型上无法表达，故由 tsconfig 的 `allowJs` + `checkJs:false` 承接）与 `vite/plugins/*.js`（Node 语境的构建插件，不在浏览器工程检查面内）。
 
-**轻量 TS**：仅 `.vue` 加 `lang="ts"` + 内联类型，依赖 Vite/esbuild 转译，暂未引入 `tsconfig.json` / `vue-tsc` / `type-check`（`pnpm build` 即转译不做类型检查）。禁止 explicit `any`。类型选型原则：**有确定形状的**用 `interface`——实体 / 表单用 `ref<XxxEntity[]>` / `Partial<XxxEntity>`，搜索袋 `query`/`params` 亦用 `Partial<XxxEntity>`（映射实体字段）；**真·动态无固定形状的**（Avue 列 / 节点、纯 `v-model` 绑定的对话框表单模型、未使用的框架回调参数如校验器 `rule`）用 `Record<string, unknown>` / `unknown`。`reactive` 不用泛型参数，改用接口标注变量（Vue 官方建议）：`const opt: { column: unknown[] } = reactive({ column: [] })`。
+**轻量 TS**：`.vue` 加 `lang="ts"` + 内联类型，基础设施层直接写 `.ts`；构建仍由 Vite/esbuild 纯转译完成（`pnpm build` 不做类型检查），类型门禁独立为 `pnpm run type-check`（`vue-tsc --noEmit`，见 `tsconfig.json`），要求**全仓 0 错误**；全仓唯一允许的压制是 `views/util/logs.vue` 的 `@ts-expect-error`（该演示页功能即引用未定义变量，修掉即破坏演示）。检查档为 `strict: false` 起步：形参不强制标注，隐式 `any` 不报错，**只在类型检查真正拦下来的位置补标注**（可选形参 `params?: object`、参数袋 `interface`、`Promise<void>` 泛型等），不为标注而标注。禁止 explicit `any`，同时**禁止 `Record<string, unknown>` 与裸 `unknown`**——二者只是把「没想清楚形状」写进代码（见迁移指南 §9.3）。类型选型原则：
+
+| 场景 | 写法 |
+| --- | --- |
+| 实体 / 表单 | 自建 `interface`，`ref<XxxEntity[]>`、`type XxxForm = Partial<XxxEntity>` |
+| 搜索袋 `query` / `params` | `Partial<XxxEntity>`（映射实体字段） |
+| Avue 列配置（`column` 回调形参、`findColumn` 返回值） | `import type { ColumnSchema } from '@/types/column'` |
+| 菜单节点（懒加载树、动态路由） | `import type { MenuItem } from '@/types/menu'` |
+| 框架回调里确是对象但不取用的形参（校验器 `rule`、懒加载 `treeNode`、上传 `res`） | `object`（诚实表达「是对象、只是不读」，无需断言） |
+| 有确定取值域 | 字面量联合，如 `ref<'ltr' \| 'rtl' \| 'ttb' \| 'btt'>('rtl')` |
+
+`reactive` 不写泛型参数：`option` / `page` 等一律 `const option = reactive({ ... })` 靠推断，需要显式类型时按 Vue 官方建议标注变量而非用 `reactive<T>()`。
 
 **本工程 Composition 约定（务必遵循，与现有 views 一致）**：
 
@@ -176,7 +192,7 @@ Saber/
 | --- | --- |
 | Vue / Vuex API | **一律显式 import**（工程虽配了 auto-import，但 `dts:false` 会导致 IDE/类型服务报「找不到 ref」，故显式引入更稳）：`import { ref, reactive, computed, watch, nextTick } from 'vue'`、`import { useStore } from 'vuex'`。只 import 实际用到的符号 |
 | 消息 / 确认框 | `import { ElMessage, ElMessageBox } from 'element-plus'`（替代 `this.$message` / `this.$confirm`） |
-| Avue 数据工具 | `import { validData, findColumn } from '@/utils/util'`（自研工具：值兜底 + Avue option 列查找，替代被移除的全局 mixin `this.validData` / `this.findObject`；见 `src/utils/util.js`，`findColumn` 未命中返回 `null`，取用需 `if (column)` 守卫）。空值校验 `validateNull` 用 `@/utils/validate` |
+| Avue 数据工具 | `import { validData, findColumn } from '@/utils/util'`（自研工具：值兜底 + Avue option 列查找，替代被移除的全局 mixin `this.validData` / `this.findObject`；见 `src/utils/util.ts`，`findColumn` 未命中返回 `null`，取用需 `if (column)` 守卫）。空值校验 `validateNull` 用 `@/utils/validate` |
 | 全局配置 | `import website from '@/config/website'`（替代 `this.website`） |
 | Vuex getter | `const store = useStore()` + `const permission = computed(() => store.getters.permission)` |
 | 组件/DOM 引用 | 模板 `ref="xxxRef"` + `const xxxRef = ref()`；Element Plus 实例用 `ref<InstanceType<typeof ElXxx>>()`；Avue 实例（无 TS 类型）用无参 `ref()` |
@@ -190,7 +206,7 @@ Saber/
 | -------------------------- | -------------------------- | -------------------------- |
 | 页面文件                   | kebab-case                 | `notice.vue`、`api-scope.vue` |
 | 组件文件                   | kebab-case 目录 + main.vue | `basic-container/main.vue` |
-| API / Option / 工具文件    | camelCase                  | `dict.js`、`datasource.js` |
+| API / Option / 工具文件    | camelCase                  | `dict.ts`、`datasource.ts` |
 | 变量 / 函数                | camelCase                  | `dictValue`、`handleDelete` |
 | Vuex mutations             | UPPER_SNAKE                | `SET_TOKEN`、`ADD_TAG`     |
 | Vuex actions               | PascalCase                 | `FedLogOut`、`RefreshToken` |
@@ -208,14 +224,14 @@ Saber/
 
 ### 4.5 全局注册的组件 / 属性
 
-在 `main.js` 中全局注册，可直接在模板中使用：
+在 `main.ts` 中全局注册，可直接在模板中使用：
 
 - `<basic-container>`、`<basic-block>`
 - Element Plus 图标组件全量注册（`@element-plus/icons-vue`）
 
-`main.js` 挂到 `app.config.globalProperties` 的全局属性（模板中可直接用；`<script setup>` 脚本内无 `this`，请改用对应 import）：
+`main.ts` 挂到 `app.config.globalProperties` 的全局属性（模板中可直接用；`<script setup>` 脚本内无 `this`，请改用对应 import）：
 
-- `website`（`config/website.js`）→ 脚本内 `import website from '@/config/website'`
+- `website`（`config/website.ts`）→ 脚本内 `import website from '@/config/website'`
 - `$dayjs`（日期库）→ 脚本内 `import dayjs from 'dayjs'`
 - `getScreen`（屏幕尺寸工具）→ 脚本内按需从 `@/utils/util` 引入
 - `axios`（`window.axios`）→ 脚本内 `import request from '@/axios'`
@@ -227,7 +243,7 @@ Saber/
 ### 5.1 新增标准 CRUD 页面
 
 1. **调用 `avue-design` Skill** 生成标准 CRUD 页面代码（推荐），或参考 `src/views/system/dict.vue` 手动编写
-2. 手动创建三件套：API 文件 `src/api/{module}/{name}.js` → 页面 `src/views/{module}/{name}.vue`（option 直接内联即可）；若想走自动装配再额外创建 `src/option/{module}/{name}.js`
+2. 手动创建三件套：API 文件 `src/api/{module}/{name}.ts` → 页面 `src/views/{module}/{name}.vue`（option 直接内联即可）；若想走自动装配再额外创建 `src/option/{module}/{name}.ts`
 3. 后端通过 `/blade-system/menu` 配置菜单项后，前端登录即可自动加载并出现在侧边栏
 
 ### 5.2 开发前必做
@@ -238,9 +254,10 @@ Saber/
 
 ### 5.3 开发后验证
 
-1. 若引入新依赖：`pnpm install` → `pnpm run build` → 确认构建通过
-2. 构建通过后：`pnpm run dev` → 确认开发服务器在 `http://localhost:2888` 正常启动，目标页面可访问
-3. 功能测试（鉴权/多租户/外链 iframe 等）交由用户执行，除非用户明确要求，不撰写示例代码或额外文档
+1. 类型门禁：`pnpm run type-check` → 确认 0 错误（新增/改动 `.ts` 与 `.vue` 必做）
+2. 若引入新依赖：`pnpm install` → `pnpm run build` → 确认构建通过
+3. 构建通过后：`pnpm run dev` → 确认开发服务器在 `http://localhost:2888` 正常启动，目标页面可访问
+4. 功能测试（鉴权/多租户/外链 iframe 等）交由用户执行，除非用户明确要求，不撰写示例代码或额外文档
 
 ---
 
@@ -252,9 +269,10 @@ pnpm run prod         # 启动开发服务器（加载 production 模式环境�
 pnpm run build        # 构建（默认模式）
 pnpm run build:prod   # 构建（production 模式，产出 dist/）
 pnpm run serve        # 预览构建产物
+pnpm run type-check   # 类型检查（vue-tsc + tsc -p tsconfig.node.json，与构建解耦，不产出产物）
 ```
 
-接口代理：`vite.config.mjs` 将 `/api` 代理至 `http://localhost`（网关地址），`.env.*` 中 `VITE_APP_API` 决定前端实际请求前缀。
+接口代理：`vite.config.mts` 将 `/api` 代理至 `VITE_APP_PROXY_TARGET`（默认 `http://localhost` 网关地址），`.env.*` 中 `VITE_APP_API` 决定前端实际请求前缀。
 
 ---
 

@@ -46,7 +46,7 @@ export const getDept = (id) => {
     }
   })
 }
-export const getDeptTree = (tenantId) => {
+export const getDeptTree = (tenantId?: string) => {
   return request({
     url: '/blade-system/dept/tree',
     method: 'get',

@@ -28,7 +28,7 @@
         <el-button text
                    type="primary"
                    icon="el-icon-plus"
-                   @click.stop="handleAdd(scope.row,scope.index)"
+                   @click.stop="handleAdd(scope.row)"
                    v-if="userInfo.authority.includes('admin')">新增子项
         </el-button>
       </template>
@@ -44,6 +44,7 @@ import { add, getDept, getDeptTree, getList, remove, update } from '@/api/system
 import { validData, findColumn } from '@/utils/util';
 import website from '@/config/website';
 import { baseUrl } from '@/config/env';
+import type { ColumnSchema } from '@/types/column';
 
 // 数据实体
 interface DeptEntity {
@@ -227,7 +228,7 @@ const selectionChange = (list: DeptEntity[]) => {
 // 新增子部门，预填并锁定上级部门
 const handleAdd = (row: DeptEntity) => {
   crudRef.value.modelValue.parentId = row.id;
-  crudRef.value.option.column.filter((item: Record<string, unknown>) => {
+  crudRef.value.option.column.filter((item: ColumnSchema) => {
     if (item.prop === 'parentId') {
       item.value = row.id;
       item.addDisabled = true;

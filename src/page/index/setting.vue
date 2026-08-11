@@ -69,7 +69,7 @@ export default {
         value: 'search'
       }, {
         label: '屏幕全屏',
-        value: 'fullscren'
+        value: 'fullscreen'
       }, {
         label: '主题选择',
         value: 'theme'

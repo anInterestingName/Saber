@@ -143,16 +143,17 @@ export function cardId(code) {
                 //∑(ai×Wi)(mod 11)
                 //加权因子
                 const factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
-                //校验位
-                const parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2, 'x'];
+                //校验位（下标为 sum % 11，值域 0~10）
+                const parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2];
                 let sum = 0;
                 for (let i = 0; i < 17; i++) {
                     const ai = code[i];
                     const wi = factor[i];
                     sum += ai * wi;
                 }
-                // WHY: 校验位为数字/字符混合（parity 含 'X'/'x'，code[17] 为字符），需宽松比对，改严格会误判
-                if (parity[sum % 11] !== code[17]) {
+                // WHY: parity 数字与字符混排、code[17] 恒为字符，不归一则数字校验位全量误判；
+                // 格式正则同时放行 X 与 x，故两侧统一转大写
+                if (String(parity[sum % 11]).toUpperCase() !== code[17].toUpperCase()) {
                     msg = "证件号码校验位错误";
                 } else {
                     result = false;
@@ -177,11 +178,10 @@ export function isValidateMobile(phone) {
     let list = [];
     let result = true;
     let msg = '';
-    const isPhone = /^0\d{2,3}-?\d{7,8}$/;
-    //增加134 减少|1349[0-9]{7}，增加181,增加145，增加17[678]
+    const mobileReg = /^1[3-9]\d{9}$/;
     if (!validateNull(phone)) {
         if (phone.length === 11) {
-            if (isPhone.test(phone)) {
+            if (!mobileReg.test(phone)) {
                 msg = '手机号码格式不正确';
             } else {
                 result = false;
