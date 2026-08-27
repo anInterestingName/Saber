@@ -1,29 +1,29 @@
 // white
-@import './white.scss';
+@use './white';
 
 // star
-@import './star.scss';
+@use './star';
 
 // vip
-@import './vip.scss';
+@use './vip';
 
 // d2
-@import './d2.scss';
+@use './d2';
 
 // bule
-@import './bule.scss';
+@use './bule';
 
 //iview
-@import './iview.scss';
+@use './iview';
 
 //heyui
-@import './hey.scss';
+@use './hey';
 
 //dark
-@import './dark.scss';
+@use './dark';
 
 //cool
-@import './cool.scss';
+@use './cool';
 
 //beautiful
-@import './beautiful.scss';
+@use './beautiful';

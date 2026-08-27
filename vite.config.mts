@@ -31,6 +31,13 @@ export default ({ mode, command }: ConfigEnv): UserConfig => {
         utils: resolve(__dirname, './src/utils'),
       },
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
+        },
+      },
+    },
     plugins: createVitePlugins(env, command === 'build'),
   });
 };

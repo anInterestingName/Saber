@@ -1,6 +1,8 @@
 
+@use './variables' as vars;
+
 .avue-sidebar {
-    width: $sidebar_width;
+    width: vars.$sidebar_width;
     height: 100%;
     user-select: none; 
     position: relative;
@@ -14,7 +16,7 @@
         overflow-x: hidden;
     }
     .avue-menu{
-      height: calc(100% - #{$top_height});
+      height: calc(100% - #{vars.$top_height});
     }
     &--tip{
         width:90%;

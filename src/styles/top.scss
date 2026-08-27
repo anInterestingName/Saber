@@ -1,11 +1,13 @@
+@use './variables' as vars;
+
 .avue-top {
     position: relative;
     background-color: #fff;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
     color: rgba(0, 0, 0, .65);
     font-size: 28px;
-    height: $top_height;
-    line-height: $top_height;
+    height: vars.$top_height;
+    line-height: vars.$top_height;
     box-sizing: border-box;
     white-space: nowrap;
     .el-menu-item{
@@ -37,7 +39,7 @@
 }
 
 .top-search {
-    line-height: $top_height;
+    line-height: vars.$top_height;
     position: absolute !important;
     right: 200px;
     top:0;
@@ -63,12 +65,12 @@
 
 .top-bar__left,
 .top-bar__right {
-    height: $top_height;
+    height: vars.$top_height;
     position: absolute;
     margin-top: 2px;
     top: 0;
     i{
-        line-height: $top_height;
+        line-height: vars.$top_height;
     }
 }
 
@@ -85,7 +87,7 @@
 .top-bar__item {
     position: relative;
     display: inline-block;
-    height: $top_height;
+    height: vars.$top_height;
     margin:0 7px;
     font-size: 16px;
     .el-badge__content.is-fixed{
@@ -106,8 +108,8 @@
 }
 
 .avue-logo {
-  height: $top_height;
-  line-height: $top_height;
+  height: vars.$top_height;
+  line-height: vars.$top_height;
   background-color: #031527;
   font-size: 20px;
   overflow: hidden;
