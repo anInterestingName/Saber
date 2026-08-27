@@ -1,46 +1,42 @@
 <template>
-  <div class="third">
-    <div class="box">
-      <i class="iconfont icon-QQ"
-         @click="handleClick('qq')"
-         style="color:#53a4d8"></i>
-      <i class="iconfont icon-weixinicon2x"
-         @click="handleClick('wechat_open')"
-         style="color:#71c252"></i>
-      <i class="iconfont icongithub"
-         @click="handleClick('github')"
-         style="color:#62676c"></i>
-      <i class="iconfont icongitee2"
-         @click="handleClick('gitee')"
-         style="color:#c73420"></i>
+  <div class="third-login">
+    <div class="third-login__divider">
+      <span>{{ $t('login.thirdLogin') }}</span>
+    </div>
+    <div class="third-login__actions">
+      <el-tooltip :content="$t('login.qq')" placement="bottom">
+        <button type="button" aria-label="QQ" @click="handleClick('qq')">
+          <i class="iconfont icon-QQ third-login__icon--qq"></i>
+        </button>
+      </el-tooltip>
+      <el-tooltip :content="$t('login.wechat')" placement="bottom">
+        <button type="button" :aria-label="$t('login.wechat')" @click="handleClick('wechat_open')">
+          <i class="iconfont icon-weixinicon2x third-login__icon--wechat"></i>
+        </button>
+      </el-tooltip>
+      <el-tooltip content="GitHub" placement="bottom">
+        <button type="button" aria-label="GitHub" @click="handleClick('github')">
+          <i class="iconfont icongithub third-login__icon--github"></i>
+        </button>
+      </el-tooltip>
+      <el-tooltip :content="$t('login.gitee')" placement="bottom">
+        <button type="button" :aria-label="$t('login.gitee')" @click="handleClick('gitee')">
+          <i class="iconfont icongitee2 third-login__icon--gitee"></i>
+        </button>
+      </el-tooltip>
     </div>
   </div>
 </template>
 
 <script>
-import { openWindow } from "utils/util";
+import website from '@/config/website';
 
 export default {
-  name: "thirdLogin",
+  name: 'thirdLogin',
   methods: {
-    handleClick (source) {
+    handleClick(source) {
       window.location.href = `${website.authUrl}/${source}`;
-    }
-  }
+    },
+  },
 };
 </script>
-
-<style lang="scss" scoped>
-.third {
-  padding: 10px 0;
-  .box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  i {
-    font-size: 36px;
-    margin: 0 10px;
-  }
-}
-</style>

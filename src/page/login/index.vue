@@ -1,90 +1,81 @@
 <template>
-  <div class="login-container"
-       @keyup.enter="handleLogin">
-    <div class="login-time">
-      {{time}}
+  <auth-layout>
+    <div class="auth-form-header">
+      <h1>{{ $t('login.welcome') }}</h1>
+      <p>{{ $t('login.welcomeHint') }}</p>
     </div>
-    <div class="login-weaper">
-      <div class="login-left animate__animated animate__fadeInLeft">
-        <img class="img"
-             src="/img/logo.png"
-             alt="">
-        <p class="title">{{ $t('login.info') }}</p>
-      </div>
-      <div class="login-border animate__animated animate__fadeInRight">
-        <div class="login-main">
-          <p class="login-title">
-            {{ $t('login.title') }}{{website.title}}
-            <top-lang></top-lang>
-          </p>
-          <userLogin v-if="activeName==='user'"></userLogin>
-          <codeLogin v-else-if="activeName==='code'"></codeLogin>
-          <faceLogin v-else-if="activeName==='face'"></faceLogin>
-          <div class="login-menu">
-            <a href="#"
-               @click.stop="activeName='user'">{{ $t('login.userLogin') }}</a>
-            <!-- <a href="#"
-               @click.stop="activeName='code'">{{ $t('login.phoneLogin') }}</a> -->
-            <a href="#"
-               @click.stop="activeName='face'">{{ $t('login.faceLogin') }}</a>
-          </div>
-          <thirdLogin></thirdLogin>
-        </div>
-      </div>
+
+    <div class="auth-mode-switch" role="tablist" :aria-label="$t('login.title')">
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="activeName === 'user'"
+        :class="{ 'is-active': activeName === 'user' }"
+        @click="activeName = 'user'"
+      >
+        <el-icon><User /></el-icon>
+        <span>{{ $t('login.userLogin') }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="activeName === 'face'"
+        :class="{ 'is-active': activeName === 'face' }"
+        @click="activeName = 'face'"
+      >
+        <el-icon><View /></el-icon>
+        <span>{{ $t('login.faceLogin') }}</span>
+      </button>
     </div>
-  </div>
+
+    <div class="auth-form-stage" :class="{ 'is-face': activeName === 'face' }">
+      <user-login v-if="activeName === 'user'"></user-login>
+      <face-login v-else></face-login>
+    </div>
+
+    <third-login></third-login>
+  </auth-layout>
 </template>
+
 <script>
-import userLogin from "./userlogin.vue";
-import codeLogin from "./codelogin.vue";
-import thirdLogin from "./thirdlogin.vue";
-import faceLogin from "./facelogin.vue";
-import { validateNull } from "@/utils/validate";
-import topLang from "@/page/index/top/top-lang.vue";
+import { User, View } from '@element-plus/icons-vue';
+import AuthLayout from '@/components/auth-layout/main.vue';
+import { validateNull } from '@/utils/validate';
+import faceLogin from './facelogin.vue';
+import thirdLogin from './thirdlogin.vue';
+import userLogin from './userlogin.vue';
+
 export default {
-  name: "login",
+  name: 'login',
   components: {
+    AuthLayout,
+    User,
+    View,
     userLogin,
-    codeLogin,
     thirdLogin,
     faceLogin,
-    topLang
   },
-  data () {
+  data() {
     return {
-      time: "",
-      activeName: "user"
+      activeName: 'user',
+      socialForm: {},
     };
   },
   watch: {
-    $route () {
+    $route() {
       const params = this.$route.query;
-      this.socialForm = params
+      this.socialForm = params;
       if (!validateNull(this.socialForm.state)) {
         const loading = this.$loading({
           lock: true,
-          text: `${this.socialForm.state === "WX" ? "微信" : "QQ"
-            }登录中,请稍后。。。`,
-          spinner: "el-icon-loading"
+          text: `${this.socialForm.state === 'WX' ? '微信' : 'QQ'}登录中,请稍后。。。`,
+          spinner: 'el-icon-loading',
         });
         setTimeout(() => {
           loading.close();
         }, 2000);
       }
-    }
+    },
   },
-  created () {
-    this.getTime();
-    setInterval(() => {
-      this.getTime();
-    }, 1000);
-  },
-  mounted () { },
-  props: [],
-  methods: {
-    getTime () {
-      this.time = this.$dayjs().format('YYYY年MM月DD日 HH:mm:ss')
-    }
-  }
 };
 </script>

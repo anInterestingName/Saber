@@ -2,10 +2,10 @@
  * 全局配置文件
  */
 export default {
-  title: 'saber',
-  logo: 'A',
+  title: 'staratlas',
+  logo: '星',
   key: 'saber', //配置主键,目前用于存储
-  indexTitle: 'Saber Admin',
+  indexTitle: '星图 staratlas',
   clientId: 'saber', // 客户端id
   clientSecret: 'saber_secret', // 客户端密钥
   tenantMode: true, // 是否开启租户模式

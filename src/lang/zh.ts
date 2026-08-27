@@ -1,6 +1,6 @@
 export default {
   tip: '提示',
-  title: 'Saber企业级开发平台',
+  title: '星图企业级开发平台',
   logoutTip: '退出系统, 是否继续?',
   submitText: '确定',
   cancelText: '取消',
@@ -65,6 +65,14 @@ export default {
   login: {
     title: '登录 ',
     info: '企业级开发平台',
+    welcome: '欢迎回来',
+    welcomeHint: '输入您的账号和密码登录系统',
+    slogan: '一款兼具设计美学与高效开发的后台系统',
+    sloganDetail: '美观实用的界面，经过视觉优化，确保卓越的用户体验',
+    locked: '屏幕已锁定',
+    unlockHint: '请输入解锁密码继续使用系统',
+    unlock: '解锁',
+    exit: '退出登录',
     tenantId: '请输入租户ID',
     username: '请输入账号',
     password: '请输入密码',
