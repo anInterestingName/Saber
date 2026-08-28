@@ -53,30 +53,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { Moon, Sunny } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import topLang from '@/page/index/top/top-lang.vue';
-import { setTheme } from '@/utils/util';
+import { applyTheme } from '@/utils/theme';
+import type { AppSetting, ThemeMode } from '@/types/setting';
 
 const store = useStore();
 const { t } = useI18n();
 const currentYear = new Date().getFullYear();
-const initialTheme = store.getters.themeName || 'default';
-const lightTheme = ref(initialTheme === 'theme-dark' ? 'default' : initialTheme);
-const isDark = computed(() => store.getters.themeName === 'theme-dark');
+const setting = computed<AppSetting>(() => store.getters.setting);
+const isDark = computed(() => setting.value.theme === 'dark');
 
-const applyTheme = (themeName: string) => {
-  store.commit('SET_THEME_NAME', themeName);
-  setTheme(themeName);
+const setThemeMode = (theme: ThemeMode) => {
+  store.commit('SET_SETTING', { theme });
+  applyTheme(store.getters.setting);
 };
 
 const toggleTheme = () => {
-  applyTheme(isDark.value ? lightTheme.value : 'theme-dark');
+  setThemeMode(isDark.value ? 'light' : 'dark');
 };
 
 onMounted(() => {
-  setTheme(store.getters.themeName || 'default');
+  applyTheme(setting.value);
 });
 </script>

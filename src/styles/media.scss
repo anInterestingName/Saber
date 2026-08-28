@@ -4,7 +4,7 @@
   .avue-sidebar {
     position: fixed;
     top: 0;
-    left: -265px;
+    left: calc(-1 * #{vars.$sidebar_width});
     z-index: 1024;
   }
 

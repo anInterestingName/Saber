@@ -1,9 +1,51 @@
-import {
-  setStore,
-  getStore,
-  removeStore
-} from 'utils/store'
-import website from '@/config/website'
+import { setStore, getStore, removeStore } from 'utils/store';
+import website from '@/config/website';
+import type { AppSetting, LayoutMode } from '@/types/setting';
+import { normalizePrimaryColor } from '@/utils/theme';
+
+const layoutSetting: Record<LayoutMode, Pick<AppSetting, 'sidebar' | 'menu'>> = {
+  side: {
+    sidebar: 'vertical',
+    menu: false,
+  },
+  top: {
+    sidebar: 'horizontal',
+    menu: false,
+  },
+  mix: {
+    sidebar: 'vertical',
+    menu: true,
+  },
+};
+
+const isSetting = (
+  value: object | string | number | boolean | null | undefined
+): value is Partial<AppSetting> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
+
+const isLayoutMode = (value: string | undefined): value is LayoutMode => {
+  return value === 'side' || value === 'top' || value === 'mix';
+};
+
+const createSetting = (storedSetting?: object | string | number | boolean | null) => {
+  const stored = isSetting(storedSetting) ? storedSetting : {};
+  const legacyLayout: LayoutMode =
+    stored.sidebar === 'horizontal' ? 'top' : stored.menu === false ? 'side' : 'mix';
+  const layout = isLayoutMode(stored.layout) ? stored.layout : legacyLayout;
+  const theme = stored.theme === 'dark' ? 'dark' : 'light';
+
+  return {
+    ...website.setting,
+    ...stored,
+    theme,
+    colorPrimary: normalizePrimaryColor(stored.colorPrimary),
+    layout,
+    ...layoutSetting[layout],
+  };
+};
+
+const initialSetting = createSetting(getStore({ name: 'setting' }));
 const common = {
   state: {
     language: getStore({ name: 'language' }) || 'zh-cn',
@@ -13,20 +55,19 @@ const common = {
     isSearch: false,
     isRefresh: true,
     isLock: getStore({ name: 'isLock' }),
-    themeName: getStore({ name: 'themeName' }) || 'default',
     lockPasswd: getStore({ name: 'lockPasswd' }) || '',
     website: website,
-    setting: website.setting
+    setting: initialSetting,
   },
   mutations: {
     SET_LANGUAGE: (state, language) => {
-      state.language = language
+      state.language = language;
       setStore({
         name: 'language',
-        content: state.language
-      })
+        content: state.language,
+      });
     },
-    SET_COLLAPSE: (state) => {
+    SET_COLLAPSE: state => {
       state.isCollapse = !state.isCollapse;
     },
     SET_IS_MENU: (state, menu) => {
@@ -38,44 +79,64 @@ const common = {
     SET_IS_SEARCH: (state, search) => {
       state.isSearch = search;
     },
-    SET_FULLSCREN: (state) => {
+    SET_FULLSCREN: state => {
       state.isFullScren = !state.isFullScren;
     },
-    SET_LOCK: (state) => {
+    SET_SETTING: (state, setting: Partial<AppSetting>) => {
+      state.setting = createSetting({
+        ...state.setting,
+        ...setting,
+      });
+      setStore({
+        name: 'setting',
+        content: state.setting,
+      });
+    },
+    SET_LAYOUT: (state, layout: LayoutMode) => {
+      state.setting = createSetting({
+        ...state.setting,
+        layout,
+      });
+      setStore({
+        name: 'setting',
+        content: state.setting,
+      });
+    },
+    RESET_SETTING: state => {
+      state.setting = createSetting();
+      setStore({
+        name: 'setting',
+        content: state.setting,
+      });
+    },
+    SET_LOCK: state => {
       state.isLock = true;
       setStore({
         name: 'isLock',
         content: state.isLock,
-        type: 'session'
-      })
-    },
-    SET_THEME_NAME: (state, themeName) => {
-      state.themeName = themeName;
-      setStore({
-        name: 'themeName',
-        content: state.themeName,
-      })
+        type: 'session',
+      });
     },
     SET_LOCK_PASSWD: (state, lockPasswd) => {
       state.lockPasswd = lockPasswd;
       setStore({
         name: 'lockPasswd',
         content: state.lockPasswd,
-        type: 'session'
-      })
+        type: 'session',
+      });
     },
-    CLEAR_LOCK: (state) => {
+    CLEAR_LOCK: state => {
       state.isLock = false;
       state.lockPasswd = '';
       removeStore({
         name: 'lockPasswd',
-        type: 'session'
+        type: 'session',
       });
       removeStore({
         name: 'isLock',
-        type: 'session'
+        type: 'session',
       });
     },
-  }
-}
-export default common
+  },
+};
+export default common;

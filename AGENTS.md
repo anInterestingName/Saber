@@ -24,13 +24,12 @@ src/
 ├── components/          # 公共组件，basic-container/basic-block 等在 main.ts 全局注册
 ├── config/              # website、环境地址、图标等全局配置
 ├── lang/                # zh/en/ja 国际化资源
-├── mac/                 # macOS 风格布局，仍允许保留 Options API
 ├── mixins/              # 历史 CRUD 混入；crud.js 为刻意保留的 JavaScript
 ├── option/              # 少量可复用或自动装配的 Avue 配置
 ├── page/                # 登录、锁屏、主布局，仍允许保留 Options API
 ├── router/              # 静态路由、动态菜单路由和组件装配
 ├── store/               # Vuex store、getters 与业务模块
-├── styles/              # 全局样式、变量、mixin 和多主题
+├── styles/              # 全局样式、变量、mixin 和明暗主题
 ├── types/               # 项目自建的最小类型声明
 ├── utils/               # 鉴权、加密、校验、存储和通用工具
 ├── views/               # 业务页面；必须使用 Composition API + TypeScript
@@ -57,7 +56,7 @@ doc/guide/               # 升级与迁移文档
 
 - `src/views/**/*.vue` 新增和修改统一使用 `<script setup lang="ts">` 与 Composition API。
 - 禁止在业务页面新增 `data()`、`methods`、`computed` 选项、`mapGetters` 或 `this.$xxx`。
-- `src/components/`、`src/page/`、`src/mac/` 仍处于渐进迁移状态。局部修改应遵循文件现有范式，不为无关需求做整文件迁移。
+- `src/components/`、`src/page/` 仍处于渐进迁移状态。局部修改应遵循文件现有范式，不为无关需求做整文件迁移。
 - 新增 API、工具、配置、store、router、lang 和 option 文件使用 `.ts`。仅 `src/mixins/crud.js` 与 `vite/plugins/*.js` 是有意保留的 JavaScript。
 - 方法和事件处理器使用 `const fn = (...) => {}`。
 
@@ -166,7 +165,7 @@ const rowSave = (row: XxxForm, done: () => void, loading: () => void) => {
 
 - 优先使用 Element Plus、Avue 和现有公共组件，不重复封装相同能力。
 - 全局 SCSS 变量和 mixin 位于 `src/styles/variables.scss`、`mixin.scss`；优先使用现有变量，避免硬编码主题色。
-- 多主题位于 `src/styles/theme/`，新增或调整主题时保持 `theme/index.scss` 的导入结构，并检查浅色/深色主题。
+- 明暗主题与动态主色统一位于 `src/styles/theme/tokens.scss`，调整时必须同时检查浅色、深色和自定义主色。
 - 页面布局保持后台系统的紧凑、可扫描风格；不要引入与现有系统不一致的营销式布局或大面积装饰。
 - Element Plus 图标已全量注册。沿用项目现有图标命名方式，不手写重复 SVG。
 

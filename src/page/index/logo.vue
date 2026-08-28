@@ -1,32 +1,28 @@
 <template>
   <div class="avue-logo">
-    <transition name="fade">
-      <span v-if="getScreen(isCollapse)"
-            class="avue-logo_subtitle"
-            key="0">
-        {{website.logo}}
-      </span>
+    <transition name="fade" mode="out-in">
+      <div
+        v-if="isCompact"
+        key="compact"
+        class="avue-logo_brand avue-logo_brand--compact"
+        :aria-label="website.indexTitle"
+      >
+        <img class="avue-logo_mark" src="/img/staratlas-mark.svg" alt="" />
+      </div>
+      <div v-else key="expanded" class="avue-logo_brand" :aria-label="website.indexTitle">
+        <img class="avue-logo_mark" src="/img/staratlas-mark.svg" alt="" />
+        <span class="avue-logo_title">{{ website.indexTitle }}</span>
+      </div>
     </transition>
-    <transition-group name="fade">
-      <template v-if="getScreen(!isCollapse)">
-        <span class="avue-logo_title"
-              key="1">{{website.indexTitle}} </span>
-      </template>
-    </transition-group>
   </div>
 </template>
 
-<script>
-import { mapGetters } from "vuex";
-export default {
-  name: "logo",
-  data () {
-    return {};
-  },
-  created () { },
-  computed: {
-    ...mapGetters(["isCollapse"])
-  },
-  methods: {}
-};
+<script setup lang="ts">
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import website from '@/config/website';
+import { getScreen } from '@/utils/util';
+
+const store = useStore();
+const isCompact = computed(() => getScreen(store.getters.isCollapse));
 </script>

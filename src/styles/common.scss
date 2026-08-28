@@ -1,86 +1,91 @@
 @use 'sass:meta';
 @use './mixin';
 @use './variables' as vars;
+@use './theme/tokens';
 
-a{
+a {
   text-decoration: none;
-  color:#333;
+  color: var(--saber-text-primary);
 }
-*{
+* {
   outline: none;
 }
 
 .avue-sidebar,
 .avue-top,
 .avue-logo,
-.avue-layout
+.avue-layout,
 .login-logo,
 .avue-main {
-    transition: all .3s;
+  transition: all 0.3s;
 }
-.avue-layout{
+.avue-layout {
   display: flex;
   height: 100%;
   overflow: hidden;
-  &--horizontal{
+  &--horizontal {
     flex-direction: column;
     .avue-sidebar {
       width: 100%;
       height: vars.$top_height;
       display: flex;
-      .avue-menu,.el-menu-item,.el-sub-menu__title{
+      .avue-menu,
+      .el-menu-item,
+      .el-sub-menu__title {
         height: vars.$top_height;
         line-height: vars.$top_height;
       }
-      .is-active:before{
+      .is-active:before {
         display: none;
       }
     }
-    .avue-logo{
-      width:vars.$sidebar_width
+    .avue-logo {
+      width: vars.$sidebar_width;
     }
   }
 }
 .avue-contail {
-    width: 100%;
-    height: 100%;
-    background: #f0f2f5;
-    background-size: 100%;
-    background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  background: var(--saber-page-bg);
+  background-size: 100%;
+  background-repeat: no-repeat;
 }
 
 .avue--collapse {
-    .avue-sidebar,
-    .avue-logo {
-        width: vars.$sidebar_collapse;
-    }
+  .avue-sidebar,
+  .avue-logo {
+    width: vars.$sidebar_collapse;
+  }
 }
 
 .avue-main {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    flex:1;
-    box-sizing: border-box;
-    overflow: hidden;
-    background: #f0f2f5;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--saber-page-bg);
 }
-#avue-view{
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  margin-bottom: 10px;
+#avue-view {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  box-sizing: border-box;
+  background: var(--saber-page-bg);
 }
 .avue-view {
-    width: 100%;
-    box-sizing: border-box;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .avue-footer {
   width: 100%;
   position: absolute;
-  bottom:0;
+  bottom: 0;
   text-align: center;
   .copyright {
     color: #666;
@@ -88,7 +93,7 @@ a{
   }
 }
 .mac_bg {
-  background-image: url("/img/bg.jpg");
+  background-image: url('/img/bg.jpg');
   background-color: #000;
   position: fixed;
   left: 0;
@@ -104,8 +109,6 @@ a{
 @include meta.load-css('./tags');
 // 侧面导航栏
 @include meta.load-css('./sidebar');
-//主题
-@include meta.load-css('./theme/index');
 //通用配置
 @include meta.load-css('./normalize');
 //图标配置
