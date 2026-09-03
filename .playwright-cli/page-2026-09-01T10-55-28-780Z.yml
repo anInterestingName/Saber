@@ -1,0 +1,307 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e99]:
+    - generic [ref=e100]:
+      - generic "星图 staratlas" [ref=e102]
+      - menubar [ref=e107]:
+        - menuitem " 工作台" [ref=e108]:
+          - generic [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]: 
+            - generic [ref=e111]: 工作台
+          - text: 
+        - menuitem " 系统监控" [ref=e115]:
+          - generic [ref=e116] [cursor=pointer]:
+            - generic [ref=e117]: 
+            - generic [ref=e118]: 系统监控
+          - text:      
+        - menuitem " 研发工具" [ref=e122]:
+          - generic [ref=e123] [cursor=pointer]:
+            - generic [ref=e124]: 
+            - generic [ref=e125]: 研发工具
+          - text:  
+        - menuitem " 报表管理" [ref=e129]:
+          - generic [ref=e130] [cursor=pointer]:
+            - generic [ref=e131]: 
+            - generic [ref=e132]: 报表管理
+          - text:  
+        - menuitem " 基础配置" [ref=e136]:
+          - generic [ref=e137] [cursor=pointer]:
+            - generic [ref=e138]: 
+            - generic [ref=e139]: 基础配置
+          - text: 
+        - menuitem " 权限管理" [ref=e143]:
+          - generic [ref=e144] [cursor=pointer]:
+            - generic [ref=e145]: 
+            - generic [ref=e146]: 权限管理
+          - text:   
+        - menuitem " 系统管理" [expanded] [ref=e150]:
+          - generic [ref=e151] [cursor=pointer]:
+            - generic [ref=e152]: 
+            - generic [ref=e153]: 系统管理
+          - menu [ref=e1180]:
+            - menuitem " 用户管理" [ref=e1181] [cursor=pointer]:
+              - generic [ref=e1182]: 
+              - generic [ref=e1183]: 用户管理
+            - menuitem " 部门管理" [ref=e1184] [cursor=pointer]:
+              - generic [ref=e1185]: 
+              - generic [ref=e1186]: 部门管理
+            - menuitem " 岗位管理" [ref=e1187] [cursor=pointer]:
+              - generic [ref=e1188]: 
+              - generic [ref=e1189]: 岗位管理
+            - menuitem " 字典管理" [ref=e1190] [cursor=pointer]:
+              - generic [ref=e1191]: 
+              - generic [ref=e1192]: 字典管理
+            - menuitem " 菜单管理" [ref=e1193] [cursor=pointer]:
+              - generic [ref=e1194]: 
+              - generic [ref=e1195]: 菜单管理
+            - menuitem " 参数管理" [ref=e1196] [cursor=pointer]:
+              - generic [ref=e1197]: 
+              - generic [ref=e1198]: 参数管理
+            - menuitem " 顶部菜单" [ref=e1199] [cursor=pointer]:
+              - generic [ref=e1200]: 
+              - generic [ref=e1201]: 顶部菜单
+            - menuitem " 租户管理" [ref=e1202] [cursor=pointer]:
+              - generic [ref=e1203]: 
+              - generic [ref=e1204]: 租户管理
+            - menuitem " 应用管理" [ref=e1205] [cursor=pointer]:
+              - generic [ref=e1206]: 
+              - generic [ref=e1207]: 应用管理
+    - generic [ref=e157]:
+      - generic [ref=e158]:
+        - generic [ref=e159]: 
+        - generic [ref=e162]:
+          - menubar [ref=e163]:
+            - menuitem " 首页" [ref=e164] [cursor=pointer]:
+              - generic [ref=e165]: 
+              - generic [ref=e166]: 首页
+          - combobox [ref=e167]:
+            - textbox "请输入搜索内容" [ref=e170]
+        - generic [ref=e171]:
+          - generic [ref=e172]: 
+          - button "" [ref=e176]
+          - generic [ref=e177]: 
+          - generic [ref=e179]: 
+          - generic [ref=e183]:
+            - button "管理员" [ref=e186]
+            - button "打开界面设置" [ref=e187] [cursor=pointer]
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - tablist [ref=e197]:
+            - tab "首页" [ref=e198]
+            - tab "通知公告" [ref=e645]
+            - tab "数据源管理" [ref=e967]
+            - tab "报表列表" [ref=e1069]
+            - tab "租户管理" [ref=e1208]
+            - tab "应用管理" [selected] [ref=e1393]
+          - generic:
+            - tabpanel "应用管理"
+        - button "更多" [ref=e201] [cursor=pointer]
+      - text:                       
+      - generic [ref=e5115]:
+        - generic [ref=e5120]:
+          - generic [ref=e5122]:
+            - generic [ref=e5123]: 应用 ID
+            - textbox "应用 ID" [ref=e5127]:
+              - /placeholder: 请输入应用 ID
+          - generic [ref=e5130]:
+            - generic [ref=e5131]: 应用密钥
+            - textbox "应用密钥" [ref=e5135]:
+              - /placeholder: 请输入应用密钥
+          - generic [ref=e5137]:
+            - button "重置" [ref=e5138] [cursor=pointer]
+            - button "查询" [ref=e5143] [cursor=pointer]
+        - generic [ref=e5150]:
+          - generic [ref=e5151]:
+            - heading "客户端列表" [level=2] [ref=e5152]
+            - generic [ref=e5153]:
+              - generic [ref=e5154]:
+                - button "新增" [ref=e5155] [cursor=pointer]
+                - button "删除" [ref=e5160] [cursor=pointer]
+              - button "刷新" [ref=e5166] [cursor=pointer]
+          - generic [ref=e5172]:
+            - table [ref=e5174]:
+              - rowgroup [ref=e5184]:
+                - row [ref=e5185]:
+                  - columnheader [ref=e5186]:
+                    - generic "选择所有行" [ref=e5188] [cursor=pointer]:
+                      - generic [ref=e5189]:
+                        - checkbox "选择所有行"
+                  - columnheader "#" [ref=e5191]
+                  - columnheader "应用 ID" [ref=e5193]
+                  - columnheader "应用密钥" [ref=e5195]
+                  - columnheader "授权类型" [ref=e5197]
+                  - columnheader "授权范围" [ref=e5199]
+                  - columnheader "令牌秒数" [ref=e5201]
+                  - columnheader "操作" [ref=e5203]
+            - table [ref=e5209]:
+              - rowgroup [ref=e5219]:
+                - row [ref=e5220]:
+                  - cell [ref=e5221]:
+                    - generic "选择当前行" [ref=e5223] [cursor=pointer]:
+                      - generic [ref=e5224]:
+                        - checkbox "选择当前行"
+                  - cell "1" [ref=e5226]
+                  - cell "sword" [ref=e5229]
+                  - cell "********" [ref=e5231]
+                  - cell "refresh_token,password,authorization_code" [ref=e5233]
+                  - cell "all" [ref=e5235]
+                  - cell "3600" [ref=e5237]
+                  - cell [ref=e5239]:
+                    - generic [ref=e5241]:
+                      - button "查看" [ref=e5242] [cursor=pointer]
+                      - button "编辑" [ref=e5247] [cursor=pointer]
+                      - button "删除" [ref=e5253] [cursor=pointer]
+                - row [ref=e5258]:
+                  - cell [ref=e5259]:
+                    - generic "选择当前行" [ref=e5261] [cursor=pointer]:
+                      - generic [ref=e5262]:
+                        - checkbox "选择当前行"
+                  - cell "2" [ref=e5264]
+                  - cell "saber" [ref=e5267]
+                  - cell "********" [ref=e5269]
+                  - cell "refresh_token,password,authorization_code" [ref=e5271]
+                  - cell "all" [ref=e5273]
+                  - cell "3600" [ref=e5275]
+                  - cell [ref=e5277]:
+                    - generic [ref=e5279]:
+                      - button "查看" [ref=e5280] [cursor=pointer]
+                      - button "编辑" [ref=e5285] [cursor=pointer]
+                      - button "删除" [ref=e5291] [cursor=pointer]
+                - row [ref=e5440]:
+                  - cell [ref=e5441]:
+                    - generic "选择当前行" [ref=e5443] [cursor=pointer]:
+                      - generic [ref=e5444]:
+                        - checkbox "选择当前行"
+                  - cell "3" [ref=e5446]
+                  - cell "qa-req002-client" [ref=e5449]
+                  - cell "********" [ref=e5451]
+                  - cell "refresh_token,password,authorization_code" [ref=e5453]
+                  - cell "all" [ref=e5455]
+                  - cell "3600" [ref=e5457]
+                  - cell [ref=e5459]:
+                    - generic [ref=e5461]:
+                      - button "查看" [ref=e5462] [cursor=pointer]
+                      - button "编辑" [ref=e5467] [cursor=pointer]
+                      - button "删除" [ref=e5473] [cursor=pointer]
+          - generic [ref=e5298]:
+            - generic [ref=e5299]: 共 3 条
+            - generic [ref=e5302] [cursor=pointer]:
+              - generic:
+                - combobox [ref=e5304]
+                - generic [ref=e5305]: 10条/页
+            - button "上一页" [disabled] [ref=e5310]
+            - list [ref=e5311]:
+              - listitem "第 1 页" [ref=e5312]: "1"
+            - button "下一页" [disabled] [ref=e5313]
+            - generic [ref=e5314]:
+              - generic [ref=e5315]: 前往
+              - spinbutton "页" [ref=e5318]: "1"
+              - generic [ref=e5319]: 页
+  - dialog "编辑客户端" [ref=e5596]:
+    - generic:
+      - banner:
+        - heading "编辑客户端" [level=2]
+        - button "关闭此对话框"
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic: "* 应用 ID"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "* 应用 ID":
+                          - /placeholder: 请输入应用 ID
+              - generic:
+                - generic:
+                  - generic: "* 应用密钥"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "* 应用密钥":
+                          - /placeholder: 请输入应用密钥
+              - generic:
+                - generic:
+                  - generic: "* 授权类型"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "* 授权类型":
+                          - /placeholder: 请输入授权类型
+                          - text: refresh_token,password,authorization_code
+              - generic:
+                - generic:
+                  - generic: "* 授权范围"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "* 授权范围":
+                          - /placeholder: 请输入授权范围
+                          - text: all
+              - generic:
+                - generic:
+                  - generic: 自动授权
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "自动授权":
+                          - /placeholder: 请输入自动授权配置
+              - generic:
+                - generic:
+                  - generic: "* 令牌秒数"
+                  - generic:
+                    - generic:
+                      - button "减少数值"
+                      - button "增加数值"
+                      - generic:
+                        - generic:
+                          - spinbutton "* 令牌秒数" [disabled]: "3600"
+              - generic:
+                - generic:
+                  - generic: "* 刷新秒数"
+                  - generic:
+                    - generic:
+                      - button "减少数值"
+                      - button "增加数值"
+                      - generic:
+                        - generic:
+                          - spinbutton "* 刷新秒数" [disabled]: "604800"
+              - generic:
+                - generic:
+                  - generic: "* 回调地址"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "* 回调地址":
+                          - /placeholder: 请输入回调地址
+              - generic:
+                - generic:
+                  - generic: 资源集合
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "资源集合":
+                          - /placeholder: 请输入资源集合
+              - generic:
+                - generic:
+                  - generic: 权限
+                  - generic:
+                    - generic:
+                      - generic:
+                        - textbox "权限":
+                          - /placeholder: 请输入权限
+              - generic:
+                - generic:
+                  - generic: 附加说明
+                  - generic:
+                    - generic:
+                      - textbox "附加说明":
+                        - /placeholder: 请输入附加说明
+      - contentinfo:
+        - generic:
+          - generic:
+            - button "取消"
+            - button "确定"
+  - alert [ref=e5715]:
+    - paragraph [ref=e5719]: 操作成功!

@@ -1,11 +1,11 @@
 @use './variables' as vars;
 
-.avue-top {
+.saber-top {
   position: relative;
   z-index: 10;
   background-color: var(--saber-header-bg);
   border-bottom: 1px solid var(--saber-border);
-  box-shadow: var(--saber-shadow);
+  box-shadow: none;
   color: var(--saber-text-secondary);
   font-size: 28px;
   height: vars.$top_height;
@@ -19,7 +19,7 @@
     }
   }
 }
-.avue-breadcrumb {
+.saber-breadcrumb {
   height: 100%;
   i {
     font-size: 30px !important;
@@ -117,28 +117,29 @@
   font-weight: 400;
 }
 
-.avue-logo {
+.saber-logo {
   display: flex;
   align-items: center;
   justify-content: center;
   height: vars.$top_height;
   padding: 0 12px;
   line-height: vars.$top_height;
-  background-color: var(--saber-sidebar-bg);
+  background-color: var(--saber-header-bg);
+  border-bottom: 1px solid var(--saber-border);
   overflow: hidden;
   box-sizing: border-box;
-  box-shadow: 1px 0 0 var(--saber-border);
   color: var(--saber-sidebar-text-active);
 
   &_brand {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
     width: 100%;
     min-width: 0;
 
     &--compact {
+      justify-content: center;
       gap: 0;
     }
   }
@@ -164,6 +165,6 @@
   }
 }
 
-html.dark .avue-logo_mark {
+html.dark .saber-logo_mark {
   filter: brightness(1.45) saturate(1.1);
 }

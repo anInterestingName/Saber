@@ -1,153 +1,129 @@
 <template>
   <basic-container>
-    <div class="wel">
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-platform-eleme"
-                   text="开始菜单1"
-                   time="1"
-                   background="/img/bg/bg3.jpg"
-                   color="#d56259"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-eleme"
-                   text="开始菜单2"
-                   time="2"
-                   background="/img/bg/bg2.jpg"
-                   color="#419ce7"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-delete-solid"
-                   text="开始菜单3"
-                   time="3"
-                   color="#56b69b"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-delete"
-                   text="开始菜单4"
-                   time="4"
-                   color="#d44858"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-tools"
-                   text="开始菜单5"
-                   time="5"
-                   color="#3a1f7e"></basic-block>
-      <basic-block :width="410"
-                   :height="height"
-                   icon="el-icon-setting"
-                   text="开始菜单6"
-                   time="6"
-                   background="/img/bg/bg1.jpg"
-                   dept="这是一段很长的很长很长很长的描述这是一段很长的很长很长很长的描述"
-                   color="#422829"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-user-solid"
-                   text="开始菜单7"
-                   time="7"
-                   color="#613cbd"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-star-off"
-                   text="开始菜单8"
-                   time="8"
-                   color="#da542e"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-goods"
-                   text="开始菜单9"
-                   time="9"
-                   color="#2e8aef"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-circle-check"
-                   text="开始菜单10"
-                   time="10"
-                   color="#3d17b8"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-platform"
-                   text="开始菜单11"
-                   time="11"
-                   color="#e31462"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-fold"
-                   text="开始菜单12"
-                   time="12"
-                   color="#d9532d"></basic-block>
-      <basic-block :width="410"
-                   :height="height"
-                   icon="el-icon-s-open"
-                   text="开始菜单13"
-                   time="13"
-                   dept="这是一段很长的很长很长很长的描述这是一段很长的很长很长很长的描述"
-                   color="#b72147"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-flag"
-                   text="开始菜单14"
-                   time="14"
-                   color="#01a100"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-data"
-                   text="开始菜单15"
-                   time="15"
-                   color="#0c56bf"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-grid"
-                   text="开始菜单16"
-                   time="16"
-                   color="#0098a9"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-release"
-                   text="开始菜单17"
-                   time="17"
-                   background="/img/bg/bg2.jpg"
-                   color="#209bdf"></basic-block>
-      <basic-block :width="width"
-                   :height="height"
-                   icon="el-icon-s-home"
-                   text="开始菜单18"
-                   time="18"
-                   background="/img/bg/bg3.jpg"
-                   color="#603bbc"></basic-block>
-      <basic-block :width="515"
-                   :height="height"
-                   icon="el-icon-s-promotion"
-                   text="开始菜单19"
-                   time="19"
-                   dept="这是一段很长的很长很长很长的描述这是一段很长的很长很长很长的描述"
-                   color="#009bad"></basic-block>
-      <basic-block :width="515"
-                   :height="height"
-                   icon="el-icon-s-custom"
-                   text="开始菜单20"
-                   time="20"
-                   background="/img/bg/bg4.jpg"
-                   dept="这是一段很长的很长很长很长的描述这是一段很长的很长很长很长的描述"
-                   color="#d74e2a"></basic-block>
+    <div class="dashboard-tiles">
+      <basic-block
+        v-for="(tile, index) in tiles"
+        :key="tile.text"
+        :width="tile.width ?? defaultWidth"
+        :height="defaultHeight"
+        :icon="tile.icon"
+        :text="tile.text"
+        :time="index + 1"
+        :background="tile.background"
+        :dept="tile.dept"
+        :color="tile.color"
+      />
     </div>
   </basic-container>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import type { Component } from 'vue';
+import {
+  Bell,
+  Collection,
+  Connection,
+  DataAnalysis,
+  Delete,
+  Document,
+  Download,
+  Files,
+  Grid,
+  House,
+  Key,
+  Lock,
+  Menu,
+  Monitor,
+  Operation,
+  Platform,
+  Promotion,
+  Setting,
+  Tools,
+  User,
+} from '@element-plus/icons-vue';
 
-// 磁贴宽高
-const width = ref(200);
-const height = ref(120);
+interface DashboardTile {
+  text: string;
+  icon: Component;
+  color: string;
+  width?: number;
+  background?: string;
+  dept?: string;
+}
+
+const defaultWidth = 200;
+const defaultHeight = 120;
+const longDescription = '用于展示可扩展的工作台磁贴内容和响应式布局效果';
+const tiles: DashboardTile[] = [
+  { text: '开始菜单1', icon: Platform, color: '#d56259', background: '/img/bg/bg3.jpg' },
+  { text: '开始菜单2', icon: Monitor, color: '#419ce7', background: '/img/bg/bg2.jpg' },
+  { text: '开始菜单3', icon: Delete, color: '#56b69b' },
+  { text: '开始菜单4', icon: Tools, color: '#d44858' },
+  { text: '开始菜单5', icon: Setting, color: '#3a1f7e' },
+  {
+    text: '开始菜单6',
+    icon: Operation,
+    color: '#422829',
+    width: 410,
+    background: '/img/bg/bg1.jpg',
+    dept: longDescription,
+  },
+  { text: '开始菜单7', icon: User, color: '#613cbd' },
+  { text: '开始菜单8', icon: Bell, color: '#da542e' },
+  { text: '开始菜单9', icon: Collection, color: '#2e8aef' },
+  { text: '开始菜单10', icon: Connection, color: '#3d17b8' },
+  { text: '开始菜单11', icon: Document, color: '#e31462' },
+  { text: '开始菜单12', icon: Files, color: '#d9532d' },
+  {
+    text: '开始菜单13',
+    icon: Grid,
+    color: '#b72147',
+    width: 410,
+    dept: longDescription,
+  },
+  { text: '开始菜单14', icon: Key, color: '#18794e' },
+  { text: '开始菜单15', icon: DataAnalysis, color: '#0c56bf' },
+  { text: '开始菜单16', icon: Menu, color: '#0098a9' },
+  {
+    text: '开始菜单17',
+    icon: Download,
+    color: '#209bdf',
+    background: '/img/bg/bg2.jpg',
+  },
+  { text: '开始菜单18', icon: House, color: '#603bbc', background: '/img/bg/bg3.jpg' },
+  {
+    text: '开始菜单19',
+    icon: Promotion,
+    color: '#009bad',
+    width: 515,
+    dept: longDescription,
+  },
+  {
+    text: '开始菜单20',
+    icon: Lock,
+    color: '#d74e2a',
+    width: 515,
+    background: '/img/bg/bg4.jpg',
+    dept: longDescription,
+  },
+];
 </script>
 
-<style lang="scss">
-  .wel {
-    display: flex;
-    flex-wrap: wrap;
-    width: 1100px;
-    margin: 0 auto;
+<style scoped lang="scss">
+.dashboard-tiles {
+  display: flex;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+  .dashboard-tiles {
+    justify-content: center;
   }
+
+  :deep(.basic-block) {
+    max-width: calc(100vw - 64px);
+  }
+}
 </style>

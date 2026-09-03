@@ -1,4 +1,4 @@
-.avue-tags {
+.saber-tags {
   user-select: none;
   position: relative;
   padding: 0 12px;
@@ -82,5 +82,19 @@
     right: 0;
     padding: 1px 0 0 15px;
     box-sizing: border-box;
+  }
+
+  &__refresh {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    margin-left: 4px;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    background: transparent;
+    cursor: pointer;
   }
 }

@@ -1,28 +1,27 @@
 <template>
-  <div class="avue-searchs" @click.self="handleEsc">
-    <div class="avue-searchs__title">Avue菜单搜索</div>
-    <div class="avue-searchs__content">
-      <div class="avue-searchs__form">
+  <div class="saber-menu-search" @click.self="handleEsc">
+    <div class="saber-menu-search__title">菜单搜索</div>
+    <div class="saber-menu-search__content">
+      <div class="saber-menu-search__form">
         <el-input :placeholder="$t('search')" v-model="value" @keydown.esc="handleEsc">
           <template #append>
-            <el-button icon="el-icon-search"></el-button>
+            <el-button aria-label="搜索">
+              <el-icon><Search /></el-icon>
+            </el-button>
           </template>
         </el-input>
-        <p>
-          <el-tag>你可以使用快捷键esc 关闭</el-tag>
-        </p>
       </div>
-      <div class="avue-searchs__list">
-        <el-scrollbar class="avue-searchs__scrollbar">
+      <div class="saber-menu-search__list">
+        <el-scrollbar class="saber-menu-search__scrollbar">
           <div
-            class="avue-searchs__item"
+            class="saber-menu-search__item"
             v-for="(item, index) in menus"
             :key="index"
             @click="handleSelect(item)"
           >
-            <i :class="[item[iconKey], 'avue-searchs__item-icon']"></i>
-            <span class="avue-searchs__item-title">{{ item[labelKey] }}</span>
-            <div class="avue-searchs__item-path">
+            <i :class="[item[iconKey], 'saber-menu-search__item-icon']"></i>
+            <span class="saber-menu-search__item-title">{{ item[labelKey] }}</span>
+            <div class="saber-menu-search__item-path">
               {{ item[pathKey] }}
             </div>
           </div>
@@ -35,7 +34,9 @@
 <script>
 import { mapGetters } from 'vuex';
 import { validateNull } from '@/utils/validate';
+import { Search } from '@element-plus/icons-vue';
 export default {
+  components: { Search },
   data() {
     return {
       value: '',
@@ -110,7 +111,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.avue-searchs {
+.saber-menu-search {
   padding-top: 50px;
   width: 100%;
   height: 100%;
@@ -118,20 +119,16 @@ export default {
   background-color: var(--saber-surface);
   z-index: 1024;
   &__title {
-    margin-bottom: 60px;
+    margin-bottom: 40px;
     text-align: center;
-    font-size: 42px;
+    font-size: 28px;
     font-weight: bold;
-    letter-spacing: 2px;
-    text-indent: 2px;
+    letter-spacing: 0;
   }
   &__form {
     margin: 0 auto 50px auto;
     width: 50%;
     text-align: center;
-    p {
-      margin-top: 20px;
-    }
   }
   &__scrollbar {
     height: 400px;

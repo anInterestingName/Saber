@@ -1,56 +1,282 @@
 <template>
-  <basic-container>
-    <avue-crud :option="option"
-               :table-loading="loading"
-               :data="data"
-               ref="crudRef"
-               v-model="form"
-               :permission="permissionList"
-               :page="page"
-               @row-del="rowDel"
-               @row-update="rowUpdate"
-               @row-save="rowSave"
-               :before-open="beforeOpen"
-               @search-change="searchChange"
-               @search-reset="searchReset"
-               @selection-change="selectionChange"
-               @current-change="currentChange"
-               @size-change="sizeChange"
-               @on-load="onLoad">
-      <template #menu-left>
-        <el-button type="danger"
-                   icon="el-icon-delete"
-                   v-if="permission.code_delete"
-                   plain
-                   @click="handleDelete">删 除
+  <div class="code-management-page">
+    <search-panel
+      :model="searchForm"
+      :loading="loading"
+      @search="handleSearch"
+      @reset="handleReset"
+    >
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="数据源">
+          <el-select
+            v-model="searchForm.datasourceId"
+            clearable
+            filterable
+            :loading="datasourceLoading"
+            placeholder="请选择数据源"
+          >
+            <el-option
+              v-for="source in datasourceOptions"
+              :key="source.id"
+              :label="source.name"
+              :value="source.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="模块名">
+          <el-input v-model="searchForm.codeName" clearable placeholder="请输入模块名" />
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="服务名">
+          <el-input v-model="searchForm.serviceName" clearable placeholder="请输入服务名" />
+        </el-form-item>
+      </el-col>
+    </search-panel>
+
+    <list-panel title="代码生成配置">
+      <template #actions>
+        <el-button
+          v-if="canAdd"
+          type="primary"
+          :icon="Plus"
+          :disabled="generating"
+          @click="openAdd"
+        >
+          新增
         </el-button>
-        <el-button type="primary"
-                   plain
-                   icon="el-icon-refresh"
-                   @click="handleBuild">代码生成
+        <el-button
+          v-if="canDelete"
+          type="danger"
+          plain
+          :icon="Delete"
+          :disabled="generating"
+          @click="handleBatchDelete"
+        >
+          删除
+        </el-button>
+        <el-button
+          v-if="isAdmin"
+          type="primary"
+          plain
+          :icon="Cpu"
+          :loading="generating"
+          @click="handleBuild"
+        >
+          代码生成
         </el-button>
       </template>
-      <template #menu="scope">
-        <el-button text
-                   type="primary"
-                   icon="el-icon-document-copy"
-                   v-if="permission.code_edit"
-                   @click.stop="handleCopy(scope.row)">复制
-        </el-button>
+      <template #tools>
+        <el-tooltip content="刷新" placement="top">
+          <el-button
+            circle
+            :icon="Refresh"
+            :loading="loading"
+            :disabled="generating"
+            aria-label="刷新"
+            @click="refresh"
+          />
+        </el-tooltip>
       </template>
-    </avue-crud>
-  </basic-container>
+
+      <el-table
+        ref="tableRef"
+        v-loading="loading"
+        :data="data"
+        row-key="id"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" fixed="left" width="48" />
+        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+        <el-table-column prop="datasourceId" label="数据源" min-width="160" show-overflow-tooltip>
+          <template #default="{ row }">{{ getDatasourceName(row.datasourceId) }}</template>
+        </el-table-column>
+        <el-table-column prop="codeName" label="模块名" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="serviceName" label="服务名" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="tableName" label="表名" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="packageName" label="包名" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="baseMode" label="基础业务" width="110" align="center">
+          <template #default="{ row }">
+            <dict-tag code="yes_no" :value="row.baseMode" value-type="number" />
+          </template>
+        </el-table-column>
+        <el-table-column prop="wrapMode" label="包装器" width="100" align="center">
+          <template #default="{ row }">
+            <dict-tag code="yes_no" :value="row.wrapMode" value-type="number" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed="right" width="260" align="center">
+          <template #default="{ row }">
+            <row-actions
+              :show-view="canView"
+              :show-edit="canEdit"
+              :show-delete="canDelete"
+              :disabled="generating || copyingId !== ''"
+              @view="openDetail(row as CodeEntity, 'view')"
+              @edit="openDetail(row as CodeEntity, 'edit')"
+              @delete="handleRowDelete(row as CodeEntity)"
+            >
+              <template v-if="canEdit" #extra>
+                <el-button
+                  type="primary"
+                  link
+                  :icon="CopyDocument"
+                  :loading="copyingId === row.id"
+                  :disabled="generating || (copyingId !== '' && copyingId !== row.id)"
+                  @click="handleCopy(row as CodeEntity)"
+                >
+                  复制
+                </el-button>
+              </template>
+            </row-actions>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <list-pagination
+          v-model:current-page="page.currentPage"
+          v-model:page-size="page.pageSize"
+          :total="page.total"
+          :disabled="loading || generating"
+          @change="handlePageChange"
+        />
+      </template>
+    </list-panel>
+
+    <form-dialog
+      v-model="dialogVisible"
+      :mode="mode"
+      entity-name="代码配置"
+      :submitting="submitting"
+      :loading="detailLoading || datasourceLoading"
+      width="860px"
+      destroy-on-close
+      @confirm="handleSubmit"
+      @cancel="handleDialogCancel"
+    >
+      <el-result v-if="detailFailed" icon="error" title="代码配置详情加载失败">
+        <template #extra>
+          <el-button type="primary" @click="retryDetail">重试</el-button>
+        </template>
+      </el-result>
+      <el-form
+        v-else
+        ref="formRef"
+        :model="form"
+        :rules="formRules"
+        :disabled="mode === 'view' || detailLoading || datasourceLoading || datasourceFailed"
+        label-width="108px"
+      >
+        <el-alert v-if="datasourceFailed" type="error" :closable="false" show-icon>
+          <template #title>
+            数据源选项加载失败
+            <el-button type="primary" link @click="loadDatasourceOptions">重试</el-button>
+          </template>
+        </el-alert>
+        <el-row :gutter="24">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="数据源" prop="datasourceId">
+              <el-select v-model="form.datasourceId" filterable :loading="datasourceLoading">
+                <el-option
+                  v-for="source in datasourceOptions"
+                  :key="source.id"
+                  :label="source.name"
+                  :value="source.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="模块名" prop="codeName">
+              <el-input v-model="form.codeName" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="服务名" prop="serviceName">
+              <el-input v-model="form.serviceName" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="表名" prop="tableName">
+              <el-input v-model="form.tableName" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="表前缀" prop="tablePrefix">
+              <el-input v-model="form.tablePrefix" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="主键名" prop="pkName">
+              <el-input v-model="form.pkName" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="包名" prop="packageName">
+              <el-input v-model="form.packageName" maxlength="200" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="基础业务" prop="baseMode">
+              <dict-select
+                v-model="form.baseMode"
+                code="yes_no"
+                value-type="number"
+                :disabled="mode === 'view'"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="包装器" prop="wrapMode">
+              <dict-select
+                v-model="form.wrapMode"
+                code="yes_no"
+                value-type="number"
+                :disabled="mode === 'view'"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="后端生成路径" prop="apiPath">
+              <el-input v-model="form.apiPath" type="textarea" :rows="2" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="前端生成路径" prop="webPath">
+              <el-input v-model="form.webPath" type="textarea" :rows="2" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </form-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { CopyDocument, Cpu, Delete, Plus, Refresh } from '@element-plus/icons-vue';
+import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
 import { useStore } from 'vuex';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { getList, getCode, build, remove, add, update, copy } from '@/api/tool/code';
-import { validData } from '@/utils/util';
-import { baseUrl } from '@/config/env';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import ListPagination from '@/components/list-pagination/main.vue';
+import RowActions from '@/components/row-actions/main.vue';
+import FormDialog from '@/components/form-dialog/main.vue';
+import DictSelect from '@/components/dict-select/main.vue';
+import DictTag from '@/components/dict-tag/main.vue';
+import { useCrudPermission } from '@/composables/useCrudPermission';
+import { usePagedList } from '@/composables/usePagedList';
+import { useRemoteDetail } from '@/composables/useRemoteDetail';
+import { useRemoteOptions } from '@/composables/useRemoteOptions';
+import { useTableSelection } from '@/composables/useTableSelection';
+import { add, build, copy, getCode, getList, remove, update } from '@/api/tool/code';
+import { getDatasourceSelect, type DatasourceOption } from '@/api/tool/datasource';
+import type { CrudMode } from '@/types/crud';
+import type { PaginationChange } from '@/types/list';
 
-// 数据实体
 interface CodeEntity {
   id: string;
   datasourceId?: string;
@@ -60,355 +286,252 @@ interface CodeEntity {
   tablePrefix?: string;
   pkName?: string;
   packageName?: string;
-  baseMode?: string;
-  wrapMode?: string;
+  baseMode?: number;
+  wrapMode?: number;
   apiPath?: string;
   webPath?: string;
 }
 
-// 新增与编辑共用的表单模型，字段均可选
+interface CodeQuery {
+  datasourceId?: string;
+  codeName?: string;
+  serviceName?: string;
+}
+
 type CodeForm = Partial<CodeEntity>;
+type CodeListResponse = Awaited<ReturnType<typeof getList<CodeEntity>>>;
 
-// 权限
+const createInitialQuery = (): CodeQuery => ({});
+const createInitialForm = (): CodeForm => ({
+  datasourceId: undefined,
+  codeName: '',
+  serviceName: '',
+  tableName: '',
+  tablePrefix: '',
+  pkName: '',
+  packageName: '',
+  baseMode: undefined,
+  wrapMode: undefined,
+  apiPath: '',
+  webPath: '',
+});
+
 const store = useStore();
-const permission = computed(() => store.getters.permission);
+const isAdmin = computed(() => store.getters.userInfo?.authority?.includes('admin') ?? false);
+const searchForm = ref<CodeQuery>(createInitialQuery());
+const form = ref<CodeForm>(createInitialForm());
+const mode = ref<CrudMode>('add');
+const dialogVisible = ref(false);
+const submitting = ref(false);
+const generating = ref(false);
+const copyingId = ref('');
+const detailId = ref<string>();
+const formRef = ref<InstanceType<typeof ElForm>>();
+const tableRef = ref<TableInstance>();
 
-// 表格实例与数据状态
-const crudRef = ref();
-const form = ref<CodeForm>({});
-const data = ref<CodeEntity[]>([]);
-const selectionList = ref<CodeEntity[]>([]);
-const query = ref<Partial<CodeEntity>>({});
-const loading = ref(true);
+const formRules: FormRules = {
+  datasourceId: [{ required: true, message: '请选择数据源', trigger: 'change' }],
+  codeName: [{ required: true, message: '请输入模块名', trigger: 'blur' }],
+  serviceName: [{ required: true, message: '请输入服务名', trigger: 'blur' }],
+  tableName: [{ required: true, message: '请输入表名', trigger: 'blur' }],
+  tablePrefix: [{ required: true, message: '请输入表前缀', trigger: 'blur' }],
+  pkName: [{ required: true, message: '请输入主键名', trigger: 'blur' }],
+  packageName: [{ required: true, message: '请输入包名', trigger: 'blur' }],
+  baseMode: [{ required: true, message: '请选择基础业务', trigger: 'change' }],
+  wrapMode: [{ required: true, message: '请选择包装器', trigger: 'change' }],
+  apiPath: [{ required: true, message: '请输入后端生成路径', trigger: 'blur' }],
+  webPath: [{ required: true, message: '请输入前端生成路径', trigger: 'blur' }],
+};
 
-// 分页参数
-const page = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const { data, page, loading, load, search, reset, refresh } = usePagedList<
+  CodeEntity,
+  CodeQuery,
+  CodeListResponse
+>({
+  fetcher: (current, size, query) => getList<CodeEntity>(current, size, query),
+  resolveResponse: response => ({
+    records: response.data.data.records,
+    total: response.data.data.total,
+  }),
+  createInitialQuery,
 });
-
-// 选中行 id 集合，供批量删除与代码生成使用
-const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
-
-// 表格配置
-const option = reactive({
-  height: 'auto',
-  calcHeight: 210,
-  searchShow: true,
-  searchMenuSpan: 6,
-  tip: false,
-  border: true,
-  index: true,
-  selection: true,
-  labelWidth: 120,
-  menuWidth: 285,
-  viewBtn: true,
-  column: [
-    {
-      label: '数据源',
-      prop: 'datasourceId',
-      search: true,
-      span: 24,
-      type: 'select',
-      dicUrl: baseUrl + '/blade-develop/datasource/select',
-      props: {
-        label: 'name',
-        value: 'id',
-      },
-      rules: [{
-        required: true,
-        message: '请选择数据源',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '模块名',
-      prop: 'codeName',
-      search: true,
-      rules: [{
-        required: true,
-        message: '请输入模块名',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '服务名',
-      prop: 'serviceName',
-      search: true,
-      rules: [{
-        required: true,
-        message: '请输入服务名',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '表名',
-      prop: 'tableName',
-      rules: [{
-        required: true,
-        message: '请输入表名',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '表前缀',
-      prop: 'tablePrefix',
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请输入表前缀',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '主键名',
-      prop: 'pkName',
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请输入主键名',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '包名',
-      prop: 'packageName',
-      overHidden: true,
-      rules: [{
-        required: true,
-        message: '请输入包名',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '基础业务',
-      prop: 'baseMode',
-      type: 'radio',
-      dicUrl: baseUrl + '/blade-system/dict/dictionary?code=yes_no',
-      props: {
-        label: 'dictValue',
-        value: 'dictKey',
-      },
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请选择基础业务',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '包装器',
-      prop: 'wrapMode',
-      type: 'radio',
-      dicUrl: baseUrl + '/blade-system/dict/dictionary?code=yes_no',
-      props: {
-        label: 'dictValue',
-        value: 'dictKey',
-      },
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请选择包装器',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '后端生成路径',
-      prop: 'apiPath',
-      span: 24,
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请输入后端生成路径',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '前端生成路径',
-      prop: 'webPath',
-      span: 24,
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请输入前端生成路径',
-        trigger: 'blur',
-      }],
-    }
-  ],
+const selection = useTableSelection<CodeEntity>();
+const { selectedRows, ids, handleSelectionChange, clearSelection } = selection;
+const { add: canAdd, view: canView, edit: canEdit, delete: canDelete } = useCrudPermission('code');
+const detail = useRemoteDetail<CodeEntity, string>(async id => {
+  const response = await getCode<CodeEntity>(id);
+  return response.data.data;
 });
+const datasourceState = useRemoteOptions<DatasourceOption>(async () => {
+  const response = await getDatasourceSelect();
+  return response.data.data;
+});
+const {
+  options: datasourceOptions,
+  loading: datasourceLoading,
+  failed: datasourceFailed,
+  load: loadDatasourceOptions,
+} = datasourceState;
+const { data: detailData, loading: detailLoading, failed: detailFailed } = detail;
 
-// 行操作按钮权限
-const permissionList = computed(() => ({
-  addBtn: validData(permission.value.code_add, false),
-  viewBtn: validData(permission.value.code_view, false),
-  delBtn: validData(permission.value.code_delete, false),
-  editBtn: validData(permission.value.code_edit, false),
-}));
+const clearTableSelection = () => {
+  clearSelection();
+  tableRef.value?.clearSelection();
+};
+watch(data, clearTableSelection, { flush: 'post' });
 
-// 加载列表数据
-const onLoad = (pageParam: { currentPage: number; pageSize: number }, params: Partial<CodeEntity> = {}) => {
-  loading.value = true;
-  getList(pageParam.currentPage, pageParam.pageSize, Object.assign(params, query.value)).then(res => {
-    const resData = res.data.data;
-    page.total = resData.total;
-    data.value = resData.records;
-    loading.value = false;
-    selectionClear();
-  });
+const getDatasourceName = (id?: string) =>
+  datasourceOptions.value.find(item => item.id === id)?.name ?? id ?? '-';
+const handleSearch = () => void search({ ...searchForm.value });
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
+};
+const handlePageChange = (nextPage: PaginationChange) => {
+  page.value = { ...page.value, ...nextPage };
+  void load();
 };
 
-// 条件检索
-const searchChange = (params: Partial<CodeEntity>, done: () => void) => {
-  query.value = params;
-  page.currentPage = 1;
-  onLoad(page, params);
-  done();
+const resetDialogState = () => {
+  detail.clear();
+  detailId.value = undefined;
+  formRef.value?.clearValidate();
 };
-
-// 重置检索条件
-const searchReset = () => {
-  query.value = {};
-  onLoad(page);
+const openAdd = () => {
+  resetDialogState();
+  mode.value = 'add';
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  if (datasourceOptions.value.length === 0) void loadDatasourceOptions();
+  nextTick(() => formRef.value?.clearValidate());
 };
-
-// 切换页码
-const currentChange = (currentPage: number) => {
-  page.currentPage = currentPage;
+const requestDetail = async () => {
+  if (!detailId.value) return;
+  form.value = createInitialForm();
+  const entity = await detail.load(detailId.value);
+  if (entity) form.value = { ...entity };
+  await nextTick();
+  formRef.value?.clearValidate();
 };
-
-// 调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.pageSize = pageSize;
+const openDetail = (row: CodeEntity, dialogMode: 'edit' | 'view') => {
+  resetDialogState();
+  detailId.value = row.id;
+  mode.value = dialogMode;
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  if (datasourceOptions.value.length === 0) void loadDatasourceOptions();
+  void requestDetail();
 };
-
-// 记录当前选中行
-const selectionChange = (list: CodeEntity[]) => {
-  selectionList.value = list;
-};
-
-// 清空选中状态
-const selectionClear = () => {
-  selectionList.value = [];
-  crudRef.value.toggleSelection();
-};
-
-// 打开表单前加载详情
-const beforeOpen = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getCode(form.value.id).then(res => {
-      form.value = res.data.data;
-    });
+const retryDetail = () => void requestDetail();
+const handleDialogCancel = () => resetDialogState();
+const handleSubmit = async () => {
+  if (
+    !formRef.value ||
+    submitting.value ||
+    detailLoading.value ||
+    detailFailed.value ||
+    datasourceLoading.value ||
+    datasourceFailed.value ||
+    (mode.value !== 'add' && !detailData.value)
+  ) {
+    return;
   }
-  done();
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  submitting.value = true;
+  try {
+    const submit = mode.value === 'add' ? add : update;
+    await submit({ ...form.value });
+    dialogVisible.value = false;
+    resetDialogState();
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // Axios 已处理接口错误，保留路径和生成参数供重试。
+  } finally {
+    submitting.value = false;
+  }
 };
 
-// 新增保存
-const rowSave = (row: CodeForm, done: () => void, loading: () => void) => {
-  add(row).then(() => {
-    done();
-    onLoad(page);
-    ElMessage({
-      type: 'success',
-      message: '操作成功!',
+const confirmDelete = async (deleteIds: string) => {
+  if (generating.value) return;
+  try {
+    await ElMessageBox.confirm('确定将选择数据删除?', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     });
-  }, error => {
-    window.console.log(error);
-    loading();
-  });
+    await remove(deleteIds);
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 用户取消或接口失败时保留当前列表和选择。
+  }
 };
-
-// 编辑更新
-const rowUpdate = (row: CodeForm, index: number, done: () => void, loading: () => void) => {
-  update(row).then(() => {
-    done();
-    onLoad(page);
-    ElMessage({
-      type: 'success',
-      message: '操作成功!',
-    });
-  }, error => {
-    window.console.log(error);
-    loading();
-  });
-};
-
-// 删除单行
-const rowDel = (row: CodeEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(row.id);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-    });
-};
-
-// 批量删除选中行
-const handleDelete = () => {
-  if (selectionList.value.length === 0) {
+const handleRowDelete = (row: CodeEntity) => void confirmDelete(row.id);
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(ids.value);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
+  void confirmDelete(ids.value);
 };
 
-// 生成选中模块代码
-const handleBuild = () => {
-  if (selectionList.value.length === 0) {
+const handleCopy = async (row: CodeEntity) => {
+  if (copyingId.value || generating.value) return;
+  copyingId.value = row.id;
+  try {
+    await copy(row.id);
+    await refresh();
+    ElMessage.success('复制成功!');
+  } catch {
+    // Axios 已处理接口错误。
+  } finally {
+    copyingId.value = '';
+  }
+};
+const handleBuild = async () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('是否生成选中模块的代码?', {
-    title: '代码生成确认',
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return build(ids.value);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
+  try {
+    await ElMessageBox.confirm(
+      `将生成 ${selectedRows.value.length} 个模块，文件会写入配置的服务端目录且无法由前端撤销。是否继续?`,
+      '代码生成确认',
+      {
+        confirmButtonText: '确定生成',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    );
+    generating.value = true;
+    await build(ids.value);
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('代码生成成功!');
+  } catch (error) {
+    if (generating.value) ElMessage.warning('代码生成失败，请检查配置的目标目录是否存在部分文件');
+  } finally {
+    generating.value = false;
+  }
 };
 
-// 复制配置生成新记录
-const handleCopy = (row: CodeEntity) => {
-  copy(row.id).then(() => {
-    onLoad(page);
-    ElMessage({
-      type: 'success',
-      message: '复制成功!',
-    });
-  });
-};
+onMounted(() => {
+  void load();
+  void loadDatasourceOptions();
+});
 </script>
+
+<style scoped lang="scss">
+.code-management-page {
+  min-width: 0;
+}
+
+:deep(.el-select) {
+  width: 100%;
+}
+</style>

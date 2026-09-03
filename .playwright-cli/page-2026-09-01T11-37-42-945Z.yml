@@ -1,0 +1,291 @@
+- generic [ref=e99]:
+  - generic [ref=e100]:
+    - generic "星图 staratlas" [ref=e102]
+    - menubar [ref=e107]:
+      - menuitem " 工作台" [ref=e108]:
+        - generic [ref=e109] [cursor=pointer]:
+          - generic [ref=e110]: 
+          - generic [ref=e111]: 工作台
+        - text: 
+      - menuitem " 系统监控" [ref=e115]:
+        - generic [ref=e116] [cursor=pointer]:
+          - generic [ref=e117]: 
+          - generic [ref=e118]: 系统监控
+        - text:      
+      - menuitem " 研发工具" [ref=e122]:
+        - generic [ref=e123] [cursor=pointer]:
+          - generic [ref=e124]: 
+          - generic [ref=e125]: 研发工具
+        - text:  
+      - menuitem " 报表管理" [ref=e129]:
+        - generic [ref=e130] [cursor=pointer]:
+          - generic [ref=e131]: 
+          - generic [ref=e132]: 报表管理
+        - text:  
+      - menuitem " 基础配置" [ref=e136]:
+        - generic [ref=e137] [cursor=pointer]:
+          - generic [ref=e138]: 
+          - generic [ref=e139]: 基础配置
+        - text: 
+      - menuitem " 权限管理" [ref=e143]:
+        - generic [ref=e144] [cursor=pointer]:
+          - generic [ref=e145]: 
+          - generic [ref=e146]: 权限管理
+        - text:   
+      - menuitem " 系统管理" [expanded] [ref=e150]:
+        - generic [ref=e151] [cursor=pointer]:
+          - generic [ref=e152]: 
+          - generic [ref=e153]: 系统管理
+        - menu [ref=e1180]:
+          - menuitem " 用户管理" [ref=e1181] [cursor=pointer]:
+            - generic [ref=e1182]: 
+            - generic [ref=e1183]: 用户管理
+          - menuitem " 部门管理" [ref=e1184] [cursor=pointer]:
+            - generic [ref=e1185]: 
+            - generic [ref=e1186]: 部门管理
+          - menuitem " 岗位管理" [active] [ref=e1187] [cursor=pointer]:
+            - generic [ref=e1188]: 
+            - generic [ref=e1189]: 岗位管理
+          - menuitem " 字典管理" [ref=e1190] [cursor=pointer]:
+            - generic [ref=e1191]: 
+            - generic [ref=e1192]: 字典管理
+          - menuitem " 菜单管理" [ref=e1193] [cursor=pointer]:
+            - generic [ref=e1194]: 
+            - generic [ref=e1195]: 菜单管理
+          - menuitem " 参数管理" [ref=e1196] [cursor=pointer]:
+            - generic [ref=e1197]: 
+            - generic [ref=e1198]: 参数管理
+          - menuitem " 顶部菜单" [ref=e1199] [cursor=pointer]:
+            - generic [ref=e1200]: 
+            - generic [ref=e1201]: 顶部菜单
+          - menuitem " 租户管理" [ref=e1202] [cursor=pointer]:
+            - generic [ref=e1203]: 
+            - generic [ref=e1204]: 租户管理
+          - menuitem " 应用管理" [ref=e1205] [cursor=pointer]:
+            - generic [ref=e1206]: 
+            - generic [ref=e1207]: 应用管理
+  - generic [ref=e157]:
+    - generic [ref=e158]:
+      - generic [ref=e159]: 
+      - generic [ref=e162]:
+        - menubar [ref=e163]:
+          - menuitem " 首页" [ref=e164] [cursor=pointer]:
+            - generic [ref=e165]: 
+            - generic [ref=e166]: 首页
+        - combobox [ref=e167]:
+          - textbox "请输入搜索内容" [ref=e170]
+      - generic [ref=e171]:
+        - generic [ref=e172]: 
+        - button "" [ref=e176]
+        - generic [ref=e177]: 
+        - generic [ref=e179]: 
+        - generic [ref=e183]:
+          - button "管理员" [ref=e186]
+          - button "打开界面设置" [ref=e187] [cursor=pointer]
+    - generic [ref=e192]:
+      - generic [ref=e193]:
+        - generic [ref=e195]:
+          - generic [ref=e6310] [cursor=pointer]
+          - generic [ref=e6314] [cursor=pointer]
+          - tablist [ref=e197]:
+            - tab "首页" [ref=e198]
+            - tab "通知公告" [ref=e645]
+            - tab "数据源管理" [ref=e967]
+            - tab "报表列表" [ref=e1069]
+            - tab "租户管理" [ref=e1208]
+            - tab "应用管理" [ref=e1393]
+            - tab "通用日志" [ref=e6064]
+            - tab "接口日志" [ref=e6193]
+            - tab "错误日志" [ref=e6318]
+            - tab "参数管理" [ref=e6569]
+            - tab "岗位管理" [selected] [ref=e6831]
+        - generic:
+          - tabpanel "岗位管理"
+      - button "更多" [ref=e201] [cursor=pointer]
+    - text:                       
+    - generic [ref=e6836]:
+      - generic [ref=e6841]:
+        - generic [ref=e6843]:
+          - generic [ref=e6844]: 岗位类型
+          - generic [ref=e6847] [cursor=pointer]:
+            - generic:
+              - combobox "岗位类型" [ref=e6849]
+              - generic [ref=e6850]: 请选择岗位类型
+        - generic [ref=e6856]:
+          - generic [ref=e6857]: 岗位编号
+          - textbox "岗位编号" [ref=e6861]:
+            - /placeholder: 请输入岗位编号
+        - generic [ref=e6864]:
+          - generic [ref=e6865]: 岗位名称
+          - textbox "岗位名称" [ref=e6869]:
+            - /placeholder: 请输入岗位名称
+        - generic [ref=e6871]:
+          - button "重置" [ref=e6872] [cursor=pointer]
+          - button "查询" [ref=e6877] [cursor=pointer]
+      - generic [ref=e6884]:
+        - generic [ref=e6885]:
+          - heading "岗位列表" [level=2] [ref=e6886]
+          - generic [ref=e6887]:
+            - generic [ref=e6888]:
+              - button "新增" [ref=e6889] [cursor=pointer]
+              - button "删除" [ref=e6894] [cursor=pointer]
+            - button "刷新" [ref=e6900] [cursor=pointer]
+        - generic [ref=e6906]:
+          - table [ref=e6908]:
+            - rowgroup [ref=e6918]:
+              - row [ref=e6919]:
+                - columnheader [ref=e6920]:
+                  - generic "选择所有行" [ref=e6922] [cursor=pointer]:
+                    - generic [ref=e6923]:
+                      - checkbox "选择所有行"
+                - columnheader "#" [ref=e6925]
+                - columnheader "所属租户" [ref=e6927]
+                - columnheader "岗位类型" [ref=e6929]
+                - columnheader "岗位编号" [ref=e6931]
+                - columnheader "岗位名称" [ref=e6933]
+                - columnheader "岗位排序" [ref=e6935]
+                - columnheader "操作" [ref=e6937]
+          - table [ref=e6943]:
+            - rowgroup [ref=e6953]:
+              - row [ref=e6954]:
+                - cell [ref=e6955]:
+                  - generic "选择当前行" [ref=e6957] [cursor=pointer]:
+                    - generic [ref=e6958]:
+                      - checkbox "选择当前行"
+                - cell "1" [ref=e6960]
+                - cell "管理组" [ref=e6963]
+                - cell "高层" [ref=e6965]
+                - cell "ceo" [ref=e6970]
+                - cell "首席执行官" [ref=e6972]
+                - cell "1" [ref=e6974]
+                - cell [ref=e6976]:
+                  - generic [ref=e6977]:
+                    - button "查看" [ref=e6978] [cursor=pointer]
+                    - button "编辑" [ref=e6983] [cursor=pointer]
+                    - button "删除" [ref=e6989] [cursor=pointer]
+              - row [ref=e6994]:
+                - cell [ref=e6995]:
+                  - generic "选择当前行" [ref=e6997] [cursor=pointer]:
+                    - generic [ref=e6998]:
+                      - checkbox "选择当前行"
+                - cell "2" [ref=e7000]
+                - cell "管理组" [ref=e7003]
+                - cell "高层" [ref=e7005]
+                - cell "coo" [ref=e7010]
+                - cell "首席运营官" [ref=e7012]
+                - cell "2" [ref=e7014]
+                - cell [ref=e7016]:
+                  - generic [ref=e7017]:
+                    - button "查看" [ref=e7018] [cursor=pointer]
+                    - button "编辑" [ref=e7023] [cursor=pointer]
+                    - button "删除" [ref=e7029] [cursor=pointer]
+              - row [ref=e7034]:
+                - cell [ref=e7035]:
+                  - generic "选择当前行" [ref=e7037] [cursor=pointer]:
+                    - generic [ref=e7038]:
+                      - checkbox "选择当前行"
+                - cell "3" [ref=e7040]
+                - cell "管理组" [ref=e7043]
+                - cell "高层" [ref=e7045]
+                - cell "cfo" [ref=e7050]
+                - cell "首席财务官" [ref=e7052]
+                - cell "3" [ref=e7054]
+                - cell [ref=e7056]:
+                  - generic [ref=e7057]:
+                    - button "查看" [ref=e7058] [cursor=pointer]
+                    - button "编辑" [ref=e7063] [cursor=pointer]
+                    - button "删除" [ref=e7069] [cursor=pointer]
+              - row [ref=e7074]:
+                - cell [ref=e7075]:
+                  - generic "选择当前行" [ref=e7077] [cursor=pointer]:
+                    - generic [ref=e7078]:
+                      - checkbox "选择当前行"
+                - cell "4" [ref=e7080]
+                - cell "管理组" [ref=e7083]
+                - cell "高层" [ref=e7085]
+                - cell "cto" [ref=e7090]
+                - cell "首席技术官" [ref=e7092]
+                - cell "4" [ref=e7094]
+                - cell [ref=e7096]:
+                  - generic [ref=e7097]:
+                    - button "查看" [ref=e7098] [cursor=pointer]
+                    - button "编辑" [ref=e7103] [cursor=pointer]
+                    - button "删除" [ref=e7109] [cursor=pointer]
+              - row [ref=e7114]:
+                - cell [ref=e7115]:
+                  - generic "选择当前行" [ref=e7117] [cursor=pointer]:
+                    - generic [ref=e7118]:
+                      - checkbox "选择当前行"
+                - cell "5" [ref=e7120]
+                - cell "管理组" [ref=e7123]
+                - cell "高层" [ref=e7125]
+                - cell "cio" [ref=e7130]
+                - cell "首席信息官" [ref=e7132]
+                - cell "5" [ref=e7134]
+                - cell [ref=e7136]:
+                  - generic [ref=e7137]:
+                    - button "查看" [ref=e7138] [cursor=pointer]
+                    - button "编辑" [ref=e7143] [cursor=pointer]
+                    - button "删除" [ref=e7149] [cursor=pointer]
+              - row [ref=e7154]:
+                - cell [ref=e7155]:
+                  - generic "选择当前行" [ref=e7157] [cursor=pointer]:
+                    - generic [ref=e7158]:
+                      - checkbox "选择当前行"
+                - cell "6" [ref=e7160]
+                - cell "管理组" [ref=e7163]
+                - cell "中层" [ref=e7165]
+                - cell "pm" [ref=e7170]
+                - cell "技术经理" [ref=e7172]
+                - cell "6" [ref=e7174]
+                - cell [ref=e7176]:
+                  - generic [ref=e7177]:
+                    - button "查看" [ref=e7178] [cursor=pointer]
+                    - button "编辑" [ref=e7183] [cursor=pointer]
+                    - button "删除" [ref=e7189] [cursor=pointer]
+              - row [ref=e7194]:
+                - cell [ref=e7195]:
+                  - generic "选择当前行" [ref=e7197] [cursor=pointer]:
+                    - generic [ref=e7198]:
+                      - checkbox "选择当前行"
+                - cell "7" [ref=e7200]
+                - cell "管理组" [ref=e7203]
+                - cell "中层" [ref=e7205]
+                - cell "hrm" [ref=e7210]
+                - cell "人力经理" [ref=e7212]
+                - cell "7" [ref=e7214]
+                - cell [ref=e7216]:
+                  - generic [ref=e7217]:
+                    - button "查看" [ref=e7218] [cursor=pointer]
+                    - button "编辑" [ref=e7223] [cursor=pointer]
+                    - button "删除" [ref=e7229] [cursor=pointer]
+              - row [ref=e7234]:
+                - cell [ref=e7235]:
+                  - generic "选择当前行" [ref=e7237] [cursor=pointer]:
+                    - generic [ref=e7238]:
+                      - checkbox "选择当前行"
+                - cell "8" [ref=e7240]
+                - cell "管理组" [ref=e7243]
+                - cell "基层" [ref=e7245]
+                - cell "staff" [ref=e7250]
+                - cell "普通员工" [ref=e7252]
+                - cell "8" [ref=e7254]
+                - cell [ref=e7256]:
+                  - generic [ref=e7257]:
+                    - button "查看" [ref=e7258] [cursor=pointer]
+                    - button "编辑" [ref=e7263] [cursor=pointer]
+                    - button "删除" [ref=e7269] [cursor=pointer]
+        - generic [ref=e7276]:
+          - generic [ref=e7277]: 共 8 条
+          - generic [ref=e7280] [cursor=pointer]:
+            - generic:
+              - combobox [ref=e7282]
+              - generic [ref=e7283]: 10条/页
+          - button "上一页" [disabled] [ref=e7288]
+          - list [ref=e7289]:
+            - listitem "第 1 页" [ref=e7290]: "1"
+          - button "下一页" [disabled] [ref=e7291]
+          - generic [ref=e7292]:
+            - generic [ref=e7293]: 前往
+            - spinbutton "页" [ref=e7296]: "1"
+            - generic [ref=e7297]: 页

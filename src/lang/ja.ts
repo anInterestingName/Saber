@@ -9,8 +9,8 @@ export default {
   feedback: '意見のフィードバック',
   submit: '送信',
   wel: {
-    info: 'おはようございます。Smallweiさん、Avueさんの想像を超えるフレームワークです。',
-    dept: '私はavueチームの下の部門です。ハーピ部門です。',
+    info: 'Saber エンタープライズ管理プラットフォームへようこそ',
+    dept: 'Vue 3、TypeScript、Element Plus を使用しています',
     team: 'チーム内ランキング',
     project: 'プロジェクトアクセス',
     count: '項目数',

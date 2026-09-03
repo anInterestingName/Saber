@@ -1,56 +1,48 @@
 import request from '@/axios';
+import type { PageResult } from '@/types/list';
+import type { BladeResponse } from '@/types/option';
 
-export const getListDataScope = (current, size, params) => {
-  return request({
+export const getDataScopeList = <T>(current: number, size: number, params: object) =>
+  request<BladeResponse<PageResult<T>>>({
     url: '/blade-system/data-scope/list',
     method: 'get',
     params: {
       ...params,
       current,
       size,
-    }
-  })
-}
+    },
+  });
 
-export const removeDataScope = (ids) => {
-  return request({
+export const removeDataScope = (ids: string) =>
+  request({
     url: '/blade-system/data-scope/remove',
     method: 'post',
-    params: {
-      ids,
-    }
-  })
-}
+    params: { ids },
+  });
 
-export const addDataScope = (row) => {
-  return request({
+export const addDataScope = (row: object) =>
+  request({
     url: '/blade-system/data-scope/submit',
     method: 'post',
-    data: row
-  })
-}
+    data: row,
+  });
 
-export const updateDataScope = (row) => {
-  return request({
+export const updateDataScope = (row: object) =>
+  request({
     url: '/blade-system/data-scope/submit',
     method: 'post',
-    data: row
-  })
-}
+    data: row,
+  });
 
-export const getMenuDataScope = (id) => {
-  return request({
+export const getDataScopeDetail = <T>(id: string) =>
+  request<BladeResponse<T>>({
     url: '/blade-system/data-scope/detail',
     method: 'get',
-    params: {
-      id,
-    }
-  })
-}
+    params: { id },
+  });
 
-
-export const getListApiScope = (current, size, params) => {
-  return request({
+export const getApiScopeList = <T>(current: number, size: number, params: object) =>
+  request<BladeResponse<PageResult<T>>>({
     url: '/blade-system/api-scope/list',
     method: 'get',
     params: {
@@ -59,40 +51,31 @@ export const getListApiScope = (current, size, params) => {
       size,
     },
   });
-};
 
-export const removeApiScope = ids => {
-  return request({
+export const removeApiScope = (ids: string) =>
+  request({
     url: '/blade-system/api-scope/remove',
     method: 'post',
-    params: {
-      ids,
-    },
+    params: { ids },
   });
-};
 
-export const addApiScope = row => {
-  return request({
+export const addApiScope = (row: object) =>
+  request({
     url: '/blade-system/api-scope/submit',
     method: 'post',
     data: row,
   });
-};
 
-export const updateApiScope = row => {
-  return request({
+export const updateApiScope = (row: object) =>
+  request({
     url: '/blade-system/api-scope/submit',
     method: 'post',
     data: row,
   });
-};
 
-export const getMenuApiScope = id => {
-  return request({
+export const getApiScopeDetail = <T>(id: string) =>
+  request<BladeResponse<T>>({
     url: '/blade-system/api-scope/detail',
     method: 'get',
-    params: {
-      id,
-    },
+    params: { id },
   });
-};

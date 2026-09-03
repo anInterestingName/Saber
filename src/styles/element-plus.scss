@@ -1,0 +1,131 @@
+.el-card.is-always-shadow {
+  border: 1px solid var(--saber-border) !important;
+  border-radius: 6px;
+  box-shadow: var(--saber-shadow);
+}
+.el-menu {
+  border-right: none;
+}
+
+.el-message__icon,
+.el-message__content {
+  display: inline-block;
+}
+
+.el-date-editor .el-range-input,
+.el-date-editor .el-range-separator {
+  height: auto;
+  overflow: hidden;
+}
+
+.el-dialog__wrapper {
+  z-index: 2048;
+}
+
+.el-col {
+  margin-bottom: 8px;
+}
+
+.el-main {
+  padding: 0 !important;
+}
+.el-dropdown-menu__item--divided:before,
+.el-menu,
+.el-menu--horizontal > .el-menu-item:not(.is-disabled):focus,
+.el-menu--horizontal > .el-menu-item:not(.is-disabled):hover,
+.el-menu--horizontal > .el-sub-menu .el-sub-menu__title:hover {
+  background-color: transparent;
+}
+
+.el-dropdown-menu__item--divided:before,
+.el-menu,
+.el-menu--horizontal > .el-menu-item:not(.is-disabled):focus,
+.el-menu--horizontal > .el-menu-item:not(.is-disabled):hover,
+.el-menu--horizontal > .el-sub-menu .el-sub-menu__title:hover {
+  background-color: transparent !important;
+}
+.el-collapse-item__header {
+  height: auto;
+  overflow: hidden;
+}
+
+.el-button.is-text:not(.is-disabled):active {
+  background-color: transparent;
+}
+.el-button.is-text:not(.is-disabled):focus,
+.el-button.is-text:not(.is-disabled):hover {
+  background-color: transparent;
+}
+// Ant Design Pro 风格列表面板，按页面显式添加该类启用
+.saber-list-panel {
+  padding-bottom: 0;
+
+  .basic-container__card {
+    border: 0;
+    border-radius: 6px;
+    box-shadow: none;
+    background: var(--saber-surface);
+  }
+
+  .el-card__body {
+    padding: 18px 24px 16px;
+  }
+
+  .el-table {
+    --el-table-border-color: transparent;
+    --el-table-header-bg-color: var(--saber-surface-muted);
+    --el-table-row-hover-bg-color: var(--saber-surface-muted);
+    color: var(--saber-text-secondary);
+  }
+
+  .el-table::before,
+  .el-table__inner-wrapper::before {
+    display: none;
+  }
+
+  .el-table th.el-table__cell {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--saber-border);
+    color: var(--saber-text-primary);
+    font-weight: 600;
+  }
+
+  .el-table td.el-table__cell {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--saber-border);
+  }
+
+  .saber-table-menu-cell .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .saber-table-menu-cell .el-button + .el-button {
+    margin-left: 0;
+  }
+
+  .el-pagination {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 767px) {
+  .saber-list-panel {
+    .el-card__body {
+      padding: 16px;
+    }
+
+    .el-pagination {
+      justify-content: center;
+    }
+
+    .el-pagination__total,
+    .el-pagination__sizes,
+    .el-pagination__jump {
+      display: none;
+    }
+  }
+}

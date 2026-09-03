@@ -1,9 +1,9 @@
 <template>
-  <div class="avue-top">
+  <div class="saber-top">
     <div class="top-bar__left">
       <div
-        class="avue-breadcrumb"
-        :class="[{ 'avue-breadcrumb--active': isCollapse }]"
+        class="saber-breadcrumb"
+        :class="[{ 'saber-breadcrumb--active': isCollapse }]"
         v-if="setting.collapse && !isHorizontal"
       >
         <i class="icon-navicon" @click="setCollapse"></i>

@@ -1,7 +1,7 @@
 <template>
-  <el-scrollbar class="avue-menu">
+  <el-scrollbar class="saber-menu">
     <div v-if="menu&&menu.length==0&&!isHorizontal"
-         class="avue-sidebar--tip">{{$t('menuTip')}}</div>
+         class="saber-sidebar--tip">{{$t('menuTip')}}</div>
     <el-menu unique-opened
              :default-active="activeMenu"
              :mode="setting.sidebar"

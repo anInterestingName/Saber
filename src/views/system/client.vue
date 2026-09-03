@@ -1,42 +1,224 @@
 <template>
-  <basic-container>
-    <avue-crud :option="option"
-               :table-loading="loading"
-               :data="data"
-               ref="crudRef"
-               :page="page"
-               @row-del="rowDel"
-               v-model="form"
-               :permission="permissionList"
-               @row-update="rowUpdate"
-               @row-save="rowSave"
-               :before-open="beforeOpen"
-               @search-change="searchChange"
-               @search-reset="searchReset"
-               @selection-change="selectionChange"
-               @current-change="currentChange"
-               @size-change="sizeChange"
-               @on-load="onLoad">
-      <template #menu-left>
-        <el-button type="danger"
-                   icon="el-icon-delete"
-                   plain
-                   v-if="permission.client_delete"
-                   @click="handleDelete">删 除
+  <div class="client-management-page">
+    <search-panel
+      :model="searchForm"
+      :loading="loading"
+      @search="handleSearch"
+      @reset="handleReset"
+    >
+      <el-col :xs="24" :sm="12" :md="8">
+        <el-form-item label="应用 ID">
+          <el-input v-model="searchForm.clientId" clearable placeholder="请输入应用 ID" />
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8">
+        <el-form-item label="应用密钥">
+          <el-input
+            v-model="searchForm.clientSecret"
+            type="password"
+            clearable
+            placeholder="请输入应用密钥"
+          />
+        </el-form-item>
+      </el-col>
+    </search-panel>
+
+    <list-panel title="客户端列表">
+      <template #actions>
+        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+        <el-button
+          v-if="canDelete"
+          type="danger"
+          plain
+          :icon="Delete"
+          :disabled="loading"
+          @click="handleBatchDelete"
+        >
+          删除
         </el-button>
       </template>
-    </avue-crud>
-  </basic-container>
+      <template #tools>
+        <el-tooltip content="刷新" placement="top">
+          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
+        </el-tooltip>
+      </template>
+
+      <el-table
+        ref="tableRef"
+        v-loading="loading"
+        :data="data"
+        row-key="id"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" fixed="left" width="48" />
+        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+        <el-table-column prop="clientId" label="应用 ID" min-width="180" show-overflow-tooltip />
+        <el-table-column label="应用密钥" min-width="130" align="center">
+          <template #default="{ row }">
+            <span class="sensitive-mask">{{ row.hasClientSecret ? '********' : '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="authorizedGrantTypes"
+          label="授权类型"
+          min-width="280"
+          show-overflow-tooltip
+        />
+        <el-table-column prop="scope" label="授权范围" min-width="140" show-overflow-tooltip />
+        <el-table-column
+          prop="accessTokenValidity"
+          label="令牌秒数"
+          min-width="120"
+          align="center"
+        />
+        <el-table-column
+          v-if="canView || canEdit || canDelete"
+          label="操作"
+          fixed="right"
+          width="200"
+          align="center"
+        >
+          <template #default="{ row }">
+            <row-actions
+              :show-view="canView"
+              :show-edit="canEdit"
+              :show-delete="canDelete"
+              :disabled="loading || submitting"
+              @view="openDetail(row as ClientListItem, 'view')"
+              @edit="openDetail(row as ClientListItem, 'edit')"
+              @delete="handleRowDelete(row as ClientListItem)"
+            />
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <list-pagination
+          v-model:current-page="page.currentPage"
+          v-model:page-size="page.pageSize"
+          :total="page.total"
+          :disabled="loading"
+          @change="handlePageChange"
+        />
+      </template>
+    </list-panel>
+
+    <form-dialog
+      v-model="dialogVisible"
+      :mode="mode"
+      entity-name="客户端"
+      :submitting="submitting"
+      :loading="detailLoading"
+      width="720px"
+      destroy-on-close
+      @confirm="handleSubmit"
+      @cancel="handleDialogCancel"
+    >
+      <el-result v-if="detailFailed" status="error" title="客户端详情加载失败">
+        <template #extra>
+          <el-button type="primary" :icon="Refresh" @click="retryDetail">重新加载</el-button>
+        </template>
+      </el-result>
+      <el-form
+        v-else
+        ref="formRef"
+        :model="form"
+        :rules="formRules"
+        :disabled="mode === 'view' || detailLoading"
+        label-width="100px"
+      >
+        <el-row :gutter="24">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="应用 ID" prop="clientId">
+              <el-input v-model="form.clientId" placeholder="请输入应用 ID" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="应用密钥" prop="clientSecret">
+              <el-input v-model="form.clientSecret" type="password" placeholder="请输入应用密钥" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="授权类型" prop="authorizedGrantTypes">
+              <el-input v-model="form.authorizedGrantTypes" placeholder="请输入授权类型" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="授权范围" prop="scope">
+              <el-input v-model="form.scope" placeholder="请输入授权范围" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="自动授权" prop="autoapprove">
+              <el-input v-model="form.autoapprove" placeholder="请输入自动授权配置" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="令牌秒数" prop="accessTokenValidity">
+              <el-input-number
+                v-model="form.accessTokenValidity"
+                :min="0"
+                controls-position="right"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="刷新秒数" prop="refreshTokenValidity">
+              <el-input-number
+                v-model="form.refreshTokenValidity"
+                :min="0"
+                controls-position="right"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="回调地址" prop="webServerRedirectUri">
+              <el-input v-model="form.webServerRedirectUri" placeholder="请输入回调地址" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="资源集合" prop="resourceIds">
+              <el-input v-model="form.resourceIds" placeholder="请输入资源集合" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="权限" prop="authorities">
+              <el-input v-model="form.authorities" placeholder="请输入权限" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="附加说明" prop="additionalInformation">
+              <el-input
+                v-model="form.additionalInformation"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入附加说明"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </form-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
-import { useStore } from 'vuex';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { getList, getDetail, add, update, remove } from '@/api/system/client';
-import { validData } from '@/utils/util';
+import { nextTick, onMounted, ref, watch } from 'vue';
+import { Delete, Plus, Refresh } from '@element-plus/icons-vue';
+import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import ListPagination from '@/components/list-pagination/main.vue';
+import FormDialog from '@/components/form-dialog/main.vue';
+import RowActions from '@/components/row-actions/main.vue';
+import { useCrudPermission } from '@/composables/useCrudPermission';
+import { usePagedList } from '@/composables/usePagedList';
+import { useRemoteDetail } from '@/composables/useRemoteDetail';
+import { useTableSelection } from '@/composables/useTableSelection';
+import { add, getDetail, getList, remove, update } from '@/api/system/client';
+import type { CrudMode } from '@/types/crud';
+import type { PaginationChange } from '@/types/list';
 
-// 数据实体
 interface ClientEntity {
   id: string;
   clientId?: string;
@@ -52,287 +234,222 @@ interface ClientEntity {
   additionalInformation?: string;
 }
 
-// 新增与编辑共用的表单模型，字段均可选
+type ClientListItem = Omit<ClientEntity, 'clientSecret'> & { hasClientSecret: boolean };
+
+interface ClientQuery {
+  clientId?: string;
+  clientSecret?: string;
+}
+
 type ClientForm = Partial<ClientEntity>;
+type ClientListResponse = Awaited<ReturnType<typeof getList>>;
 
-// 权限
-const store = useStore();
-const permission = computed(() => store.getters.permission);
+const createInitialQuery = (): ClientQuery => ({});
+const createInitialForm = (): ClientForm => ({
+  clientId: '',
+  clientSecret: '',
+  authorizedGrantTypes: 'refresh_token,password,authorization_code',
+  scope: 'all',
+  accessTokenValidity: 3600,
+  refreshTokenValidity: 604800,
+  webServerRedirectUri: '',
+  resourceIds: '',
+  authorities: '',
+  autoapprove: '',
+  additionalInformation: '',
+});
+const toListItem = (entity: ClientEntity): ClientListItem => {
+  const { clientSecret, ...item } = entity;
+  return { ...item, hasClientSecret: Boolean(clientSecret) };
+};
 
-// 表格实例与数据状态
-const crudRef = ref();
-const form = ref<ClientForm>({});
-const data = ref<ClientEntity[]>([]);
-const selectionList = ref<ClientEntity[]>([]);
-const query = ref<Partial<ClientEntity>>({});
-const loading = ref(true);
+const searchForm = ref<ClientQuery>(createInitialQuery());
+const form = ref<ClientForm>(createInitialForm());
+const mode = ref<CrudMode>('add');
+const dialogVisible = ref(false);
+const submitting = ref(false);
+const detailId = ref<string>();
+const formRef = ref<InstanceType<typeof ElForm>>();
+const tableRef = ref<TableInstance>();
 
-// 分页参数
-const page = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const formRules: FormRules = {
+  clientId: [{ required: true, message: '请输入客户端 ID', trigger: 'blur' }],
+  clientSecret: [{ required: true, message: '请输入客户端密钥', trigger: 'blur' }],
+  authorizedGrantTypes: [{ required: true, message: '请输入授权类型', trigger: 'blur' }],
+  scope: [{ required: true, message: '请输入授权范围', trigger: 'blur' }],
+  accessTokenValidity: [{ required: true, message: '请输入令牌过期秒数', trigger: 'change' }],
+  refreshTokenValidity: [{ required: true, message: '请输入刷新令牌过期秒数', trigger: 'change' }],
+  webServerRedirectUri: [{ required: true, message: '请输入回调地址', trigger: 'blur' }],
+};
+
+const { data, page, loading, load, search, reset, refresh } = usePagedList<
+  ClientListItem,
+  ClientQuery,
+  ClientListResponse
+>({
+  fetcher: (current, size, query) => getList(current, size, query),
+  resolveResponse: response => ({
+    records: response.data.data.records.map((item: ClientEntity) => toListItem(item)),
+    total: response.data.data.total,
+  }),
+  createInitialQuery,
+});
+const { selectedRows, ids, handleSelectionChange, clearSelection } =
+  useTableSelection<ClientListItem>();
+const {
+  add: canAdd,
+  view: canView,
+  edit: canEdit,
+  delete: canDelete,
+} = useCrudPermission('client');
+const {
+  data: detailData,
+  loading: detailLoading,
+  failed: detailFailed,
+  load: loadDetail,
+  clear: clearDetail,
+} = useRemoteDetail<ClientEntity, string>(async id => {
+  const response = await getDetail(id);
+  return response.data.data;
 });
 
-// 选中行 id 集合，供批量删除使用
-const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
-
-// 表格配置
-const option = reactive({
-  height: 'auto',
-  calcHeight: 210,
-  searchShow: true,
-  searchMenuSpan: 6,
-  tip: false,
-  border: true,
-  index: true,
-  viewBtn: true,
-  selection: true,
-  column: [
-    {
-      label: '应用id',
-      prop: 'clientId',
-      search: true,
-      rules: [{
-        required: true,
-        message: '请输入客户端id',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '应用密钥',
-      prop: 'clientSecret',
-      search: true,
-      rules: [{
-        required: true,
-        message: '请输入客户端密钥',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '授权类型',
-      prop: 'authorizedGrantTypes',
-      valueDefault: 'refresh_token,password,authorization_code',
-      rules: [{
-        required: true,
-        message: '请输入授权类型',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '授权范围',
-      prop: 'scope',
-      valueDefault: 'all',
-      rules: [{
-        required: true,
-        message: '请输入授权范围',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '令牌秒数',
-      prop: 'accessTokenValidity',
-      type: 'number',
-      valueDefault: 3600,
-      rules: [{
-        required: true,
-        message: '请输入令牌过期秒数',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '刷新秒数',
-      prop: 'refreshTokenValidity',
-      type: 'number',
-      valueDefault: 604800,
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请输入刷新令牌过期秒数',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '回调地址',
-      prop: 'webServerRedirectUri',
-      hide: true,
-      rules: [{
-        required: true,
-        message: '请输入回调地址',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '资源集合',
-      prop: 'resourceIds',
-      hide: true,
-      rules: [{
-        message: '请输入资源集合',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '权限',
-      prop: 'authorities',
-      hide: true,
-      rules: [{
-        message: '请输入权限',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '自动授权',
-      prop: 'autoapprove',
-      hide: true,
-      rules: [{
-        message: '请输入自动授权',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '附加说明',
-      hide: true,
-      prop: 'additionalInformation',
-      span: 24,
-      rules: [{
-        message: '请输入附加说明',
-        trigger: 'blur',
-      }],
-    },
-  ],
-});
-
-// 行操作按钮权限
-const permissionList = computed(() => ({
-  addBtn: validData(permission.value.client_add, false),
-  viewBtn: validData(permission.value.client_view, false),
-  delBtn: validData(permission.value.client_delete, false),
-  editBtn: validData(permission.value.client_edit, false),
-}));
-
-// 加载列表数据
-const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Partial<ClientEntity> = {}) => {
-  loading.value = true;
-  getList(pageData.currentPage, pageData.pageSize, Object.assign(params, query.value)).then(res => {
-    const resData = res.data.data;
-    page.total = resData.total;
-    data.value = resData.records;
-    loading.value = false;
-  });
+const clearTableSelection = () => {
+  clearSelection();
+  tableRef.value?.clearSelection();
 };
 
-// 条件检索
-const searchChange = (params: Partial<ClientEntity>, done: () => void) => {
-  query.value = params;
-  page.currentPage = 1;
-  onLoad(page, params);
-  done();
+watch(data, clearTableSelection, { flush: 'post' });
+
+const handleSearch = () => {
+  void search({ ...searchForm.value });
 };
 
-// 重置检索条件
-const searchReset = () => {
-  query.value = {};
-  onLoad(page);
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
 };
 
-// 切换页码
-const currentChange = (currentPage: number) => {
-  page.currentPage = currentPage;
+const handlePageChange = (nextPage: PaginationChange) => {
+  page.value = { ...page.value, ...nextPage };
+  void load();
 };
 
-// 调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.pageSize = pageSize;
+const openAdd = () => {
+  clearDetail();
+  detailId.value = undefined;
+  mode.value = 'add';
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  nextTick(() => formRef.value?.clearValidate());
 };
 
-// 记录当前选中行
-const selectionChange = (list: ClientEntity[]) => {
-  selectionList.value = list;
+const requestDetail = async () => {
+  if (!detailId.value) return;
+  form.value = createInitialForm();
+  const detail = await loadDetail(detailId.value);
+  if (!detail) return;
+  form.value = { ...detail };
+  await nextTick();
+  formRef.value?.clearValidate();
 };
 
-// 新增保存
-const rowSave = (row: ClientForm, done: () => void, loading: () => void) => {
-  add(row).then(() => {
-    done();
-    onLoad(page);
-    ElMessage({
-      type: 'success',
-      message: '操作成功!',
+const openDetail = (row: ClientListItem, dialogMode: 'edit' | 'view') => {
+  clearDetail();
+  detailId.value = row.id;
+  mode.value = dialogMode;
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  void requestDetail();
+};
+
+const retryDetail = () => {
+  void requestDetail();
+};
+
+const resetDialogState = () => {
+  formRef.value?.clearValidate();
+  clearDetail();
+  detailId.value = undefined;
+  form.value = createInitialForm();
+};
+
+const handleDialogCancel = () => {
+  resetDialogState();
+};
+
+const handleSubmit = async () => {
+  if (
+    !formRef.value ||
+    submitting.value ||
+    detailLoading.value ||
+    detailFailed.value ||
+    (mode.value !== 'add' && !detailData.value)
+  ) {
+    return;
+  }
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  submitting.value = true;
+  try {
+    const submit = mode.value === 'add' ? add : update;
+    await submit({ ...form.value });
+    dialogVisible.value = false;
+    resetDialogState();
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // Axios 已处理错误提示，保留弹窗和敏感字段输入供用户重试。
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const confirmDelete = async (deleteIds: string) => {
+  try {
+    await ElMessageBox.confirm('确定将选择数据删除?', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     });
-  }, error => {
-    window.console.log(error);
-    loading();
-  });
+    await remove(deleteIds);
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 用户取消或接口失败时保留当前列表和选择状态。
+  }
 };
 
-// 编辑更新
-const rowUpdate = (row: ClientForm, index: number, done: () => void, loading: () => void) => {
-  update(row).then(() => {
-    done();
-    onLoad(page);
-    ElMessage({
-      type: 'success',
-      message: '操作成功!',
-    });
-  }, error => {
-    window.console.log(error);
-    loading();
-  });
+const handleRowDelete = (row: ClientListItem) => {
+  void confirmDelete(row.id);
 };
 
-// 删除单行
-const rowDel = (row: ClientEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(row.id);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-    });
-};
-
-// 批量删除选中行
-const handleDelete = () => {
-  if (selectionList.value.length === 0) {
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(ids.value);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
+  void confirmDelete(ids.value);
 };
 
-// 打开弹窗前加载编辑/查看详情
-const beforeOpen = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getDetail(form.value.id).then(res => {
-      form.value = res.data.data;
-    });
-  }
-  done();
-};
+onMounted(() => {
+  void load();
+});
 </script>
 
-<style>
+<style scoped lang="scss">
+.client-management-page {
+  min-width: 0;
+}
+
+.sensitive-mask {
+  color: var(--saber-text-tertiary);
+  letter-spacing: 0;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
+}
 </style>

@@ -1,0 +1,228 @@
+- generic [ref=e89]:
+  - generic [ref=e90]:
+    - generic "星图 staratlas" [ref=e92]
+    - menubar [ref=e97]:
+      - menuitem " 工作台" [ref=e98]:
+        - generic [ref=e99] [cursor=pointer]:
+          - generic [ref=e100]: 
+          - generic [ref=e101]: 工作台
+        - text: 
+      - menuitem " 系统监控" [ref=e105]:
+        - generic [ref=e106] [cursor=pointer]:
+          - generic [ref=e107]: 
+          - generic [ref=e108]: 系统监控
+        - text:      
+      - menuitem " 研发工具" [ref=e112]:
+        - generic [ref=e113] [cursor=pointer]:
+          - generic [ref=e114]: 
+          - generic [ref=e115]: 研发工具
+        - text:  
+      - menuitem " 报表管理" [ref=e119]:
+        - generic [ref=e120] [cursor=pointer]:
+          - generic [ref=e121]: 
+          - generic [ref=e122]: 报表管理
+        - text:  
+      - menuitem " 基础配置" [ref=e126]:
+        - generic [ref=e127] [cursor=pointer]:
+          - generic [ref=e128]: 
+          - generic [ref=e129]: 基础配置
+        - text: 
+      - menuitem " 权限管理" [ref=e133]:
+        - generic [ref=e134] [cursor=pointer]:
+          - generic [ref=e135]: 
+          - generic [ref=e136]: 权限管理
+        - text:   
+      - menuitem " 系统管理" [ref=e140]:
+        - generic [ref=e141] [cursor=pointer]:
+          - generic [ref=e142]: 
+          - generic [ref=e143]: 系统管理
+        - text:         
+  - generic [ref=e147]:
+    - generic [ref=e148]:
+      - generic [ref=e149]: 
+      - generic [ref=e152]:
+        - menubar [ref=e153]:
+          - menuitem " 首页" [ref=e154] [cursor=pointer]:
+            - generic [ref=e155]: 
+            - generic [ref=e156]: 首页
+        - combobox [ref=e157]:
+          - textbox "请输入搜索内容" [ref=e160]
+      - generic [ref=e161]:
+        - generic [ref=e162]: 
+        - button "" [ref=e166]
+        - generic [ref=e167]: 
+        - generic [ref=e169]: 
+        - generic [ref=e173]:
+          - button "管理员" [ref=e176]
+          - button "打开界面设置" [ref=e177] [cursor=pointer]
+    - generic [ref=e182]:
+      - generic [ref=e183]:
+        - tablist [ref=e187]:
+          - tab [selected] [ref=e188]:
+            - generic [ref=e189]:
+              - text: 首页
+              - button "刷新当前标签" [ref=e190] [cursor=pointer]
+        - generic:
+          - tabpanel "首页 刷新当前标签"
+      - button "更多" [ref=e195] [cursor=pointer]
+    - text:                       
+    - generic [ref=e200]:
+      - paragraph [ref=e204]:
+        - img "Downloads" [ref=e205]
+        - img "Build Status" [ref=e206]
+        - img "Coverage Status" [ref=e207]
+        - img "Downloads" [ref=e208]
+        - link [ref=e209] [cursor=pointer]:
+          - /url: https://bladex.cn
+          - img "Downloads" [ref=e210]
+        - link [ref=e211] [cursor=pointer]:
+          - /url: https://bladex.cn
+          - img "Downloads" [ref=e212]
+      - generic [ref=e214]:
+        - generic [ref=e219]:
+          - generic [ref=e220]:
+            - button "欢迎使用Saber" [expanded] [ref=e221] [cursor=pointer]
+            - region "欢迎使用Saber" [ref=e226]:
+              - generic [ref=e227]:
+                - generic [ref=e228]: 1.Saber 是 SpringBlade 的 Vue 3 管理端
+                - generic [ref=e229]: 2.基于 Vue 3.5、TypeScript、Vite 5 与 Element Plus 构建
+                - generic [ref=e230]: 3.同时兼容 SpringBlade Boot 与 Cloud 后端接口
+                - generic [ref=e231]: 4.提供动态菜单、按钮权限、主题、国际化与标签页能力
+                - generic [ref=e232]: 5.业务页面统一采用 Composition API 与 TypeScript
+          - generic [ref=e233]:
+            - button "什么是BladeX" [expanded] [ref=e234] [cursor=pointer]
+            - region "什么是BladeX" [ref=e239]:
+              - generic [ref=e240]:
+                - generic [ref=e241]: 1.BladeX是一款精心设计的微服务架构，提供 SpringCloud 全套解决方案
+                - generic [ref=e242]: 2.开源中国首批完美集成 SpringCloud Alibaba 系列组件的微服务架构
+                - generic [ref=e243]: 3.基于稳定生产的商业项目升级优化而来，更加贴近企业级的需求
+                - generic [ref=e244]: 4.追求企业开发更加高效，部署更加方便，生产更加稳定
+                - generic [ref=e245]: 5.GVP-码云最有价值开源项目
+                - generic [ref=e246]:
+                  - text: "6.BladeX授权地址:"
+                  - link "点击授权" [ref=e247] [cursor=pointer]:
+                    - /url: https://bladex.cn/pricing
+          - generic [ref=e248]:
+            - button "为何需要BladeX" [expanded] [ref=e249] [cursor=pointer]
+            - region "为何需要BladeX" [ref=e254]:
+              - generic [ref=e255]:
+                - generic [ref=e256]: 1.经历过较长的线上生产，积累了很多企业痛点的解决方案
+                - generic [ref=e257]: 2.一套代码兼容MySql、Oracle、PostgreSQL，适应企业各种不同场景的需求
+                - generic [ref=e258]: 3.集成了很多企业急切所需的例如多租户、Oauth2授权认证、工作流、分布式事务等等功能
+                - generic [ref=e259]: 4.深度定制了Flowable工作流，完美支持SpringCloud分布式服务的场景，以远程调用的方式进行操作
+                - generic [ref=e260]: 5.升级了核心驱动，新功能完全可以开箱即用，而开源版需要自己再花时间进行集成，需要花掉更多的时间成本
+                - generic [ref=e261]: 6.拥抱微服务时代，很多企业由于项目转型或升级，传统的技术已然不能满足，反而会花更多成本，而BladeX就是为此而生
+                - generic [ref=e262]: 7.同时提供SpringCloud版本和SpringBoot版本，两个版本的api可以与Sword和Saber无缝对接，为小型项目至大型项目保驾护航
+                - generic [ref=e263]: 8.授权购买即永久，源码没有混淆，完全开放，后续升级完全免费。企业只需花很少的钱即可获得一整套成熟的解决方案，你还在等什么？
+          - button "拥有的核心功能" [ref=e265] [cursor=pointer]
+          - generic [ref=e270]:
+            - button "软件定制开发合作" [expanded] [ref=e271] [cursor=pointer]
+            - region "软件定制开发合作" [ref=e276]:
+              - generic [ref=e277]:
+                - generic [ref=e278]: 1.承接BladeX系列架构的定制服务
+                - generic [ref=e279]: 2.承接大模型、Agent、Skills等AI相关的定制开发服务
+                - generic [ref=e280]:
+                  - text: 3.有意向请联系官方商务微信：
+                  - link "点击查看" [ref=e281] [cursor=pointer]:
+                    - /url: https://bladex.cn/contact/
+        - generic [ref=e282]:
+          - generic [ref=e287]:
+            - text: 产品名称
+            - separator [ref=e288]
+            - generic [ref=e289]: SpringBlade企业级微服务开发平台
+            - separator [ref=e292]
+            - text: 账号密码
+            - separator [ref=e297]
+            - generic [ref=e298]: 管理员(admin)
+            - separator [ref=e300]
+            - text: 官网地址
+            - separator [ref=e305]
+            - link "https://bladex.cn" [ref=e307] [cursor=pointer]:
+              - /url: https://bladex.cn
+            - separator [ref=e309]
+            - text: 社区地址
+            - separator [ref=e314]
+            - link "https://sns.bladex.cn" [ref=e316] [cursor=pointer]:
+              - /url: https://sns.bladex.cn
+            - separator [ref=e318]
+            - text: 获取文档
+            - separator [ref=e323]
+            - generic [ref=e324]:
+              - generic [ref=e325] [cursor=pointer]: 免费版
+              - separator [ref=e327]
+              - generic [ref=e328] [cursor=pointer]: 收费版
+            - separator [ref=e330]
+            - text: 获取源码
+            - separator [ref=e335]
+            - generic [ref=e336]:
+              - generic [ref=e337] [cursor=pointer]: 开源版
+              - separator [ref=e339]
+              - generic [ref=e340] [cursor=pointer]: 商业版
+          - generic [ref=e346]:
+            - generic [ref=e347]:
+              - button "5.0.1发布 增强角色判定与角色分配归属校验，建立全 TS 工程化底座" [expanded] [ref=e348] [cursor=pointer]
+              - region "5.0.1发布 增强角色判定与角色分配归属校验，建立全 TS 工程化底座" [ref=e353]:
+                - generic [ref=e354]:
+                  - generic [ref=e355]: 1.[升级]前端基础设施层 49 个模块由 .js 全量迁移为 .ts
+                  - generic [ref=e356]: 2.[升级]vite.config 迁移为 .mts，端口与代理目标改由环境变量驱动
+                  - generic [ref=e357]: 3.[升级]vue、element-plus、axios 等核心依赖，移除已停用的 mock 体系
+                  - generic [ref=e358]: 4.[升级]代码生成器模板升级 TS 与 Composition API 产出
+                  - generic [ref=e359]: 5.[新增]vue-tsc 类型门禁，与 esbuild 构建链路解耦
+                  - generic [ref=e360]: 6.[新增]env.d.ts 与 types 类型、Router 扩展与 axios 自定义配置
+                  - generic [ref=e361]: 7.[新增]tsconfig.node.json 独立承载 Node 语境类型检查
+                  - generic [ref=e362]: 8.[新增]用户新增、修改与角色分配校验角色租户归属
+                  - generic [ref=e363]: 9.[新增]禁止创建超管角色，取消角色别名越权风险
+                  - generic [ref=e364]: 10.[优化]角色判定由子串包含改为按分隔符切分全等比对
+                  - generic [ref=e365]: 11.[优化]字典管理权限注解由类级下沉至方法级
+                  - generic [ref=e366]: 12.[优化]类型选型规则收紧，禁用 explicit any 与 Record 宽泛类型
+                  - generic [ref=e367]: 13.[修复]TenantGuard 超管新增数据时租户归属落库为空
+                  - generic [ref=e368]: 14.[修复]代码生成器入口参数错误与 Skills 文档 ApiOrder 用法
+                  - generic [ref=e369]: 15.[修复]证件与手机号校验误判、全屏 API 失效、存储层反序列化越界
+            - button "5.0.0发布 重构升级 SpringBoot4 SpringCloud2025 JDK21 TypeScript" [ref=e371] [cursor=pointer]
+            - button "4.10.0发布 新增TenantGuard租户守卫工具" [ref=e377] [cursor=pointer]
+            - button "4.9.0发布 新增全栈AI开发Skills集合，新增全自动视图序列化机制" [ref=e383] [cursor=pointer]
+            - button "4.8.0发布 新增接口权限模块，增强系统安全性" [ref=e389] [cursor=pointer]
+            - button "4.7.0发布 新增i18n国际化组件，新增顶部菜单模块" [ref=e395] [cursor=pointer]
+            - button "4.6.0发布 升级适配 SpringCloud2025 SpringBoot3.5" [ref=e401] [cursor=pointer]
+            - button "4.5.0发布 新增账号锁定与解锁功能，新增腾讯云对象存储支持" [ref=e407] [cursor=pointer]
+            - button "4.4.0发布 新增黑白名单、脱敏工具、BladeRedis新版工具" [ref=e413] [cursor=pointer]
+            - button "4.3.0发布 多租户支持线程模式指定租户ID与忽略租户" [ref=e419] [cursor=pointer]
+            - button "4.2.0发布 底层架构升级，分类core模块与starter模块" [ref=e425] [cursor=pointer]
+            - button "4.1.0发布 登录认证升级为国密算法，数据库password字段内容无需变动" [ref=e431] [cursor=pointer]
+            - button "4.0.0发布 升级 SpringBoot3 SpringCloud2023 JDK17" [ref=e437] [cursor=pointer]
+            - button "3.7.1发布 升级系统安全性能" [ref=e443] [cursor=pointer]
+            - button "3.7.0发布 新增Token加密传输功能" [ref=e449] [cursor=pointer]
+            - button "3.6.0发布 基于vue3的前端架构正式发布" [ref=e455] [cursor=pointer]
+            - button "3.5.0发布 新增报文加密 令牌签名校验提示" [ref=e461] [cursor=pointer]
+            - button "3.4.1发布 重构Swagger封装" [ref=e467] [cursor=pointer]
+            - button "3.4.0发布 新增灰度服务功能" [ref=e473] [cursor=pointer]
+            - button "3.3.1发布 升级适配代码生成器API" [ref=e479] [cursor=pointer]
+            - button "3.3.0发布 升级适配 SpringCloud 2021" [ref=e485] [cursor=pointer]
+            - button "3.2.0发布 新增灵活数据权限特性" [ref=e491] [cursor=pointer]
+            - button "3.1.0发布 底层架构升级适配" [ref=e497] [cursor=pointer]
+            - button "3.0.3发布 新增kuboard-k8s脚本一键部署方案" [ref=e503] [cursor=pointer]
+            - button "3.0.2.发布 支持Nacos2.0长链接特性" [ref=e509] [cursor=pointer]
+            - button "3.0.1.发布 新增Swagger独立网关，优化代码生成" [ref=e515] [cursor=pointer]
+            - button "3.0.0.发布 架构升级适配SpringCloud2020" [ref=e521] [cursor=pointer]
+            - button "2.8.0发布 增加在线报表模块" [ref=e527] [cursor=pointer]
+            - button "2.7.3发布 增强多租户功能" [ref=e533] [cursor=pointer]
+            - button "2.7.2发布 集成JustAuth支持第三方登录" [ref=e539] [cursor=pointer]
+            - button "2.7.1发布 增加行政区划管理，支持seata1.2" [ref=e545] [cursor=pointer]
+            - button "2.7.0发布 内核全面升级，增加岗位管理，用户导入导出" [ref=e551] [cursor=pointer]
+            - button "2.6.2发布 升级支持seata1.1 支持阿里云oss" [ref=e557] [cursor=pointer]
+            - button "2.6.1发布 增加登陆验证码 支持seata1.0" [ref=e563] [cursor=pointer]
+            - button "2.6.0发布 升级Hoxton.SR1 适配最新架构" [ref=e569] [cursor=pointer]
+            - button "2.5.4发布 增加多数据源示例工程" [ref=e575] [cursor=pointer]
+            - button "2.5.3发布 集成分布式链路追踪" [ref=e581] [cursor=pointer]
+            - button "2.5.2发布 增加个人中心" [ref=e587] [cursor=pointer]
+            - button "2.5.1发布 增加动态网关鉴权" [ref=e593] [cursor=pointer]
+            - button "2.5.0发布 集成seata支持分布式事务" [ref=e599] [cursor=pointer]
+            - button "2.4.1发布 代码生成增加多数据源，强化代码生成功能" [ref=e605] [cursor=pointer]
+            - button "2.4.0发布 升级AlibabaCloud毕业版本" [ref=e611] [cursor=pointer]
+            - button "2.3.3发布 重构令牌逻辑, 增强令牌功能" [ref=e617] [cursor=pointer]
+            - button "2.3.2发布 增加 OSS 封装及单元测试封装" [ref=e623] [cursor=pointer]
+            - button "2.3.1发布 升级业务架构" [ref=e629] [cursor=pointer]
+            - button "2.3.0发布 升级SpringCloud Greenwich与SpringBoot" [ref=e635] [cursor=pointer]
+            - button "2.2.0发布 升级为多终端令牌认证系统" [ref=e641] [cursor=pointer]
+            - button "2.1.0发布 升级为SaaS多租户系统" [ref=e647] [cursor=pointer]
+            - button "2.0.0发布 全面升级为SpringCloud微服务架构" [ref=e653] [cursor=pointer]

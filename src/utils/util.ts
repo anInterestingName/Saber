@@ -12,17 +12,6 @@ export const validData = (val, defaultVal = false) => {
   }
   return validateNull(val) ? defaultVal : val;
 };
-/**
- * 在 Avue option 的 column 配置中按 prop 查找列对象。
- * 兼容扁平列数组 [{ prop }] 与分组列 [{ column: [{ prop }] }]。
- * @returns {import('@/types/column').ColumnSchema|null} 找到的 column 对象引用，未找到返回 null
- */
-export const findColumn = (arr, prop) => {
-  if (!Array.isArray(arr) || arr.length === 0) {
-    return null;
-  }
-  return arr.flatMap(item => item.column || [item]).find(col => col.prop === prop) || null;
-};
 //表单序列化
 export const serialize = data => {
   let list = [];

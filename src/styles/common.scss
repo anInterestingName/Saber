@@ -11,40 +11,48 @@ a {
   outline: none;
 }
 
-.avue-sidebar,
-.avue-top,
-.avue-logo,
-.avue-layout,
+.saber-sidebar,
+.saber-top,
+.saber-logo,
+.saber-layout,
 .login-logo,
-.avue-main {
+.saber-main {
   transition: all 0.3s;
 }
-.avue-layout {
+.saber-layout {
   display: flex;
   height: 100%;
   overflow: hidden;
   &--horizontal {
     flex-direction: column;
-    .avue-sidebar {
+    .saber-sidebar {
       width: 100%;
       height: vars.$top_height;
       display: flex;
-      .avue-menu,
+      border-right: 0;
+      border-bottom: 1px solid var(--saber-border);
+      background-color: var(--saber-header-bg);
+      .saber-menu,
       .el-menu-item,
       .el-sub-menu__title {
         height: vars.$top_height;
         line-height: vars.$top_height;
       }
+      .saber-menu {
+        background-color: transparent;
+        border-right: 0;
+      }
       .is-active:before {
         display: none;
       }
     }
-    .avue-logo {
+    .saber-logo {
       width: vars.$sidebar_width;
+      border-bottom: 0;
     }
   }
 }
-.avue-contail {
+.saber-shell {
   width: 100%;
   height: 100%;
   background: var(--saber-page-bg);
@@ -52,14 +60,14 @@ a {
   background-repeat: no-repeat;
 }
 
-.avue--collapse {
-  .avue-sidebar,
-  .avue-logo {
+.saber-shell--collapsed {
+  .saber-sidebar,
+  .saber-logo {
     width: vars.$sidebar_collapse;
   }
 }
 
-.avue-main {
+.saber-main {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -69,7 +77,7 @@ a {
   overflow: hidden;
   background: var(--saber-page-bg);
 }
-#avue-view {
+#saber-view {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -77,12 +85,12 @@ a {
   box-sizing: border-box;
   background: var(--saber-page-bg);
 }
-.avue-view {
+.saber-view {
   width: 100%;
   box-sizing: border-box;
 }
 
-.avue-footer {
+.saber-footer {
   width: 100%;
   position: absolute;
   bottom: 0;
@@ -102,7 +110,7 @@ a {
   bottom: 0;
 }
 // ele样式覆盖
-@include meta.load-css('./element-ui');
+@include meta.load-css('./element-plus');
 // 顶部右侧显示
 @include meta.load-css('./top');
 // 导航标签

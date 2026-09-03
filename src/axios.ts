@@ -20,9 +20,9 @@ import { baseUrl } from '@/config/env';
 import crypto from '@/utils/crypto';
 
 axios.defaults.timeout = 10000;
-//返回其他状态吗
+// 仅 2xx 响应进入业务状态处理，HTTP 错误统一在失败拦截器恢复页面状态。
 axios.defaults.validateStatus = function (status) {
-  return status >= 200 && status <= 500; // 默认的
+  return status >= 200 && status < 300;
 };
 //跨域请求，允许保存cookie
 axios.defaults.withCredentials = true;
@@ -59,9 +59,9 @@ axios.interceptors.request.use(config => {
 //HTTPresponse拦截
 axios.interceptors.response.use(res => {
   NProgress.done();
-  const status = res.data.code || 200
+  const status = res.data?.code ?? 200
   const statusWhiteList = website.statusWhiteList || [];
-  const message = res.data.msg || '未知错误';
+  const message = res.data?.msg || '未知错误';
   //如果在白名单里则自行catch逻辑处理
   if (statusWhiteList.includes(status)) return Promise.reject(res);
   //如果是401则跳转到登录页面
@@ -77,7 +77,17 @@ axios.interceptors.response.use(res => {
   return res;
 }, error => {
   NProgress.done();
-  return Promise.reject(new Error(error));
+  const response = axios.isAxiosError(error) ? error.response : undefined;
+  const status = response?.data?.code ?? response?.status;
+  const statusWhiteList = website.statusWhiteList || [];
+  const message = response?.data?.msg || error?.message || '未知错误';
+  if (statusWhiteList.includes(status)) return Promise.reject(error);
+  if (status === 401) store.dispatch('FedLogOut').then(() => router.push({ path: '/login' }));
+  ElMessage({
+    message,
+    type: 'error'
+  });
+  return Promise.reject(error instanceof Error ? error : new Error(message));
 })
 
 export default axios;

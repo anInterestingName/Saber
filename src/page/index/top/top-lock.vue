@@ -17,8 +17,9 @@
         <el-input v-model="form.passwd"
                   placeholder="请输入锁屏密码">
           <template #append>
-            <el-button @click="handleSetLock"
-                       icon="el-icon-lock"></el-button>
+            <el-button aria-label="确认锁屏密码" @click="handleSetLock">
+              <el-icon><Lock /></el-icon>
+            </el-button>
           </template>
         </el-input>
       </el-form-item>
@@ -29,8 +30,10 @@
 <script>
 import { validateNull } from "utils/validate";
 import { mapGetters } from "vuex";
+import { Lock } from '@element-plus/icons-vue';
 export default {
   name: "top-lock",
+  components: { Lock },
   data () {
     return {
       box: false,

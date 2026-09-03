@@ -3,7 +3,7 @@ import { setStore, getStore } from '@/utils/store'
 import { deepClone } from '@/utils/util'
 import { loginByUsername, loginBySocial, getUserInfo, logout, refreshToken, getButtons } from '@/api/user'
 import { getRoutes, getTopMenu } from '@/api/system/menu'
-import { formatPath } from '@/router/avue-router'
+import { formatMenuPaths } from '@/router/dynamic-router'
 import { ElMessage } from 'element-plus'
 import { encrypt } from '@/utils/sm2'
 
@@ -160,8 +160,7 @@ const user = {
         getRoutes(topMenuId).then((res) => {
           const data = res.data.data
           let menu = deepClone(data);
-          menu.forEach(ele => formatPath(ele, true));
-          console.log(menu)
+          menu.forEach(ele => formatMenuPaths(ele, true));
           commit('SET_MENU', menu);
           commit('SET_MENU_ALL', menu);
           dispatch('GetButtons');

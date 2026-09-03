@@ -1,6 +1,6 @@
 @use './variables' as vars;
 
-.avue-sidebar {
+.saber-sidebar {
   width: vars.$sidebar_width;
   height: 100%;
   user-select: none;
@@ -10,12 +10,14 @@
   background-color: var(--saber-sidebar-bg);
   transition: width 0.2s;
   box-sizing: border-box;
-  box-shadow: 1px 0 0 var(--saber-border);
   .el-scrollbar__wrap {
     overflow-x: hidden;
   }
-  .avue-menu {
+  .saber-menu {
     height: calc(100% - #{vars.$top_height});
+    background-color: var(--saber-sidebar-bg);
+    border-right: 1px solid var(--saber-border);
+    box-sizing: border-box;
   }
   &--tip {
     width: 90%;

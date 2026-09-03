@@ -71,7 +71,7 @@ export default {
       return item[this.pathKey]
     },
     getTitle (item) {
-      return this.$router.$avueRouter.generateTitle(item, this.props);
+      return this.$router.$dynamicRouter.generateTitle(item, this.props);
     },
     validRoles (item) {
       item.meta = item.meta || {};

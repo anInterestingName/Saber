@@ -1,0 +1,3 @@
+[      88ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[     308ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149

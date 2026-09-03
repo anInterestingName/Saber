@@ -69,7 +69,6 @@ export default {
         const loading = this.$loading({
           lock: true,
           text: `${this.socialForm.state === 'WX' ? '微信' : 'QQ'}登录中,请稍后。。。`,
-          spinner: 'el-icon-loading',
         });
         setTimeout(() => {
           loading.close();

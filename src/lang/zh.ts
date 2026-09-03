@@ -7,8 +7,8 @@ export default {
   search: '请输入搜索内容',
   menuTip: '没有发现菜单',
   wel: {
-    info: '早安，Smallwei，Avuex一款超乎你想象的框架！',
-    dept: '我是avue团队下的一个部门-哈皮部门-哈皮职位',
+    info: '欢迎使用 Saber 企业级管理平台',
+    dept: '基于 Vue 3、TypeScript 与 Element Plus 构建',
     team: '团队内排名',
     project: '项目访问',
     count: '项目数',

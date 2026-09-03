@@ -47,9 +47,9 @@ export default {
       this.$nextTick(() => {
         const tag = this.tag;
         const hasTagTitle = tag && (tag.label || (tag.query && tag.query.name));
-        const title = hasTagTitle ? this.$router.$avueRouter.generateTitle(tag) : '';
+        const title = hasTagTitle ? this.$router.$dynamicRouter.generateTitle(tag) : '';
         //根据当前的标签也获取label的值动态设置浏览器标题
-        this.$router.$avueRouter.setTitle(title);
+        this.$router.$dynamicRouter.setTitle(title);
       });
     },
   },

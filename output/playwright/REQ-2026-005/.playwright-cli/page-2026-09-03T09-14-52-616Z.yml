@@ -1,0 +1,45 @@
+- generic [ref=e3]:
+  - region "星图品牌展示" [ref=e4]:
+    - generic [ref=e6]:
+      - strong [ref=e7]: 星图
+      - generic [ref=e8]: staratlas
+    - generic [ref=e11]:
+      - heading "一款兼具设计美学与高效开发的后台系统" [level=2] [ref=e12]
+      - paragraph [ref=e13]: 美观实用的界面，经过视觉优化，确保卓越的用户体验
+    - generic [ref=e14]: © 2026 星图 staratlas
+  - generic [ref=e15]:
+    - generic [ref=e16]:
+      - button " 简体中文" [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: 简体中文
+      - button "切换到深色模式" [ref=e25] [cursor=pointer]
+    - main [ref=e29]:
+      - generic [ref=e30]:
+        - heading "欢迎回来" [level=1] [ref=e31]
+        - paragraph [ref=e32]: 输入您的账号和密码登录系统
+      - tablist "登录" [ref=e33]:
+        - tab "账号密码" [selected] [ref=e34] [cursor=pointer]
+        - tab "刷脸登录" [ref=e39] [cursor=pointer]
+      - generic [ref=e45]:
+        - generic [ref=e49]:
+          - generic: 
+          - textbox "请输入租户ID" [ref=e52]: "000000"
+        - generic [ref=e56]:
+          - generic: 
+          - textbox "请输入账号" [ref=e59]: admin
+        - generic [ref=e63]:
+          - generic: 
+          - textbox "请输入密码" [ref=e66]: admin
+          - generic [ref=e68] [cursor=pointer]
+        - button "登录" [ref=e74] [cursor=pointer]
+      - generic [ref=e76]:
+        - generic [ref=e77]: 第三方登录
+        - generic [ref=e79]:
+          - button "QQ" [ref=e80] [cursor=pointer]:
+            - generic [ref=e81]: 
+          - button "微信" [ref=e82] [cursor=pointer]:
+            - generic [ref=e83]: 
+          - button "GitHub" [ref=e84] [cursor=pointer]:
+            - generic [ref=e85]: 
+          - button "码云" [ref=e86] [cursor=pointer]:
+            - generic [ref=e87]: 

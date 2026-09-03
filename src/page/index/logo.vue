@@ -1,17 +1,17 @@
 <template>
-  <div class="avue-logo">
+  <div class="saber-logo">
     <transition name="fade" mode="out-in">
       <div
         v-if="isCompact"
         key="compact"
-        class="avue-logo_brand avue-logo_brand--compact"
+        class="saber-logo_brand saber-logo_brand--compact"
         :aria-label="website.indexTitle"
       >
-        <img class="avue-logo_mark" src="/img/staratlas-mark.svg" alt="" />
+        <img class="saber-logo_mark" src="/img/staratlas-mark.svg" alt="" />
       </div>
-      <div v-else key="expanded" class="avue-logo_brand" :aria-label="website.indexTitle">
-        <img class="avue-logo_mark" src="/img/staratlas-mark.svg" alt="" />
-        <span class="avue-logo_title">{{ website.indexTitle }}</span>
+      <div v-else key="expanded" class="saber-logo_brand" :aria-label="website.indexTitle">
+        <img class="saber-logo_mark" src="/img/staratlas-mark.svg" alt="" />
+        <span class="saber-logo_title">{{ website.indexTitle }}</span>
       </div>
     </transition>
   </div>

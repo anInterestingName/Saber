@@ -9,8 +9,8 @@ export default {
   feedback: 'feedback',
   submit: 'submit',
   wel: {
-    info: 'Good morning, Smallwei, Avue is a framework',
-    dept: 'a certain technology department',
+    info: 'Welcome to the Saber enterprise platform',
+    dept: 'Built with Vue 3, TypeScript, and Element Plus',
     team: 'Team ranking',
     project: 'Project access',
     count: 'Item number',

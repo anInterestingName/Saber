@@ -1,0 +1,163 @@
+- generic [ref=f8e1]:
+  - generic [ref=f8e4]:
+    - generic [ref=f8e5]:
+      - generic "星图 staratlas" [ref=f8e7]
+      - menubar [ref=f8e11]:
+        - menuitem "" [ref=f8e12]
+        - menuitem "" [ref=f8e15]
+        - menuitem "" [ref=f8e18]
+        - menuitem "" [ref=f8e21]
+        - menuitem "" [ref=f8e24]
+        - menuitem "" [ref=f8e27]
+        - menuitem "" [ref=f8e30]
+    - generic [ref=f8e33]:
+      - generic [ref=f8e34]:
+        - generic [ref=f8e35]: 
+        - menubar [ref=f8e39]:
+          - menuitem " 首页" [ref=f8e40] [cursor=pointer]:
+            - generic [ref=f8e41]: 
+            - generic [ref=f8e42]: 首页
+        - generic [ref=f8e43]:
+          - text:    
+          - generic [ref=f8e44]:
+            - button "管理员" [ref=f8e47]
+            - button "打开界面设置" [ref=f8e48] [cursor=pointer]
+      - generic [ref=f8e53]:
+        - generic [ref=f8e54]:
+          - generic [ref=f8e56]:
+            - generic [ref=f8e61] [cursor=pointer]
+            - tablist [ref=f8e66]:
+              - tab "首页" [ref=f8e67]
+              - tab "通知公告" [ref=f8e69]
+              - tab "数据源管理" [ref=f8e72]
+              - tab "报表列表" [ref=f8e75]
+              - tab "租户管理" [ref=f8e78]
+              - tab "应用管理" [ref=f8e81]
+              - tab "通用日志" [ref=f8e84]
+              - tab "接口日志" [ref=f8e87]
+              - tab "错误日志" [selected] [ref=f8e90]
+              - tab "参数管理" [ref=f8e95]
+              - tab "岗位管理" [ref=f8e98]
+              - tab "字典管理" [ref=f8e101]
+          - generic:
+            - tabpanel "错误日志"
+        - button "更多" [ref=f8e105] [cursor=pointer]
+      - text:                       
+      - generic [ref=f8e108]:
+        - generic [ref=f8e113]:
+          - generic [ref=f8e115]:
+            - generic [ref=f8e116]: 服务 ID
+            - textbox "服务 ID" [ref=f8e120]:
+              - /placeholder: 请输入服务 ID
+          - generic [ref=f8e123]:
+            - generic [ref=f8e124]: 服务 Host
+            - textbox "服务 Host" [ref=f8e128]:
+              - /placeholder: 请输入服务 Host
+          - generic [ref=f8e130]:
+            - button "重置" [ref=f8e131] [cursor=pointer]
+            - button "查询" [ref=f8e136] [cursor=pointer]
+        - generic [ref=f8e143]:
+          - generic [ref=f8e144]:
+            - heading "错误日志" [level=2] [ref=f8e145]
+            - button "刷新" [ref=f8e148] [cursor=pointer]
+          - generic [ref=f8e154]:
+            - table [ref=f8e156]:
+              - rowgroup [ref=f8e168]:
+                - row [ref=f8e169]:
+                  - columnheader "#" [ref=f8e170]
+                  - columnheader "服务 ID" [ref=f8e172]
+                  - columnheader "服务 Host" [ref=f8e174]
+                  - columnheader "服务 IP" [ref=f8e176]
+                  - columnheader "软件环境" [ref=f8e178]
+                  - columnheader "日志名" [ref=f8e180]
+                  - columnheader "请求方法" [ref=f8e182]
+                  - columnheader "请求接口" [ref=f8e184]
+                  - columnheader "日志时间" [ref=f8e186]
+                  - columnheader "操作" [ref=f8e188]
+            - table [ref=f8e194]:
+              - rowgroup [ref=f8e206]:
+                - row [ref=f8e207]:
+                  - cell "1" [ref=f8e208]
+                  - cell "blade-system" [ref=f8e211]
+                  - cell "DESKTOP-61JE414" [ref=f8e213]
+                  - cell "172.22.32.1:8106" [ref=f8e215]
+                  - cell "dev" [ref=f8e217]
+                  - cell [ref=f8e219]
+                  - cell "POST" [ref=f8e220]
+                  - cell "/user/update" [ref=f8e222]
+                  - cell "2026-08-28 18:34:04" [ref=f8e224]
+                  - cell [ref=f8e226]:
+                    - button "查看" [ref=f8e229] [cursor=pointer]
+          - generic [ref=f8e236]:
+            - button "上一页" [disabled] [ref=f8e237]
+            - list [ref=f8e238]:
+              - listitem "第 1 页" [ref=f8e239]: "1"
+            - button "下一页" [disabled] [ref=f8e240]
+  - generic:                        
+  - dialog "界面设置" [ref=f8e288]:
+    - banner [ref=f8e289]:
+      - heading "界面设置" [level=2] [ref=f8e290]
+      - button "关闭此对话框" [ref=f8e291] [cursor=pointer]
+    - generic [ref=f8e296]:
+      - generic [ref=f8e297]:
+        - heading "整体风格设置" [level=3] [ref=f8e298]
+        - generic [ref=f8e299]:
+          - button "明亮" [ref=f8e300] [cursor=pointer]
+          - button "暗黑" [pressed] [ref=f8e308] [cursor=pointer]
+        - heading "主题色" [level=3] [ref=f8e313]
+        - generic [ref=f8e314]:
+          - button "拂晓蓝" [ref=f8e315] [cursor=pointer]
+          - button "科技蓝" [ref=f8e319] [cursor=pointer]
+          - button "薄暮" [ref=f8e320] [cursor=pointer]
+          - button "火山" [pressed] [ref=f8e321] [cursor=pointer]
+          - button "日暮" [ref=f8e322] [cursor=pointer]
+          - button "明青" [ref=f8e323] [cursor=pointer]
+          - button "极光绿" [ref=f8e324] [cursor=pointer]
+          - button "极客蓝" [ref=f8e325] [cursor=pointer]
+          - button "酱紫" [ref=f8e326] [cursor=pointer]
+      - separator [ref=f8e327]
+      - generic [ref=f8e328]:
+        - heading "导航模式" [level=3] [ref=f8e329]
+        - generic [ref=f8e330]:
+          - button "侧边" [ref=f8e331] [cursor=pointer]
+          - button "顶部" [ref=f8e336] [cursor=pointer]
+          - button "混合" [pressed] [ref=f8e340] [cursor=pointer]
+      - separator [ref=f8e348]
+      - generic [ref=f8e349]:
+        - heading "界面显示" [level=3] [ref=f8e350]
+        - generic [ref=f8e351]:
+          - generic [ref=f8e352]:
+            - generic [ref=f8e353]: 导航标签
+            - generic [ref=f8e354]:
+              - switch [checked]
+              - generic [ref=f8e355] [cursor=pointer]
+          - generic [ref=f8e357]:
+            - generic [ref=f8e358]: 菜单折叠
+            - generic [ref=f8e359]:
+              - switch [checked]
+              - generic [ref=f8e360] [cursor=pointer]
+          - generic [ref=f8e362]:
+            - generic [ref=f8e363]: 菜单搜索
+            - generic [ref=f8e364]:
+              - switch [checked]
+              - generic [ref=f8e365] [cursor=pointer]
+      - separator [ref=f8e367]
+      - generic [ref=f8e368]:
+        - heading "工具栏" [level=3] [ref=f8e369]
+        - generic [ref=f8e370]:
+          - generic [ref=f8e371]:
+            - generic [ref=f8e372]: 屏幕全屏
+            - generic [ref=f8e373]:
+              - switch [checked]
+              - generic [ref=f8e374] [cursor=pointer]
+          - generic [ref=f8e376]:
+            - generic [ref=f8e377]: 屏幕锁定
+            - generic [ref=f8e378]:
+              - switch [checked]
+              - generic [ref=f8e379] [cursor=pointer]
+          - generic [ref=f8e381]:
+            - generic [ref=f8e382]: 日志调试
+            - generic [ref=f8e383]:
+              - switch [checked]
+              - generic [ref=f8e384] [cursor=pointer]
+      - button "恢复默认设置" [ref=f8e387] [cursor=pointer]

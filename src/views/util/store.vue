@@ -5,7 +5,7 @@
     </el-tag>
     <div class="box">
       <el-button type="primary"
-                 @click="setItem({name:'username', value:'avuex'});">set('username', 'avuex')
+                 @click="setItem({name:'username', value:'saber'});">set('username', 'saber')
       </el-button>
 
       <el-button type="success"
@@ -20,7 +20,7 @@
     </el-tag>
     <div class="box">
       <el-button type="primary"
-                 @click="setItem({name:'username', value:'avuex',type:'session'});">set('username', 'avuex')
+                 @click="setItem({name:'username', value:'saber',type:'session'});">set('username', 'saber')
       </el-button>
 
       <el-button type="success"

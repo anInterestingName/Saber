@@ -8,12 +8,14 @@
                v-model="box"
                width="60%"
                append-to-body>
-      <el-button type="primary"
-                 icon="el-icon-upload"
-                 @click="send">上传服务器</el-button>
-      <el-button type="danger"
-                 icon="el-icon-delete"
-                 @click="clear">清空本地日志</el-button>
+      <el-button type="primary" @click="send">
+        <el-icon><Upload /></el-icon>
+        <span>上传服务器</span>
+      </el-button>
+      <el-button type="danger" @click="clear">
+        <el-icon><Delete /></el-icon>
+        <span>清空本地日志</span>
+      </el-button>
       <el-table :data="logsList">
         <el-table-column prop="type"
                          label="类型"
@@ -42,8 +44,10 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { Delete, Upload } from '@element-plus/icons-vue';
 export default {
   name: "top-logs",
+  components: { Delete, Upload },
   data () {
     return {
       box: false

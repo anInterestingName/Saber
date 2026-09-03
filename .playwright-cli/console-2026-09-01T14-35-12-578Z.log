@@ -1,0 +1,3 @@
+[     255ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[  207000ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:2889/api/blade-auth/token?grantType=captcha&tenantId=000000&account=admin&password=472dec1dc6a544b74445b7bed9604f85c2afca3b5e29990bdef6e8113ee025f70f9b97156bfcc20890defa7b435012175894f422103760f9529f9c481f287d88f466aeb931dded04c9ae9396d604fd0cdbb5b47e499ce2feaf021aa7c93e192b562de33251&type=account:0
