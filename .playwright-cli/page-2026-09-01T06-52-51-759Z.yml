@@ -1,0 +1,116 @@
+- generic [ref=e1]:
+  - generic [ref=e99]:
+    - generic [ref=e100]:
+      - generic "星图 staratlas" [ref=e102]
+      - menubar [ref=e107]:
+        - menuitem " 工作台" [ref=e108]:
+          - generic [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]: 
+            - generic [ref=e111]: 工作台
+          - text: 
+        - menuitem " 系统监控" [ref=e115]:
+          - generic [ref=e116] [cursor=pointer]:
+            - generic [ref=e117]: 
+            - generic [ref=e118]: 系统监控
+          - text:      
+        - menuitem " 研发工具" [expanded] [ref=e122]:
+          - generic [ref=e123] [cursor=pointer]:
+            - generic [ref=e124]: 
+            - generic [ref=e125]: 研发工具
+          - menu [ref=e960]:
+            - menuitem " 代码生成" [ref=e961] [cursor=pointer]:
+              - generic [ref=e962]: 
+              - generic [ref=e963]: 代码生成
+            - menuitem " 数据源管理" [active] [ref=e964] [cursor=pointer]:
+              - generic [ref=e965]: 
+              - generic [ref=e966]: 数据源管理
+        - menuitem " 报表管理" [ref=e129]:
+          - generic [ref=e130] [cursor=pointer]:
+            - generic [ref=e131]: 
+            - generic [ref=e132]: 报表管理
+          - text:  
+        - menuitem " 基础配置" [ref=e136]:
+          - generic [ref=e137] [cursor=pointer]:
+            - generic [ref=e138]: 
+            - generic [ref=e139]: 基础配置
+          - text: 
+        - menuitem " 权限管理" [ref=e143]:
+          - generic [ref=e144] [cursor=pointer]:
+            - generic [ref=e145]: 
+            - generic [ref=e146]: 权限管理
+          - text:   
+        - menuitem " 系统管理" [ref=e150]:
+          - generic [ref=e151] [cursor=pointer]:
+            - generic [ref=e152]: 
+            - generic [ref=e153]: 系统管理
+          - text:         
+    - generic [ref=e157]:
+      - generic [ref=e158]:
+        - generic [ref=e159]: 
+        - generic [ref=e162]:
+          - menubar [ref=e163]:
+            - menuitem " 首页" [ref=e164] [cursor=pointer]:
+              - generic [ref=e165]: 
+              - generic [ref=e166]: 首页
+          - combobox [ref=e167]:
+            - textbox "请输入搜索内容" [ref=e170]
+        - generic [ref=e171]:
+          - generic [ref=e172]: 
+          - button "" [ref=e176]
+          - generic [ref=e177]: 
+          - generic [ref=e179]: 
+          - generic [ref=e183]:
+            - button "管理员" [ref=e186]
+            - button "打开界面设置" [ref=e187] [cursor=pointer]
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - tablist [ref=e197]:
+            - tab "首页" [ref=e198]
+            - tab "通知公告" [ref=e645]
+            - tab "数据源管理" [selected] [ref=e967]
+          - generic:
+            - tabpanel "数据源管理"
+        - button "更多" [ref=e201] [cursor=pointer]
+      - text:                       
+      - generic [ref=e975]:
+        - generic [ref=e976]:
+          - heading "数据源列表" [level=2] [ref=e977]
+          - generic [ref=e978]:
+            - generic [ref=e979]:
+              - button "新增" [ref=e980] [cursor=pointer]
+              - button "删除" [ref=e985] [cursor=pointer]
+            - button "刷新" [ref=e991] [cursor=pointer]
+        - generic [ref=e997]:
+          - table [ref=e999]:
+            - rowgroup [ref=e1008]:
+              - row [ref=e1009]:
+                - columnheader [ref=e1010]:
+                  - generic "选择所有行" [ref=e1012]:
+                    - generic [ref=e1013] [cursor=pointer]:
+                      - checkbox "选择所有行" [disabled]
+                - columnheader "#" [ref=e1015]
+                - columnheader "名称" [ref=e1017]
+                - columnheader "驱动类" [ref=e1019]
+                - columnheader "用户名" [ref=e1021]
+                - columnheader "连接地址" [ref=e1023]
+                - columnheader "操作" [ref=e1025]
+          - generic [ref=e1030]:
+            - table:
+              - rowgroup
+            - generic [ref=e1031]: 暂无数据
+        - generic [ref=e1035]:
+          - generic [ref=e1036]: 共 0 条
+          - generic [ref=e1039] [cursor=pointer]:
+            - generic:
+              - combobox [ref=e1041]
+              - generic [ref=e1042]: 10条/页
+          - button "上一页" [disabled] [ref=e1047]
+          - list [ref=e1048]:
+            - listitem "第 1 页" [ref=e1049]: "1"
+          - button "下一页" [disabled] [ref=e1050]
+          - generic [ref=e1051]:
+            - generic [ref=e1052]: 前往
+            - spinbutton "页" [ref=e1055]: "1"
+            - generic [ref=e1056]: 页
+  - alert [ref=e1057]:
+    - paragraph [ref=e1061]: "Failed to handle request [GET http://localhost/blade-develop/datasource/list?current=1&size=10]: 404 NOT_FOUND \"No static resource blade-develop/datasource/list for request 'http://localhost/blade-develop/datasource/list?current=1&size=10'.\""

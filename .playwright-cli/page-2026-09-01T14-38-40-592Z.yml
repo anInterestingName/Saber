@@ -1,0 +1,53 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - region "星图品牌展示" [ref=e4]:
+      - generic [ref=e6]:
+        - strong [ref=e7]: 星图
+        - generic [ref=e8]: staratlas
+      - generic [ref=e11]:
+        - heading "一款兼具设计美学与高效开发的后台系统" [level=2] [ref=e12]
+        - paragraph [ref=e13]: 美观实用的界面，经过视觉优化，确保卓越的用户体验
+      - generic [ref=e14]: © 2026 星图 staratlas
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - button " 简体中文" [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: 
+          - generic [ref=e20]: 简体中文
+        - button "切换到深色模式" [ref=e25] [cursor=pointer]
+      - main [ref=e29]:
+        - generic [ref=e30]:
+          - heading "欢迎回来" [level=1] [ref=e31]
+          - paragraph [ref=e32]: 输入您的账号和密码登录系统
+        - tablist "登录" [ref=e33]:
+          - tab "账号密码" [selected] [ref=e34] [cursor=pointer]
+          - tab "刷脸登录" [ref=e39] [cursor=pointer]
+        - generic [ref=e45]:
+          - generic [ref=e49]:
+            - generic: 
+            - textbox "请输入租户ID" [ref=e52]: "000000"
+          - generic [ref=e56]:
+            - generic: 
+            - textbox "请输入账号" [ref=e59]: admin
+          - generic [ref=e63]:
+            - generic: 
+            - textbox "请输入密码" [ref=e66]: admin
+            - generic [ref=e68] [cursor=pointer]
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - generic: 
+              - textbox "请输入验证码" [ref=e78]: Ev25P
+            - img [ref=e81] [cursor=pointer]
+          - button "登录" [active] [ref=e84] [cursor=pointer]
+        - generic [ref=e86]:
+          - generic [ref=e87]: 第三方登录
+          - generic [ref=e89]:
+            - button "QQ" [ref=e90] [cursor=pointer]:
+              - generic [ref=e91]: 
+            - button "微信" [ref=e92] [cursor=pointer]:
+              - generic [ref=e93]: 
+            - button "GitHub" [ref=e94] [cursor=pointer]:
+              - generic [ref=e95]: 
+            - button "码云" [ref=e96] [cursor=pointer]:
+              - generic [ref=e97]: 
+  - alert [ref=e101]:
+    - paragraph [ref=e105]: 验证码不正确

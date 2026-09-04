@@ -1,0 +1,155 @@
+- generic [ref=e99]:
+  - generic [ref=e100]:
+    - generic "星图 staratlas" [ref=e102]
+    - menubar [ref=e107]:
+      - menuitem " 工作台" [ref=e108]:
+        - generic [ref=e109] [cursor=pointer]:
+          - generic [ref=e110]: 
+          - generic [ref=e111]: 工作台
+        - text: 
+      - menuitem " 系统监控" [expanded] [ref=e115]:
+        - generic [ref=e116] [cursor=pointer]:
+          - generic [ref=e117]: 
+          - generic [ref=e118]: 系统监控
+        - menu [ref=e936]:
+          - menuitem " 接口文档" [ref=e937] [cursor=pointer]:
+            - generic [ref=e938]: 
+            - generic [ref=e939]: 接口文档
+          - menuitem " 服务治理" [ref=e940] [cursor=pointer]:
+            - generic [ref=e941]: 
+            - generic [ref=e942]: 服务治理
+          - menuitem " 日志管理" [expanded] [ref=e943]:
+            - generic [ref=e944] [cursor=pointer]:
+              - generic [ref=e945]: 
+              - generic [ref=e946]: 日志管理
+            - menu [ref=e959]:
+              - menuitem " 通用日志" [ref=e950] [cursor=pointer]:
+                - generic [ref=e951]: 
+                - generic [ref=e952]: 通用日志
+              - menuitem " 接口日志" [ref=e953] [cursor=pointer]:
+                - generic [ref=e954]: 
+                - generic [ref=e955]: 接口日志
+              - menuitem " 错误日志" [ref=e956] [cursor=pointer]:
+                - generic [ref=e957]: 
+                - generic [ref=e958]: 错误日志
+      - menuitem " 研发工具" [ref=e122]:
+        - generic [ref=e123] [cursor=pointer]:
+          - generic [ref=e124]: 
+          - generic [ref=e125]: 研发工具
+        - text:  
+      - menuitem " 报表管理" [ref=e129]:
+        - generic [ref=e130] [cursor=pointer]:
+          - generic [ref=e131]: 
+          - generic [ref=e132]: 报表管理
+        - text:  
+      - menuitem " 基础配置" [ref=e136]:
+        - generic [ref=e137] [cursor=pointer]:
+          - generic [ref=e138]: 
+          - generic [ref=e139]: 基础配置
+        - text: 
+      - menuitem " 权限管理" [ref=e143]:
+        - generic [ref=e144] [cursor=pointer]:
+          - generic [ref=e145]: 
+          - generic [ref=e146]: 权限管理
+        - text:   
+      - menuitem " 系统管理" [ref=e150]:
+        - generic [ref=e151] [cursor=pointer]:
+          - generic [ref=e152]: 
+          - generic [ref=e153]: 系统管理
+        - text:         
+  - generic [ref=e157]:
+    - generic [ref=e158]:
+      - generic [ref=e159]: 
+      - generic [ref=e162]:
+        - menubar [ref=e163]:
+          - menuitem " 首页" [ref=e164] [cursor=pointer]:
+            - generic [ref=e165]: 
+            - generic [ref=e166]: 首页
+        - combobox [ref=e167]:
+          - textbox "请输入搜索内容" [ref=e170]
+      - generic [ref=e171]:
+        - generic [ref=e172]: 
+        - button "" [ref=e176]
+        - generic [ref=e177]: 
+        - generic [ref=e179]: 
+        - generic [ref=e183]:
+          - button "管理员" [ref=e186]
+          - button "打开界面设置" [ref=e187] [cursor=pointer]
+    - generic [ref=e192]:
+      - generic [ref=e193]:
+        - generic [ref=e195]:
+          - generic [ref=e6310] [cursor=pointer]
+          - generic [ref=e6314] [cursor=pointer]
+          - tablist [ref=e197]:
+            - tab "首页" [ref=e198]
+            - tab "通知公告" [ref=e645]
+            - tab "数据源管理" [ref=e967]
+            - tab "报表列表" [ref=e1069]
+            - tab "租户管理" [ref=e1208]
+            - tab "应用管理" [ref=e1393]
+            - tab "通用日志" [ref=e6064]
+            - tab "接口日志" [ref=e6193]
+            - tab "错误日志" [selected] [ref=e6318]
+        - generic:
+          - tabpanel "错误日志"
+      - button "更多" [ref=e201] [cursor=pointer]
+    - text:                       
+    - generic [ref=e6323]:
+      - generic [ref=e6328]:
+        - generic [ref=e6330]:
+          - generic [ref=e6331]: 服务 ID
+          - textbox "服务 ID" [ref=e6335]:
+            - /placeholder: 请输入服务 ID
+        - generic [ref=e6338]:
+          - generic [ref=e6339]: 服务 Host
+          - textbox "服务 Host" [ref=e6343]:
+            - /placeholder: 请输入服务 Host
+        - generic [ref=e6345]:
+          - button "重置" [ref=e6346] [cursor=pointer]
+          - button "查询" [ref=e6351] [cursor=pointer]
+      - generic [ref=e6358]:
+        - generic [ref=e6359]:
+          - heading "错误日志" [level=2] [ref=e6360]
+          - button "刷新" [ref=e6363] [cursor=pointer]
+        - generic [ref=e6369]:
+          - table [ref=e6371]:
+            - rowgroup [ref=e6383]:
+              - row [ref=e6384]:
+                - columnheader "#" [ref=e6385]
+                - columnheader "服务 ID" [ref=e6387]
+                - columnheader "服务 Host" [ref=e6389]
+                - columnheader "服务 IP" [ref=e6391]
+                - columnheader "软件环境" [ref=e6393]
+                - columnheader "日志名" [ref=e6395]
+                - columnheader "请求方法" [ref=e6397]
+                - columnheader "请求接口" [ref=e6399]
+                - columnheader "日志时间" [ref=e6401]
+                - columnheader "操作" [ref=e6403]
+          - table [ref=e6409]:
+            - rowgroup [ref=e6421]:
+              - row [ref=e6422]:
+                - cell "1" [ref=e6423]
+                - cell "blade-system" [ref=e6426]
+                - cell "DESKTOP-61JE414" [ref=e6428]
+                - cell "172.22.32.1:8106" [ref=e6430]
+                - cell "dev" [ref=e6432]
+                - cell [ref=e6434]
+                - cell "POST" [ref=e6435]
+                - cell "/user/update" [ref=e6437]
+                - cell "2026-08-28 18:34:04" [ref=e6439]
+                - cell [ref=e6441]:
+                  - button "查看" [active] [ref=e6444] [cursor=pointer]
+        - generic [ref=e6451]:
+          - generic [ref=e6452]: 共 1 条
+          - generic [ref=e6455] [cursor=pointer]:
+            - generic:
+              - combobox [ref=e6457]
+              - generic [ref=e6458]: 10条/页
+          - button "上一页" [disabled] [ref=e6463]
+          - list [ref=e6464]:
+            - listitem "第 1 页" [ref=e6465]: "1"
+          - button "下一页" [disabled] [ref=e6466]
+          - generic [ref=e6467]:
+            - generic [ref=e6468]: 前往
+            - spinbutton "页" [ref=e6471]: "1"
+            - generic [ref=e6472]: 页

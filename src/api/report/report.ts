@@ -1,6 +1,6 @@
 import request from '@/axios';
 
-export const getList = (current, size, params) => {
+export const getList = (current: number, size: number, params: object) => {
   return request({
     url: '/blade-report/report/rest/list',
     method: 'get',
@@ -8,15 +8,15 @@ export const getList = (current, size, params) => {
       ...params,
       current,
       size,
-    }
-  })
-}
-export const remove = (ids) => {
+    },
+  });
+};
+export const remove = (ids: string) => {
   return request({
     url: '/blade-report/report/rest/remove',
     method: 'post',
     params: {
       ids,
-    }
-  })
-}
+    },
+  });
+};

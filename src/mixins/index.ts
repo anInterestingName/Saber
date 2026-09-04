@@ -1,5 +1,9 @@
 import { validateNull } from "@/utils/validate";
 import { getStore } from "@/utils/store";
+import { pinia } from '@/store';
+import { useUserStore } from '@/store/user';
+
+const userStore = useUserStore(pinia);
 export default {
   data () {
     return {
@@ -28,13 +32,12 @@ export default {
         if (validateNull(date)) return;
         if (date >= this.website.tokenTime && !this.refreshLock) {
           this.refreshLock = true;
-          this.$store
-            .dispatch('RefreshToken')
+          userStore
+            .RefreshToken()
             .then(() => {
               this.refreshLock = false;
             })
-            .catch(err => {
-              console.log(err);
+            .catch(() => {
               this.refreshLock = false;
             });
         }

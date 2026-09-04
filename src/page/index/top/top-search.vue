@@ -15,8 +15,9 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from 'pinia';
 import { validateNull } from "@/utils/validate";
+import { useUserStore } from '@/store/user';
 export default {
   data () {
     return {
@@ -48,7 +49,7 @@ export default {
         this.website.menu.children
       );
     },
-    ...mapGetters(["menu"])
+    ...mapState(useUserStore, ['menu'])
   },
   methods: {
     getMenuList () {

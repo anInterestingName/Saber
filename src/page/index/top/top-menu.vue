@@ -19,7 +19,9 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapActions, mapState } from 'pinia';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 
 export default {
   name: 'top-menu',
@@ -38,9 +40,13 @@ export default {
     this.getMenu();
   },
   computed: {
-    ...mapGetters(['tagCurrent', 'menu', 'tagWel']),
+    ...mapState(useUserStore, ['menu']),
+    ...mapState(useTagsStore, {
+      tagWel: store => store.homeTag,
+    }),
   },
   methods: {
+    ...mapActions(useUserStore, ['GetTopMenu']),
     openMenu(item) {
       this.index.openMenu(item);
     },
@@ -49,7 +55,7 @@ export default {
       this.$router.push(this.tagWel);
     },
     getMenu() {
-      this.$store.dispatch('GetTopMenu').then(res => {
+      this.GetTopMenu().then(res => {
         this.items = res;
       });
     },

@@ -1,0 +1,213 @@
+- generic [ref=e1]:
+  - generic [ref=e99]:
+    - generic [ref=e100]:
+      - generic "星图 staratlas" [ref=e102]
+      - menubar [ref=e107]:
+        - menuitem " 工作台" [expanded] [ref=e108]:
+          - generic [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]: 
+            - generic [ref=e111]: 工作台
+          - menu [ref=e641]:
+            - menuitem " 通知公告" [ref=e642] [cursor=pointer]:
+              - generic [ref=e643]: 
+              - generic [ref=e644]: 通知公告
+        - menuitem " 系统监控" [ref=e115]:
+          - generic [ref=e116] [cursor=pointer]:
+            - generic [ref=e117]: 
+            - generic [ref=e118]: 系统监控
+          - text:      
+        - menuitem " 研发工具" [ref=e122]:
+          - generic [ref=e123] [cursor=pointer]:
+            - generic [ref=e124]: 
+            - generic [ref=e125]: 研发工具
+          - text:  
+        - menuitem " 报表管理" [ref=e129]:
+          - generic [ref=e130] [cursor=pointer]:
+            - generic [ref=e131]: 
+            - generic [ref=e132]: 报表管理
+          - text:  
+        - menuitem " 基础配置" [ref=e136]:
+          - generic [ref=e137] [cursor=pointer]:
+            - generic [ref=e138]: 
+            - generic [ref=e139]: 基础配置
+          - text: 
+        - menuitem " 权限管理" [ref=e143]:
+          - generic [ref=e144] [cursor=pointer]:
+            - generic [ref=e145]: 
+            - generic [ref=e146]: 权限管理
+          - text:   
+        - menuitem " 系统管理" [ref=e150]:
+          - generic [ref=e151] [cursor=pointer]:
+            - generic [ref=e152]: 
+            - generic [ref=e153]: 系统管理
+          - text:         
+    - generic [ref=e157]:
+      - generic [ref=e158]:
+        - generic [ref=e159]: 
+        - generic [ref=e162]:
+          - menubar [ref=e163]:
+            - menuitem " 首页" [ref=e164] [cursor=pointer]:
+              - generic [ref=e165]: 
+              - generic [ref=e166]: 首页
+          - combobox [ref=e167]:
+            - textbox "请输入搜索内容" [ref=e170]
+        - generic [ref=e171]:
+          - generic [ref=e172]: 
+          - button "" [ref=e176]
+          - generic [ref=e177]: 
+          - generic [ref=e179]: 
+          - generic [ref=e183]:
+            - button "管理员" [ref=e186]
+            - button "打开界面设置" [ref=e187] [cursor=pointer]
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - tablist [ref=e197]:
+            - tab "首页" [ref=e198]
+            - tab "通知公告" [selected] [ref=e645]
+            - tab "数据源管理" [ref=e967]
+            - tab "报表列表" [ref=e1069]
+            - tab "租户管理" [ref=e1208]
+            - tab "应用管理" [ref=e1393]
+          - generic:
+            - tabpanel "通知公告"
+        - button "更多" [ref=e201] [cursor=pointer]
+      - text:                       
+      - generic [ref=e2470]:
+        - generic [ref=e2475]:
+          - generic [ref=e2477]:
+            - generic [ref=e2478]: 通知标题
+            - textbox "通知标题" [ref=e2482]:
+              - /placeholder: 请输入通知标题
+          - generic [ref=e2485]:
+            - generic [ref=e2486]: 通知类型
+            - generic [ref=e2489] [cursor=pointer]:
+              - generic:
+                - combobox "通知类型" [ref=e2491]
+                - generic [ref=e2492]: 事务通知
+          - generic [ref=e2497]:
+            - button "重置" [ref=e2498] [cursor=pointer]
+            - button "查询" [ref=e2503] [cursor=pointer]
+        - generic [ref=e2510]:
+          - generic [ref=e2511]:
+            - heading "通知公告列表" [level=2] [ref=e2512]
+            - generic [ref=e2513]:
+              - generic [ref=e2514]:
+                - button "新增" [ref=e2515] [cursor=pointer]
+                - button "删除" [ref=e2520] [cursor=pointer]
+              - button "刷新" [ref=e2526] [cursor=pointer]
+          - generic [ref=e2532]:
+            - table [ref=e2534]:
+              - rowgroup [ref=e2543]:
+                - row [ref=e2544]:
+                  - columnheader [ref=e2545]:
+                    - generic "选择所有行" [ref=e2547] [cursor=pointer]:
+                      - generic [ref=e2548]:
+                        - checkbox "选择所有行"
+                  - columnheader "#" [ref=e2550]
+                  - columnheader "通知标题" [ref=e2552]
+                  - columnheader "通知类型" [ref=e2554]
+                  - columnheader "通知日期" [ref=e2556]
+                  - columnheader "通知内容" [ref=e2558]
+                  - columnheader "操作" [ref=e2560]
+            - table [ref=e2566]:
+              - rowgroup [ref=e2575]:
+                - row [ref=e2782]:
+                  - cell [ref=e2655]:
+                    - generic "选择当前行" [ref=e2657] [cursor=pointer]:
+                      - generic [ref=e2658]:
+                        - checkbox "选择当前行"
+                  - cell "1" [ref=e2783]
+                  - cell "测试公告3" [ref=e2663]
+                  - cell "事务通知" [ref=e2665]
+                  - cell "2018-12-29 00:00:00" [ref=e2670]
+                  - cell "22222" [ref=e2672]
+                  - cell [ref=e2674]:
+                    - generic [ref=e2676]:
+                      - button "查看" [ref=e2677] [cursor=pointer]
+                      - button "编辑" [ref=e2682] [cursor=pointer]
+                      - button "删除" [ref=e2688] [cursor=pointer]
+          - generic [ref=e2734]:
+            - generic [ref=e2735]: 共 1 条
+            - generic [ref=e2738] [cursor=pointer]:
+              - generic:
+                - combobox [ref=e2740]
+                - generic [ref=e2741]: 10条/页
+            - button "上一页" [disabled] [ref=e2746]
+            - list [ref=e2747]:
+              - listitem "第 1 页" [ref=e2748]: "1"
+            - button "下一页" [disabled] [ref=e2749]
+            - generic [ref=e2750]:
+              - generic [ref=e2751]: 前往
+              - spinbutton "页" [ref=e2754]: "1"
+              - generic [ref=e2755]: 页
+  - generic:
+    - tooltip:
+      - generic:
+        - generic:
+          - generic:
+            - listbox:
+              - option "发布通知"
+              - option "批转通知"
+              - option "转发通知"
+              - option "指示通知"
+              - option "任免通知"
+              - option "事务通知"
+  - dialog "新增通知公告" [ref=e2785]:
+    - generic [ref=e2786]:
+      - banner [ref=e2787]:
+        - heading "新增通知公告" [level=2] [ref=e2788]
+        - button "关闭此对话框" [ref=e2789] [cursor=pointer]
+      - generic [ref=e2796]:
+        - generic [ref=e2798]:
+          - generic [ref=e2799]: "* 通知标题"
+          - generic [ref=e2800]:
+            - textbox "* 通知标题" [ref=e2803]:
+              - /placeholder: 请输入通知标题
+            - generic [ref=e2985]: 请输入通知标题
+        - generic [ref=e2805]:
+          - generic [ref=e2806]: "* 通知类型"
+          - generic [ref=e2807]:
+            - generic [ref=e2809] [cursor=pointer]:
+              - generic:
+                - combobox "* 通知类型" [expanded] [active] [ref=e2811]
+                - generic [ref=e2812]: 请选择通知类型
+            - generic [ref=e2986]: 请选择通知类型
+        - generic [ref=e2818]:
+          - generic [ref=e2819]: "* 通知日期"
+          - generic [ref=e2820]:
+            - combobox "* 通知日期" [ref=e2829]
+            - generic [ref=e2987]: 请选择通知日期
+        - group "通知内容" [ref=e2831]:
+          - generic [ref=e2835]:
+            - generic [ref=e2837]:
+              - button "正文" [ref=e2839]
+              - button [ref=e2843]
+              - button [ref=e2848]
+              - button [ref=e2852]
+              - button [ref=e2856]
+              - button [ref=e2860]
+              - button [ref=e2868]
+              - button [ref=e2874]
+              - button "默认字号" [ref=e2881]
+              - button "默认字体" [ref=e2885]
+              - button "默认行高" [ref=e2889]
+              - button [ref=e2894]
+              - button [ref=e2898]
+              - button [ref=e2902]
+              - button [ref=e2906]
+              - button [ref=e2912]
+              - button [ref=e2919]
+              - button [ref=e2925]
+              - button [ref=e2930]
+              - button [ref=e2936]
+              - button [ref=e2942]
+              - button [ref=e2948]
+              - button [ref=e2952]
+              - button [ref=e2961]
+              - button [ref=e2965]
+              - button [ref=e2970] [cursor=pointer]
+            - paragraph [ref=e2977]
+      - contentinfo [ref=e2978]:
+        - generic [ref=e2980]:
+          - button "取消" [ref=e2981] [cursor=pointer]
+          - button "确定" [ref=e2983] [cursor=pointer]

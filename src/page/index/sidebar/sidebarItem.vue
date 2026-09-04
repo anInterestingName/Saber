@@ -34,9 +34,10 @@
   </template>
 </template>
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from 'pinia';
 import { validateNull } from 'utils/validate'
 import website from '@/config/website'
+import { useUserStore } from '@/store/user';
 export default {
   name: "sidebarItem",
   data () {
@@ -48,7 +49,7 @@ export default {
     menu: Array
   },
   computed: {
-    ...mapGetters(["roles"]),
+    ...mapState(useUserStore, ['roles']),
     labelKey () {
       return this.props.label
     },
@@ -71,7 +72,7 @@ export default {
       return item[this.pathKey]
     },
     getTitle (item) {
-      return this.$router.$avueRouter.generateTitle(item, this.props);
+      return this.$router.$dynamicRouter.generateTitle(item, this.props);
     },
     validRoles (item) {
       item.meta = item.meta || {};

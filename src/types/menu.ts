@@ -18,7 +18,7 @@ export interface MenuItem {
 /**
  * 菜单 meta：formatPath 重建后随动态路由注册，permission.ts 与标签体系按此约定消费。
  */
-export interface MenuMeta {
+export interface MenuMeta extends RouteMeta {
   keepAlive?: boolean;
   isTab?: boolean;
   isAuth?: boolean;
@@ -27,3 +27,4 @@ export interface MenuMeta {
   i18n?: string;
   menu?: boolean;
 }
+import type { RouteMeta } from 'vue-router';

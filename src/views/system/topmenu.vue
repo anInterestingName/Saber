@@ -1,136 +1,232 @@
 <template>
-  <basic-container>
-    <avue-crud
-      :option="option"
-      :table-loading="loading"
-      :data="data"
-      v-model:page="page"
-      :permission="permissionList"
-      :before-open="beforeOpen"
-      v-model="form"
-      ref="crudRef"
-      @row-update="rowUpdate"
-      @row-save="rowSave"
-      @row-del="rowDel"
-      @search-change="searchChange"
-      @search-reset="searchReset"
-      @selection-change="selectionChange"
-      @current-change="currentChange"
-      @size-change="sizeChange"
-      @refresh-change="refreshChange"
-      @on-load="onLoad"
+  <div class="topmenu-management-page">
+    <search-panel
+      :model="searchForm"
+      :loading="loading"
+      @search="handleSearch"
+      @reset="handleReset"
     >
-      <template #menu-left>
-        <el-button
-          type="danger"
-          icon="el-icon-delete"
-          plain
-          v-if="permission.topmenu_delete"
-          @click="handleDelete"
-          >删 除
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="菜单名">
+          <el-input v-model="searchForm.name" clearable placeholder="请输入菜单名" />
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="菜单编号">
+          <el-input v-model="searchForm.code" clearable placeholder="请输入菜单编号" />
+        </el-form-item>
+      </el-col>
+    </search-panel>
+
+    <list-panel title="顶部菜单列表">
+      <template #actions>
+        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+        <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
+          删除
         </el-button>
-        <el-button
-          icon="el-icon-setting"
-          @click="handleMenuSetting"
-          v-if="permission.topmenu_setting"
-          plain
-          >菜单配置
-        </el-button>
-      </template>
-      <template #menu="scope">
-        <el-button
-          v-if="permission.topmenu_setting"
-          type="primary"
-          text
-          icon="el-icon-setting"
-          @click.stop="handleRowMenuSetting(scope.row)"
-          >配置
+        <el-button v-if="canSetting" :icon="Setting" @click="openGrantFromSelection">
+          菜单配置
         </el-button>
       </template>
-      <template #name="{ row }">
-        <i :class="row.source" style="margin-right: 5px" />
-        <span>{{ row.name }}</span>
+      <template #tools>
+        <el-tooltip content="刷新" placement="top">
+          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
+        </el-tooltip>
       </template>
-      <template #source="{ row }">
-        <div style="text-align: center">
-          <i :class="row.source"></i>
-        </div>
-      </template>
-      <template #sort="{ row }">
-        <el-input-number
-          v-model="row.sort"
-          @change="sortChange(row)"
-          :min="1"
-          :max="100"
-        ></el-input-number>
-      </template>
-    </avue-crud>
-    <el-dialog
-      title="下级菜单配置"
-      append-to-body
-      v-model="box"
-      width="345px"
-      @closed="handleDialogClose"
-    >
-      <el-row
-        justify="space-between"
-        align="middle"
-        style="margin-bottom: 12px; background: #f5f7fa; padding: 6px 10px; border-radius: 4px"
+
+      <el-table
+        ref="tableRef"
+        v-loading="loading"
+        :data="data"
+        row-key="id"
+        @selection-change="handleSelectionChange"
       >
-        <span style="display: inline-flex; align-items: center">
-          <el-switch
-            v-model="menuLinked"
-            active-text="节点联动"
-            size="small"
-            @change="handleLinkedChange"
-          />
-          <el-tooltip content="开启后勾选父节点会自动勾选所有子节点，关闭则可独立勾选任意节点" placement="top">
-            <el-icon style="margin-left: 4px; color: #909399; cursor: pointer"><el-icon-question-filled /></el-icon>
-          </el-tooltip>
-        </span>
-        <el-button-group>
-          <el-button size="small" plain @click="handleSelectAll">全选</el-button>
-          <el-button size="small" plain @click="handleInvertSelect">反选</el-button>
-        </el-button-group>
-      </el-row>
-      <el-tree
-        :data="menuGrantList"
-        show-checkbox
-        :check-strictly="!menuLinked"
-        node-key="id"
-        ref="treeMenuRef"
-        :default-checked-keys="menuTreeObj"
-        :props="props"
-      >
-      </el-tree>
+        <el-table-column type="selection" fixed="left" width="48" />
+        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+        <el-table-column prop="name" label="菜单名" min-width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            <i :class="row.source" class="topmenu-icon" />{{ row.name }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="source" label="图标" width="80" align="center">
+          <template #default="{ row }"><i :class="row.source" /></template>
+        </el-table-column>
+        <el-table-column prop="code" label="菜单编号" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="sort" label="菜单排序" width="150" align="center">
+          <template #default="{ row }">
+            <el-input-number
+              :model-value="row.sort"
+              :min="1"
+              :max="100"
+              size="small"
+              controls-position="right"
+              :disabled="!canEdit || sortingId !== ''"
+              @change="value => handleSortChange(row as TopMenuEntity, value)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column prop="path" label="菜单路由" min-width="220" show-overflow-tooltip />
+        <el-table-column label="操作" fixed="right" width="260" align="center">
+          <template #default="{ row }">
+            <row-actions
+              :show-view="canView"
+              :show-edit="canEdit"
+              :show-delete="canDelete"
+              :disabled="sortingId !== ''"
+              @view="openDetail(row as TopMenuEntity, 'view')"
+              @edit="openDetail(row as TopMenuEntity, 'edit')"
+              @delete="handleRowDelete(row as TopMenuEntity)"
+            >
+              <template v-if="canSetting" #extra>
+                <el-button
+                  type="primary"
+                  link
+                  :icon="Setting"
+                  :disabled="sortingId !== ''"
+                  @click="openGrant(row as TopMenuEntity)"
+                >
+                  配置
+                </el-button>
+              </template>
+            </row-actions>
+          </template>
+        </el-table-column>
+      </el-table>
+
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="box = false">取 消</el-button>
-          <el-button type="primary" @click="submit">确 定</el-button>
-        </span>
+        <list-pagination
+          v-model:current-page="page.currentPage"
+          v-model:page-size="page.pageSize"
+          :total="page.total"
+          :disabled="loading || sortingId !== ''"
+          @change="handlePageChange"
+        />
+      </template>
+    </list-panel>
+
+    <form-dialog
+      v-model="dialogVisible"
+      :mode="mode"
+      entity-name="顶部菜单"
+      :submitting="submitting"
+      :loading="detailLoading"
+      width="720px"
+      destroy-on-close
+      @confirm="handleSubmit"
+      @cancel="handleDialogCancel"
+    >
+      <el-alert v-if="detailFailed" type="error" :closable="false" show-icon>
+        <template #title>详情加载失败，请关闭后重试</template>
+      </el-alert>
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="formRules"
+        :disabled="mode === 'view' || detailLoading || detailFailed"
+        label-width="88px"
+      >
+        <el-row :gutter="24">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="菜单名" prop="name">
+              <el-input v-model="form.name" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="菜单编号" prop="code">
+              <el-input v-model="form.code" maxlength="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="菜单图标" prop="source">
+              <icon-select v-model="form.source" :disabled="mode === 'view'" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="菜单排序" prop="sort">
+              <el-input-number v-model="form.sort" :min="1" :max="100" controls-position="right" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="菜单路由" prop="path">
+              <el-input v-model="form.path" maxlength="255" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </form-dialog>
+
+    <el-dialog
+      v-model="grantVisible"
+      title="下级菜单配置"
+      width="640px"
+      append-to-body
+      :close-on-click-modal="!grantSubmitting"
+      :close-on-press-escape="!grantSubmitting"
+      :show-close="!grantSubmitting"
+      :before-close="handleGrantBeforeClose"
+    >
+      <div v-loading="grantLoading" class="topmenu-grant-dialog">
+        <el-result v-if="grantFailed" icon="error" title="菜单配置加载失败">
+          <template #extra>
+            <el-button type="primary" @click="retryGrant">重试</el-button>
+          </template>
+        </el-result>
+        <tree-check-panel
+          v-else
+          v-model="grantKeys"
+          v-model:linked="grantLinked"
+          :data="grantTreeData"
+          :loading="grantLoading"
+          :disabled="grantSubmitting"
+        />
+      </div>
+      <template #footer>
+        <el-button :disabled="grantSubmitting" @click="closeGrant">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="grantSubmitting"
+          :disabled="grantLoading || grantFailed"
+          @click="submitGrant"
+        >
+          确定
+        </el-button>
       </template>
     </el-dialog>
-  </basic-container>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick } from 'vue';
-import { useStore } from 'vuex';
-import { ElMessage, ElMessageBox, ElTree } from 'element-plus';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { Delete, Plus, Refresh, Setting } from '@element-plus/icons-vue';
+import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import ListPagination from '@/components/list-pagination/main.vue';
+import RowActions from '@/components/row-actions/main.vue';
+import FormDialog from '@/components/form-dialog/main.vue';
+import { useUserStore } from '@/store/user';
+import IconSelect from '@/components/icon-select/main.vue';
+import TreeCheckPanel from '@/components/tree-check-panel/main.vue';
+import { useCrudPermission } from '@/composables/useCrudPermission';
+import { usePagedList } from '@/composables/usePagedList';
+import { useRemoteDetail } from '@/composables/useRemoteDetail';
+import { useTableSelection } from '@/composables/useTableSelection';
 import {
-  getList,
-  getDetail,
   add,
-  update,
-  remove,
+  getDetail,
+  getGrantKeys,
+  getList,
   grant,
   grantTree,
-  getTopTree,
+  remove,
+  update,
 } from '@/api/system/topmenu';
-import iconList from '@/config/iconList';
 import { validData } from '@/utils/util';
+import type { CrudMode } from '@/types/crud';
+import type { PaginationChange } from '@/types/list';
+import type { TreeKey, TreeNode } from '@/types/tree';
 
-// 数据实体
 interface TopMenuEntity {
   id: string;
   name?: string;
@@ -140,419 +236,254 @@ interface TopMenuEntity {
   path?: string;
 }
 
-// 新增与编辑共用的表单模型，字段均可选
-type TopMenuForm = Partial<TopMenuEntity>;
-
-// 授权树节点
-interface MenuNode {
-  id: string;
-  children?: MenuNode[];
+interface TopMenuQuery {
+  name?: string;
+  code?: string;
 }
 
-// 权限
-const store = useStore();
-const permission = computed(() => store.getters.permission);
+interface GrantModel {
+  tree: TreeNode[];
+  keys: TreeKey[];
+}
 
-// 表格实例与数据状态
-const crudRef = ref();
-const form = ref<TopMenuForm>({});
-const data = ref<TopMenuEntity[]>([]);
-const selectionList = ref<TopMenuEntity[]>([]);
-const query = ref<Partial<TopMenuEntity>>({});
-const loading = ref(true);
+type TopMenuForm = Partial<TopMenuEntity>;
+type TopMenuListResponse = Awaited<ReturnType<typeof getList<TopMenuEntity>>>;
 
-// 分页参数（整体替换，需用 ref）
-const page = ref({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const createInitialQuery = (): TopMenuQuery => ({});
+const createInitialForm = (): TopMenuForm => ({
+  name: '',
+  source: '',
+  code: '',
+  sort: 1,
+  path: '',
 });
 
-// 选中行 id 集合，供批量删除使用
-const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
+const { permission } = storeToRefs(useUserStore());
+const canSetting = computed(() => validData(permission.value.topmenu_setting, false));
+const searchForm = ref<TopMenuQuery>(createInitialQuery());
+const form = ref<TopMenuForm>(createInitialForm());
+const mode = ref<CrudMode>('add');
+const dialogVisible = ref(false);
+const submitting = ref(false);
+const sortingId = ref('');
+const formRef = ref<InstanceType<typeof ElForm>>();
+const tableRef = ref<TableInstance>();
 
-// 选中行 id 数组，供菜单授权使用
-const idsArray = computed(() => {
-  const idList: string[] = [];
-  selectionList.value.forEach(ele => {
-    idList.push(ele.id);
-  });
-  return idList;
+const formRules: FormRules = {
+  name: [{ required: true, message: '请输入菜单名', trigger: 'blur' }],
+  source: [{ required: true, message: '请选择菜单图标', trigger: 'change' }],
+  code: [{ required: true, message: '请输入菜单编号', trigger: 'blur' }],
+  sort: [{ required: true, message: '请输入菜单排序', trigger: 'change' }],
+};
+
+const { data, page, loading, load, search, reset, refresh } = usePagedList<
+  TopMenuEntity,
+  TopMenuQuery,
+  TopMenuListResponse
+>({
+  fetcher: (current, size, query) => getList<TopMenuEntity>(current, size, query),
+  resolveResponse: response => ({
+    records: response.data.data.records,
+    total: response.data.data.total,
+  }),
+  createInitialQuery,
 });
-
-// 菜单授权弹窗与授权树状态
-const box = ref(false);
-const treeMenuRef = ref<InstanceType<typeof ElTree>>();
-const menuGrantList = ref<MenuNode[]>([]);
-const menuTreeObj = ref<string[]>([]);
-const menuLinked = ref(false);
-const currentMenuIds = ref<string[]>([]);
-
-// 授权树控件配置
-const props = reactive({
-  label: 'title',
-  value: 'key',
+const selection = useTableSelection<TopMenuEntity>();
+const { selectedRows, selectedIds, ids, handleSelectionChange, clearSelection } = selection;
+const { add: canAdd, view: canView, edit: canEdit, delete: canDelete } =
+  useCrudPermission('topmenu');
+const detail = useRemoteDetail<TopMenuEntity, string>(async id => {
+  const response = await getDetail<TopMenuEntity>(id);
+  return response.data.data;
 });
+const { loading: detailLoading, failed: detailFailed } = detail;
 
-// 表格配置
-const option = reactive({
-  height: 'auto',
-  calcHeight: 32,
-  tip: false,
-  searchShow: true,
-  searchMenuSpan: 6,
-  border: true,
-  index: true,
-  viewBtn: true,
-  selection: true,
-  menuWidth: 300,
-  dialogWidth: 900,
-  dialogClickModal: false,
-  column: [
-    {
-      label: '菜单名',
-      prop: 'name',
-      search: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单名',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单图标',
-      prop: 'source',
-      type: 'icon',
-      slot: true,
-      iconList: iconList,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单图标',
-          trigger: 'click',
-        },
-      ],
-    },
-    {
-      label: '菜单编号',
-      prop: 'code',
-      search: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单编号',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单排序',
-      prop: 'sort',
-      type: 'number',
-      slot: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单排序',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单路由',
-      prop: 'path',
-      span: 24,
-      hide: true,
-      rules: [
-        {
-          required: false,
-          message: '请输入菜单路由',
-          trigger: 'blur',
-        },
-      ],
-    },
-  ],
-});
+const clearTableSelection = () => {
+  clearSelection();
+  tableRef.value?.clearSelection();
+};
+watch(data, clearTableSelection, { flush: 'post' });
 
-// 行操作按钮权限
-const permissionList = computed(() => ({
-  addBtn: validData(permission.value.topmenu_add, false),
-  viewBtn: validData(permission.value.topmenu_view, false),
-  delBtn: validData(permission.value.topmenu_delete, false),
-  editBtn: validData(permission.value.topmenu_edit, false),
-}));
-
-// 加载列表数据
-const onLoad = (
-  pageData: { currentPage: number; pageSize: number },
-  params: Partial<TopMenuEntity> = {}
-) => {
-  loading.value = true;
-  getList(pageData.currentPage, pageData.pageSize, Object.assign(params, query.value)).then(res => {
-    const resData = res.data.data;
-    page.value.total = resData.total;
-    data.value = resData.records;
-    loading.value = false;
-    selectionClear();
-  });
+const handleSearch = () => void search({ ...searchForm.value });
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
+};
+const handlePageChange = (nextPage: PaginationChange) => {
+  page.value = { ...page.value, ...nextPage };
+  void load();
 };
 
-// 条件检索
-const searchChange = (params: Partial<TopMenuEntity>, done: () => void) => {
-  query.value = params;
-  page.value.currentPage = 1;
-  onLoad(page.value, params);
-  done();
+const resetDialogState = () => {
+  detail.clear();
+  formRef.value?.clearValidate();
+};
+const openAdd = () => {
+  resetDialogState();
+  mode.value = 'add';
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  nextTick(() => formRef.value?.clearValidate());
+};
+const openDetail = async (row: TopMenuEntity, dialogMode: 'edit' | 'view') => {
+  resetDialogState();
+  mode.value = dialogMode;
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  const entity = await detail.load(row.id);
+  if (entity) form.value = { ...entity };
+  await nextTick();
+  formRef.value?.clearValidate();
+};
+const handleDialogCancel = () => resetDialogState();
+const handleSubmit = async () => {
+  if (!formRef.value || submitting.value || detailLoading.value || detailFailed.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  submitting.value = true;
+  try {
+    const submit = mode.value === 'add' ? add : update;
+    await submit({ ...form.value });
+    dialogVisible.value = false;
+    resetDialogState();
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // Axios 已处理接口错误，保留当前输入供重试。
+  } finally {
+    submitting.value = false;
+  }
 };
 
-// 重置检索条件
-const searchReset = () => {
-  query.value = {};
-  onLoad(page.value);
-};
-
-// 切换页码
-const currentChange = (currentPage: number) => {
-  page.value.currentPage = currentPage;
-};
-
-// 调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.value.pageSize = pageSize;
-};
-
-// 刷新当前列表
-const refreshChange = () => {
-  onLoad(page.value, query.value);
-};
-
-// 记录当前选中行
-const selectionChange = (list: TopMenuEntity[]) => {
-  selectionList.value = list;
-};
-
-// 清空选中状态
-const selectionClear = () => {
-  selectionList.value = [];
-  crudRef.value.toggleSelection();
-};
-
-// 新增保存
-const rowSave = (row: TopMenuForm, done: () => void, loading: () => void) => {
-  add(row).then(
-    () => {
-      onLoad(page.value);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
-};
-
-// 编辑保存
-const rowUpdate = (row: TopMenuForm, index: number, done: () => void, loading: () => void) => {
-  update(row).then(
-    () => {
-      onLoad(page.value);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
-};
-
-// 删除单行
-const rowDel = (row: TopMenuEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(row.id);
-    })
-    .then(() => {
-      onLoad(page.value);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
+const confirmDelete = async (deleteIds: string) => {
+  try {
+    await ElMessageBox.confirm('确定将选择数据删除?', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     });
+    await remove(deleteIds);
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 用户取消或接口失败时保持当前列表状态。
+  }
 };
-
-// 批量删除选中行
-const handleDelete = () => {
-  if (selectionList.value.length === 0) {
+const handleRowDelete = (row: TopMenuEntity) => void confirmDelete(row.id);
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(ids.value);
-    })
-    .then(() => {
-      onLoad(page.value);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
+  void confirmDelete(ids.value);
 };
 
-// 编辑或查看前加载菜单详情
-const beforeOpen = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getDetail(form.value.id).then(res => {
-      form.value = res.data.data;
-    });
+const handleSortChange = async (row: TopMenuEntity, nextSort?: number) => {
+  if (!canEdit.value || sortingId.value || nextSort == null || nextSort === row.sort) return;
+  if (nextSort < 1 || nextSort > 100) return;
+  sortingId.value = row.id;
+  try {
+    await update({ ...row, sort: nextSort });
+    await refresh();
+    ElMessage.success('排序已更新');
+  } catch {
+    // 列表实体未做乐观修改，失败后仍显示服务端确认值。
+  } finally {
+    sortingId.value = '';
   }
-  done();
 };
 
-// 修改菜单排序并即时保存
-const sortChange = (row: TopMenuEntity) => {
-  update(row).then(
-    () => {
-      onLoad(page.value);
-    },
-    error => {
-      window.console.log(error);
-    }
-  );
-};
+const grantVisible = ref(false);
+const grantSubmitting = ref(false);
+const grantTargetIds = ref<TreeKey[]>([]);
+const grantTarget = ref<TopMenuEntity>();
+const grantTreeData = ref<TreeNode[]>([]);
+const grantKeys = ref<TreeKey[]>([]);
+const grantLinked = ref(false);
+const grantDetail = useRemoteDetail<GrantModel, string>(async topMenuId => {
+  const [treeResponse, keysResponse] = await Promise.all([grantTree(), getGrantKeys(topMenuId)]);
+  return { tree: treeResponse.data.data.menu, keys: keysResponse.data.data.menu };
+});
+const { loading: grantLoading, failed: grantFailed } = grantDetail;
 
-// 对选中的单条顶部菜单打开下级菜单授权弹窗
-const handleMenuSetting = () => {
-  if (selectionList.value.length !== 1) {
-    ElMessage.warning('只能选择一条数据');
+const clearGrant = () => {
+  grantDetail.clear();
+  grantTargetIds.value = [];
+  grantTarget.value = undefined;
+  grantTreeData.value = [];
+  grantKeys.value = [];
+  grantLinked.value = false;
+};
+const loadGrant = async (row: TopMenuEntity) => {
+  const result = await grantDetail.load(row.id);
+  if (!result) return;
+  grantTreeData.value = result.tree;
+  grantKeys.value = result.keys;
+};
+const openGrant = (row: TopMenuEntity) => {
+  clearGrant();
+  grantTarget.value = row;
+  grantTargetIds.value = [row.id];
+  grantVisible.value = true;
+  void loadGrant(row);
+};
+const openGrantFromSelection = () => {
+  if (selectedRows.value.length !== 1) {
+    ElMessage.warning('请选择一条顶部菜单数据');
     return;
   }
-  currentMenuIds.value = idsArray.value;
-  menuTreeObj.value = [];
-  grantTree().then(res => {
-    menuGrantList.value = res.data.data.menu;
-    getTopTree(ids.value).then(res => {
-      menuTreeObj.value = res.data.data.menu;
-      box.value = true;
-    });
-  });
+  openGrant(selectedRows.value[0]);
+  grantTargetIds.value = [...selectedIds.value];
 };
-
-// 对指定行顶部菜单打开下级菜单授权弹窗
-const handleRowMenuSetting = (row: TopMenuEntity) => {
-  currentMenuIds.value = [row.id];
-  menuTreeObj.value = [];
-  grantTree().then(res => {
-    menuGrantList.value = res.data.data.menu;
-    getTopTree(row.id).then(res => {
-      menuTreeObj.value = res.data.data.menu;
-      box.value = true;
-    });
-  });
+const retryGrant = () => {
+  if (grantTarget.value) void loadGrant(grantTarget.value);
 };
-
-// 关闭授权弹窗时重置授权状态
-const handleDialogClose = () => {
-  currentMenuIds.value = [];
-  menuLinked.value = false;
+const closeGrant = () => {
+  if (grantSubmitting.value) return;
+  grantVisible.value = false;
+  clearGrant();
 };
-
-// 递归收集所有节点的 id
-const getAllNodeKeys = (nodes: MenuNode[]) => {
-  let keys: string[] = [];
-  nodes.forEach(node => {
-    keys.push(node.id);
-    if (node.children && node.children.length > 0) {
-      keys = keys.concat(getAllNodeKeys(node.children));
-    }
-  });
-  return keys;
+const handleGrantBeforeClose = (done: () => void) => {
+  if (grantSubmitting.value) return;
+  clearGrant();
+  done();
 };
-
-// 递归收集所有叶子节点的 id
-const getLeafKeys = (nodes: MenuNode[]) => {
-  let keys: string[] = [];
-  nodes.forEach(node => {
-    if (!node.children || node.children.length === 0) {
-      keys.push(node.id);
-    } else {
-      keys = keys.concat(getLeafKeys(node.children));
-    }
-  });
-  return keys;
-};
-
-// 全选授权树全部节点
-const handleSelectAll = () => {
-  const tree = treeMenuRef.value;
-  if (!tree) return;
-  const allKeys = getAllNodeKeys(menuGrantList.value);
-  tree.setCheckedKeys(allKeys);
-};
-
-// 反选授权树节点（联动时仅针对叶子节点）
-const handleInvertSelect = () => {
-  const tree = treeMenuRef.value;
-  if (!tree) return;
-  const checkedKeys = new Set(tree.getCheckedKeys());
-  if (menuLinked.value) {
-    const leafKeys = getLeafKeys(menuGrantList.value);
-    const invertedKeys = leafKeys.filter(key => !checkedKeys.has(key));
-    tree.setCheckedKeys(invertedKeys);
-  } else {
-    const allKeys = getAllNodeKeys(menuGrantList.value);
-    const invertedKeys = allKeys.filter(key => !checkedKeys.has(key));
-    tree.setCheckedKeys(invertedKeys);
+const submitGrant = async () => {
+  if (grantSubmitting.value || grantLoading.value || grantFailed.value) return;
+  grantSubmitting.value = true;
+  try {
+    await grant(grantTargetIds.value, grantKeys.value);
+    grantVisible.value = false;
+    clearGrant();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 配置失败时保留勾选状态供重试。
+  } finally {
+    grantSubmitting.value = false;
   }
 };
 
-// 切换节点联动时保留已选中及半选中节点
-const handleLinkedChange = () => {
-  const tree = treeMenuRef.value;
-  if (!tree) return;
-  const checkedKeys = tree.getCheckedKeys();
-  const halfCheckedKeys = tree.getHalfCheckedKeys();
-  nextTick(() => {
-    tree.setCheckedKeys([...checkedKeys, ...halfCheckedKeys]);
-  });
-};
-
-// 提交下级菜单授权
-const submit = () => {
-  const menuList = treeMenuRef.value.getCheckedKeys();
-  grant(currentMenuIds.value, menuList).then(() => {
-    box.value = false;
-    ElMessage({
-      type: 'success',
-      message: '操作成功!',
-    });
-    onLoad(page.value);
-  });
-};
+onMounted(() => void load());
 </script>
 
-<style>
-.none-border {
-  border: 0;
-  background-color: transparent !important;
+<style scoped lang="scss">
+.topmenu-management-page {
+  min-width: 0;
+}
+
+.topmenu-icon {
+  margin-right: 6px;
+}
+
+.topmenu-grant-dialog {
+  min-height: 260px;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
 }
 </style>

@@ -1,4 +1,5 @@
 import request from '@/axios';
+import type { BladeResponse } from '@/types/option';
 
 export const getList = (current, size, params) => {
   return request({
@@ -12,8 +13,8 @@ export const getList = (current, size, params) => {
   })
 }
 
-export const getPostList = (tenantId) => {
-  return request({
+export const getPostList = <T>(tenantId?: string) => {
+  return request<BladeResponse<T[]>>({
     url: '/blade-system/post/select',
     method: 'get',
     params: {

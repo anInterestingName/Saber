@@ -1,0 +1,77 @@
+:root {
+  color-scheme: light;
+  --el-color-primary: #1677ff;
+  --el-color-primary-light-3: #5a9cff;
+  --el-color-primary-light-5: #8bbbff;
+  --el-color-primary-light-7: #bad7ff;
+  --el-color-primary-light-8: #d0e4ff;
+  --el-color-primary-light-9: #e8f2ff;
+  --el-color-primary-dark-2: #125fcc;
+  --el-border-radius-base: 6px;
+  --el-border-radius-small: 4px;
+  --saber-page-bg: #f5f5f5;
+  --saber-surface: #ffffff;
+  --saber-surface-elevated: #ffffff;
+  --saber-surface-muted: #fafafa;
+  --saber-border: #e5e7eb;
+  --saber-border-strong: #d9d9d9;
+  --saber-text-primary: rgba(0, 0, 0, 0.88);
+  --saber-text-secondary: rgba(0, 0, 0, 0.65);
+  --saber-text-tertiary: rgba(0, 0, 0, 0.45);
+  --saber-header-bg: var(--saber-surface);
+  --saber-sidebar-bg: var(--saber-page-bg);
+  --saber-sidebar-active: var(--el-color-primary-light-9);
+  --saber-sidebar-text: var(--saber-text-secondary);
+  --saber-sidebar-text-active: var(--el-color-primary);
+  --saber-sidebar-tip-bg: #f5f5f5;
+  --saber-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --saber-shadow-drawer: -6px 0 16px rgba(0, 0, 0, 0.08);
+}
+
+html.dark {
+  color-scheme: dark;
+  --saber-page-bg: #0f1013;
+  --saber-surface: #17191f;
+  --saber-surface-elevated: #1d2027;
+  --saber-surface-muted: #1b1e24;
+  --saber-border: #2a2e37;
+  --saber-border-strong: #3a3f4a;
+  --saber-text-primary: rgba(255, 255, 255, 0.88);
+  --saber-text-secondary: rgba(255, 255, 255, 0.65);
+  --saber-text-tertiary: rgba(255, 255, 255, 0.45);
+  --saber-header-bg: var(--saber-surface);
+  --saber-sidebar-bg: var(--saber-page-bg);
+  --saber-sidebar-active: rgba(255, 255, 255, 0.12);
+  --saber-sidebar-text-active: #ffffff;
+  --saber-sidebar-tip-bg: rgba(255, 255, 255, 0.06);
+  --saber-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  --saber-shadow-drawer: -6px 0 18px rgba(0, 0, 0, 0.32);
+}
+
+html,
+body {
+  color: var(--saber-text-primary);
+  background-color: var(--saber-page-bg);
+}
+
+.theme-dark {
+  .saber-top,
+  .saber-tags,
+  .saber-main,
+  .saber-shell {
+    color: var(--saber-text-primary);
+  }
+
+  .saber-top i,
+  .saber-top span {
+    color: inherit;
+  }
+
+  .saber-sidebar .el-menu-item,
+  .saber-sidebar .el-sub-menu__title {
+    &:hover,
+    &.is-active {
+      background: var(--saber-sidebar-active);
+    }
+  }
+}

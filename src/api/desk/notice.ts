@@ -1,6 +1,6 @@
 import request from '@/axios';
 
-export const getList = (current, size, params) => {
+export const getList = (current: number, size: number, params: object) => {
   return request({
     url: '/blade-desk/notice/list',
     method: 'get',
@@ -10,10 +10,10 @@ export const getList = (current, size, params) => {
       size,
     },
     cryptoToken: false,
-  })
-}
+  });
+};
 
-export const remove = (ids) => {
+export const remove = (ids: string) => {
   return request({
     url: '/blade-desk/notice/remove',
     method: 'post',
@@ -21,35 +21,34 @@ export const remove = (ids) => {
       ids,
     },
     cryptoToken: false,
-  })
-}
+  });
+};
 
-export const add = (row) => {
+export const add = (row: object) => {
   return request({
     url: '/blade-desk/notice/submit',
     method: 'post',
     data: row,
     cryptoToken: false,
-  })
-}
+  });
+};
 
-export const update = (row) => {
+export const update = (row: object) => {
   return request({
     url: '/blade-desk/notice/submit',
     method: 'post',
     data: row,
     cryptoToken: false,
-  })
-}
+  });
+};
 
-export const getNotice = (id) => {
+export const getNotice = (id: string) => {
   return request({
     url: '/blade-desk/notice/detail',
     method: 'get',
     params: {
-      id
+      id,
     },
     cryptoToken: false,
-  })
-}
-
+  });
+};

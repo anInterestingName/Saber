@@ -1,58 +1,45 @@
 import request from '@/axios';
+import type { BladeResponse } from '@/types/option';
+import type { TreeNode } from '@/types/tree';
 
-export const getList = (current, size, params) => {
-  return request({
+export const getList = <T extends TreeNode>(params: object) =>
+  request<BladeResponse<T[]>>({
     url: '/blade-system/dept/list',
     method: 'get',
-    params: {
-      ...params,
-      current,
-      size,
-    }
-  })
-}
-export const remove = (ids) => {
-  return request({
+    params,
+  });
+
+export const remove = (ids: string) =>
+  request({
     url: '/blade-system/dept/remove',
     method: 'post',
-    params: {
-      ids,
-    }
-  })
-}
+    params: { ids },
+  });
 
-export const add = (row) => {
-  return request({
+export const add = (row: object) =>
+  request({
     url: '/blade-system/dept/submit',
     method: 'post',
-    data: row
-  })
-}
+    data: row,
+  });
 
-export const update = (row) => {
-  return request({
+export const update = (row: object) =>
+  request({
     url: '/blade-system/dept/submit',
     method: 'post',
-    data: row
-  })
-}
+    data: row,
+  });
 
-export const getDept = (id) => {
-  return request({
+export const getDept = <T>(id: string) =>
+  request<BladeResponse<T>>({
     url: '/blade-system/dept/detail',
     method: 'get',
-    params: {
-      id,
-    }
-  })
-}
-export const getDeptTree = (tenantId?: string) => {
-  return request({
+    params: { id },
+  });
+
+export const getDeptTree = <T extends TreeNode = TreeNode>(tenantId?: string) =>
+  request<BladeResponse<T[]>>({
     url: '/blade-system/dept/tree',
     method: 'get',
-    params: {
-      tenantId,
-    }
-  })
-}
-
+    params: { tenantId },
+  });

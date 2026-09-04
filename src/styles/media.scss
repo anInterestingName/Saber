@@ -1,62 +1,34 @@
+@use './variables' as vars;
+
 @media screen and (max-width: 992px) {
-    .avue-sidebar{
-      position: fixed;
-      top:0;
-      left: -265px;
-      z-index:1024;
+  .saber-sidebar {
+    position: fixed;
+    top: 0;
+    left: calc(-1 * #{vars.$sidebar_width});
+    z-index: 1024;
+  }
+
+  .saber-shell--collapsed {
+    .saber-sidebar {
+      left: 0;
+      width: vars.$sidebar_width;
     }
-    .avue--collapse{
-      .avue-sidebar{
-        left:0;
-        width: $sidebar_width;
-      }   
-      .avue-logo{
-        width: $sidebar_width;
-      }
-      .avue-main{
-        margin-left:$sidebar_width;
-      }  
+
+    .saber-logo {
+      width: vars.$sidebar_width;
     }
-    // ele的自适应
-    .el-dialog,
-    .el-message-box {
-        width: 98%;
+
+    .saber-main {
+      margin-left: vars.$sidebar_width;
     }
-    //登录页面
-    .login-left {
-      width: 100%;
-      min-height: auto;
-      .title{
-        margin-top: 20px;
-        font-size: 20px;
-        text-shadow:#000 1px 0 0,#000 0 1px 0,#000 -1px 0 0,#000 0 -1px 0;
-      }
-      .img{
-        width: 50px;
-      }
-    }
-    .login-logo {
-        padding-top: 30px;
-        margin-left: -30px;
-    }
-    .login-border {
-        border-radius: 5px;
-        padding: 20px;
-        margin: 0 auto;
-        width: 100%;
-    }
-    .login-main {
-        width: 100%;
-        background-color: #fff;
-        padding: 10px 20px;
-        box-shadow:none
-    }
-    .login-container{
-      &::before {
-        margin-left:0
-      }
-    }
-    .top-bar__item {
-        display: none;
-    }
+  }
+
+  .el-dialog,
+  .el-message-box {
+    width: 98%;
+  }
+
+  .top-bar__item {
+    display: none;
+  }
 }

@@ -1,84 +1,99 @@
-// 全局变量
-@import './variables.scss';
-a{
+@use 'sass:meta';
+@use './mixin';
+@use './variables' as vars;
+@use './theme/tokens';
+
+a {
   text-decoration: none;
-  color:#333;
+  color: var(--saber-text-primary);
 }
-*{
+* {
   outline: none;
 }
 
-.avue-sidebar,
-.avue-top,
-.avue-logo,
-.avue-layout
+.saber-sidebar,
+.saber-top,
+.saber-logo,
+.saber-layout,
 .login-logo,
-.avue-main {
-    transition: all .3s;
+.saber-main {
+  transition: all 0.3s;
 }
-.avue-layout{
+.saber-layout {
   display: flex;
   height: 100%;
   overflow: hidden;
-  &--horizontal{
+  &--horizontal {
     flex-direction: column;
-    .avue-sidebar {
+    .saber-sidebar {
       width: 100%;
-      height: $top_height;
+      height: vars.$top_height;
       display: flex;
-      .avue-menu,.el-menu-item,.el-sub-menu__title{
-        height: $top_height;
-        line-height: $top_height;
+      border-right: 0;
+      border-bottom: 1px solid var(--saber-border);
+      background-color: var(--saber-header-bg);
+      .saber-menu,
+      .el-menu-item,
+      .el-sub-menu__title {
+        height: vars.$top_height;
+        line-height: vars.$top_height;
       }
-      .is-active:before{
+      .saber-menu {
+        background-color: transparent;
+        border-right: 0;
+      }
+      .is-active:before {
         display: none;
       }
     }
-    .avue-logo{
-      width:$sidebar_width
+    .saber-logo {
+      width: vars.$sidebar_width;
+      border-bottom: 0;
     }
   }
 }
-.avue-contail {
-    width: 100%;
-    height: 100%;
-    background: #f0f2f5;
-    background-size: 100%;
-    background-repeat: no-repeat;
+.saber-shell {
+  width: 100%;
+  height: 100%;
+  background: var(--saber-page-bg);
+  background-size: 100%;
+  background-repeat: no-repeat;
 }
 
-.avue--collapse {
-    .avue-sidebar,
-    .avue-logo {
-        width: $sidebar_collapse;
-    }
+.saber-shell--collapsed {
+  .saber-sidebar,
+  .saber-logo {
+    width: vars.$sidebar_collapse;
+  }
 }
 
-.avue-main {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    flex:1;
-    box-sizing: border-box;
-    overflow: hidden;
-    background: #f0f2f5;
+.saber-main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--saber-page-bg);
 }
-#avue-view{
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  margin-bottom: 10px;
+#saber-view {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  box-sizing: border-box;
+  background: var(--saber-page-bg);
 }
-.avue-view {
-    width: 100%;
-    box-sizing: border-box;
+.saber-view {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.avue-footer {
+.saber-footer {
   width: 100%;
   position: absolute;
-  bottom:0;
+  bottom: 0;
   text-align: center;
   .copyright {
     color: #666;
@@ -86,7 +101,7 @@ a{
   }
 }
 .mac_bg {
-  background-image: url("/img/bg.jpg");
+  background-image: url('/img/bg.jpg');
   background-color: #000;
   position: fixed;
   left: 0;
@@ -95,24 +110,20 @@ a{
   bottom: 0;
 }
 // ele样式覆盖
-@import './element-ui.scss';
+@include meta.load-css('./element-plus');
 // 顶部右侧显示
-@import './top.scss';
+@include meta.load-css('./top');
 // 导航标签
-@import './tags.scss';
-// 工具类函数
-@import './mixin.scss';
+@include meta.load-css('./tags');
 // 侧面导航栏
-@import './sidebar.scss';
-//主题
-@import './theme/index.scss';
+@include meta.load-css('./sidebar');
 //通用配置
-@import './normalize.scss';
+@include meta.load-css('./normalize');
 //图标配置
-@import './iconfont.scss';
+@include meta.load-css('./iconfont');
 //登录样式
-@import "./login.scss";
+@include meta.load-css('./login');
 //适配
-@import './media.scss';
+@include meta.load-css('./media');
 //滚动条样式
-@include scrollBar;
+@include mixin.scrollBar;

@@ -1,17 +1,17 @@
 <template>
-  <div class="avue-tags"
+  <div class="saber-tags"
        v-if="setting.tag"
        @click="contextmenuFlag=false">
     <!-- tag盒子 -->
     <div v-if="contextmenuFlag"
-         class="avue-tags__contentmenu"
+         class="saber-tags__contentmenu"
          :style="{left:contentmenuX+'px',top:contentmenuY+'px'}">
       <div class="item"
            @click="closeOthersTags">{{$t('tagsView.closeOthers')}}</div>
       <div class="item"
            @click="closeAllTags">{{$t('tagsView.closeAll')}}</div>
     </div>
-    <div class="avue-tags__box">
+    <div class="saber-tags__box">
       <el-tabs v-model="active"
                type="card"
                @contextmenu="handleContextmenu"
@@ -25,20 +25,26 @@
           <template #label>
             <span>
               {{generateTitle(item)}}
-              <i class="el-icon-refresh"
-                 :class="{'turn':refresh}"
-                 @click="handleRefresh"
-                 v-if="active==item.fullPath"></i>
+              <button
+                v-if="active==item.fullPath"
+                type="button"
+                class="saber-tags__refresh"
+                :class="{'turn':refresh}"
+                aria-label="刷新当前标签"
+                @click.stop="handleRefresh"
+              >
+                <el-icon><Refresh /></el-icon>
+              </button>
             </span>
           </template>
 
         </el-tab-pane>
 
       </el-tabs>
-      <el-dropdown class="avue-tags__menu">
+      <el-dropdown class="saber-tags__menu">
         <el-button type="primary">
           {{$t('tagsView.menu')}}
-          <i class="el-icon-arrow-down el-icon--right"></i>
+          <el-icon class="el-icon--right"><ArrowDown /></el-icon>
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
@@ -53,9 +59,13 @@
   </div>
 </template>
 <script>
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
+import { ArrowDown, Refresh } from '@element-plus/icons-vue';
+import { useCommonStore } from '@/store/common';
+import { useTagsStore } from '@/store/tags';
 export default {
   name: "tags",
+  components: { ArrowDown, Refresh },
   data () {
     return {
       refresh: false,
@@ -68,7 +78,7 @@ export default {
   watch: {
     tag: {
       handler (val) {
-        this.active = val.fullPath;
+        this.active = val?.fullPath || '';
       },
       immediate: true,
     },
@@ -77,27 +87,34 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["tagWel", "tagList", "tag", "setting"]),
+    ...mapState(useTagsStore, {
+      tagWel: store => store.homeTag,
+      tag: store => store.currentTag,
+      tagList: store => store.tagList,
+    }),
+    ...mapState(useCommonStore, ['setting']),
     tagLen () {
       return this.tagList.length || 0;
     }
   },
   methods: {
+    ...mapActions(useTagsStore, ['deleteTag', 'clearTags', 'deleteOtherTags']),
+    ...mapActions(useCommonStore, ['setSearch', 'setRefresh']),
     openSearch () {
-      this.$store.commit('SET_IS_SEARCH', true)
+      this.setSearch(true)
     },
     handleRefresh () {
       this.refresh = true;
-      this.$store.commit('SET_IS_REFRESH', false);
+      this.setRefresh(false);
       setTimeout(() => {
-        this.$store.commit('SET_IS_REFRESH', true);
+        this.setRefresh(true);
       }, 100)
       setTimeout(() => {
         this.refresh = false;
       }, 500)
     },
     generateTitle (item) {
-      return this.$router.$avueRouter.generateTitle({
+      return this.$router.$dynamicRouter.generateTitle({
         ...item,
         ...{
           label: item.name
@@ -130,9 +147,9 @@ export default {
     menuTag (value, action) {
       if (action === "remove") {
         let { tag, key } = this.findTag(value);
-        this.$store.commit("DEL_TAG", tag);
+        this.deleteTag(tag);
         if (tag.fullPath === this.tag.fullPath) {
-          tag = this.tagList[key - 1]
+          tag = this.tagList[key - 1] || this.tagList[0] || this.tagWel;
           this.$router.push({
             path: tag.path,
             query: tag.query
@@ -155,11 +172,11 @@ export default {
     },
     closeOthersTags () {
       this.contextmenuFlag = false;
-      this.$store.commit('DEL_TAG_OTHER')
+      this.deleteOtherTags()
     },
     closeAllTags () {
       this.contextmenuFlag = false;
-      this.$store.commit('DEL_ALL_TAG')
+      this.clearTags()
       this.$router.push(this.tagWel);
     }
   }

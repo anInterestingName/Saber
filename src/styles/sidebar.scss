@@ -1,65 +1,71 @@
+@use './variables' as vars;
 
-.avue-sidebar {
-    width: $sidebar_width;
-    height: 100%;
-    user-select: none; 
-    position: relative;
-    height: 100%;
-    position: relative;
-    background-color: #031527;
-    transition: width .2s;
+.saber-sidebar {
+  width: vars.$sidebar_width;
+  height: 100%;
+  user-select: none;
+  position: relative;
+  height: 100%;
+  position: relative;
+  background-color: var(--saber-sidebar-bg);
+  transition: width 0.2s;
+  box-sizing: border-box;
+  .el-scrollbar__wrap {
+    overflow-x: hidden;
+  }
+  .saber-menu {
+    height: calc(100% - #{vars.$top_height});
+    background-color: var(--saber-sidebar-bg);
+    border-right: 1px solid var(--saber-border);
     box-sizing: border-box;
-    box-shadow: 2px 0 6px rgba(0,21,41,.35);
-    .el-scrollbar__wrap {
-        overflow-x: hidden;
+  }
+  &--tip {
+    width: 90%;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    position: absolute;
+    top: 5px;
+    left: 5%;
+    color: var(--saber-sidebar-text);
+    z-index: 2;
+    text-align: center;
+    font-size: 14px;
+    background-color: var(--saber-sidebar-tip-bg);
+  }
+  .el-menu-item,
+  .el-sub-menu__title {
+    i {
+      margin-right: 5px;
     }
-    .avue-menu{
-      height: calc(100% - #{$top_height});
+    i,
+    span {
+      color: var(--saber-sidebar-text);
     }
-    &--tip{
-        width:90%;
-        height: 140px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 5px;
+    &:hover {
+      background: transparent;
+      i,
+      span {
+        color: var(--saber-sidebar-text-active);
+      }
+    }
+    &.is-active {
+      &:before {
+        content: '';
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--el-color-primary);
         position: absolute;
-        top:5px;
-        left:5%;
-        color:#ccc;
-        z-index: 2;
-        text-align: center;
-        font-size: 14px;
-        background-color: rgba(0,0,0,.4);
+      }
+      background-color: var(--saber-sidebar-active);
+      i,
+      span {
+        color: var(--saber-sidebar-text-active);
+      }
     }
-    .el-menu-item,.el-sub-menu__title{
-        i{
-          margin-right: 5px;
-        }
-        i,span{
-           color:hsla(0,0%,100%,.7);
-        }
-        &:hover{
-            background: transparent;
-            i,span{
-               color:#fff;
-            }
-        }
-        &.is-active {
-            &:before {
-                content: '';
-                top: 0;
-                left: 0;
-                bottom: 0;
-                width: 4px;
-                background: #409eff;
-                position: absolute;
-            }
-            background-color: rgba(0,0,0,.8);
-            i,span{
-                color:#fff;
-            }
-        }
-    }
-    
+  }
 }

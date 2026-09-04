@@ -1,756 +1,535 @@
 <template>
-  <basic-container>
-    <avue-crud
-      :option="option"
-      :table-loading="loading"
-      :data="data"
-      ref="crudRef"
-      v-model="form"
-      :permission="permissionList"
-      :before-open="beforeOpen"
-      @row-del="rowDel"
-      @row-update="rowUpdate"
-      @row-save="rowSave"
-      @search-change="searchChange"
-      @search-reset="searchReset"
-      @selection-change="selectionChange"
-      @current-change="currentChange"
-      @size-change="sizeChange"
-      @refresh-change="refreshChange"
-      @on-load="onLoad"
-      @tree-load="treeLoad"
-    >
-      <template #menu="{ row }">
-        <el-button
-          type="primary"
-          text
-          icon="el-icon-setting"
-          v-if="permission.api_scope_setting"
-          plain
-          style="border: 0; background-color: transparent !important"
-          @click.stop="handleDataScope(row)"
-          >权限配置
-        </el-button>
-      </template>
-      <template #name="{ row }">
-        <i :class="row.source" style="margin-right: 5px" />
-        <span>{{ row.name }}</span>
-      </template>
-      <template #source="{ row }">
-        <div style="text-align: center">
-          <i :class="row.source" />
-        </div>
-      </template>
-    </avue-crud>
+  <div class="scope-page">
+    <scope-menu-browser
+      title="API 权限菜单"
+      :can-configure="canConfigure"
+      @configure="openDrawer"
+    />
+
     <el-drawer
-      :title="`[${scopeMenuName}] 接口权限配置`"
       v-model="drawerVisible"
-      :direction="direction"
+      class="scope-drawer"
+      :title="`[${activeMenu?.name || '菜单'}] 接口权限配置`"
+      direction="rtl"
       append-to-body
-      :before-close="handleDrawerClose"
-      size="1000px"
+      destroy-on-close
+      size="min(1000px, 100vw)"
+      :close-on-click-modal="!drawerLocked"
+      :close-on-press-escape="!drawerLocked"
+      :show-close="!drawerLocked"
+      :before-close="handleDrawerBeforeClose"
     >
-      <basic-container>
-        <avue-crud
-          :option="optionScope"
-          :data="dataScope"
-          :page="pageScope"
-          v-model="formScope"
-          :table-loading="scopeLoading"
-          ref="crudScopeRef"
-          @row-del="rowDelScope"
-          @row-update="rowUpdateScope"
-          @row-save="rowSaveScope"
-          :before-open="beforeOpenScope"
-          @search-change="searchChangeScope"
-          @search-reset="searchResetScope"
-          @selection-change="selectionChangeScope"
-          @current-change="currentChangeScope"
-          @size-change="sizeChangeScope"
-          @on-load="onLoadScope"
+      <div class="scope-drawer__body">
+        <search-panel
+          :model="searchForm"
+          :loading="loading"
+          @search="handleSearch"
+          @reset="handleReset"
         >
-          <template #menu-left>
-            <el-button type="danger" icon="el-icon-delete" plain @click="handleDeleteScope"
-              >删 除
+          <el-col :xs="24" :sm="12" :md="8">
+            <el-form-item label="权限名称">
+              <el-input v-model="searchForm.scopeName" clearable placeholder="请输入权限名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12" :md="8">
+            <el-form-item label="权限编号">
+              <el-input v-model="searchForm.resourceCode" clearable placeholder="请输入权限编号" />
+            </el-form-item>
+          </el-col>
+        </search-panel>
+
+        <list-panel title="API 权限规则" compact>
+          <template #actions>
+            <el-button
+              v-if="canConfigure"
+              type="primary"
+              :icon="Plus"
+              :disabled="loading || deleting"
+              @click="openAdd"
+            >
+              新增
+            </el-button>
+            <el-button
+              v-if="canConfigure"
+              type="danger"
+              plain
+              :icon="Delete"
+              :loading="deleting"
+              :disabled="loading"
+              @click="handleBatchDelete"
+            >
+              删除
             </el-button>
           </template>
-          <template #scopeType="{ row }">
-            <el-tag>{{ row.scopeTypeName }}</el-tag>
+          <template #tools>
+            <el-tooltip content="刷新" placement="top">
+              <el-button
+                circle
+                :icon="Refresh"
+                :loading="loading"
+                :disabled="deleting"
+                aria-label="刷新"
+                @click="refreshList"
+              />
+            </el-tooltip>
           </template>
-        </avue-crud>
-      </basic-container>
+
+          <el-table
+            ref="tableRef"
+            v-loading="loading"
+            :data="data"
+            row-key="id"
+            @selection-change="handleSelectionChange"
+          >
+            <el-table-column type="selection" width="48" />
+            <el-table-column type="index" label="#" width="60" align="center" />
+            <el-table-column
+              prop="scopeName"
+              label="权限名称"
+              min-width="180"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="resourceCode"
+              label="权限编号"
+              min-width="150"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="scopePath"
+              label="权限路径"
+              min-width="220"
+              show-overflow-tooltip
+            />
+            <el-table-column label="接口类型" width="130" align="center">
+              <template #default="{ row }">
+                <dict-tag code="api_scope_type" :value="row.scopeType" value-type="number" />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" fixed="right" width="210" align="center">
+              <template #default="{ row }">
+                <row-actions
+                  :show-view="canConfigure"
+                  :show-edit="canConfigure"
+                  :show-delete="canConfigure"
+                  :disabled="deleting || loading"
+                  @view="openDetail(row as ApiScopeEntity, 'view')"
+                  @edit="openDetail(row as ApiScopeEntity, 'edit')"
+                  @delete="handleRowDelete(row as ApiScopeEntity)"
+                />
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <template #footer>
+            <list-pagination
+              :current-page="page.currentPage"
+              :page-size="page.pageSize"
+              :total="page.total"
+              :disabled="loading || deleting"
+              @change="handlePaginationChange"
+            />
+          </template>
+        </list-panel>
+      </div>
     </el-drawer>
-  </basic-container>
+
+    <form-dialog
+      v-model="dialogVisible"
+      :mode="mode"
+      entity-name="API 权限"
+      :submitting="submitting"
+      :loading="detailLoading"
+      :confirm-disabled="formUnavailable"
+      width="720px"
+      destroy-on-close
+      @confirm="handleSubmit"
+      @cancel="handleDialogCancel"
+    >
+      <el-alert
+        v-if="detailFailed || dictionaryFailed"
+        class="scope-form__alert"
+        type="error"
+        :closable="false"
+        show-icon
+      >
+        <template #title>
+          {{
+            detailFailed ? '详情加载失败，请关闭后重试' : '接口类型加载失败，请在接口类型字段重试'
+          }}
+        </template>
+      </el-alert>
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="formRules"
+        :disabled="mode === 'view' || detailLoading || detailFailed"
+        label-width="88px"
+      >
+        <el-row :gutter="24">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="权限名称" prop="scopeName">
+              <el-input v-model="form.scopeName" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="权限编号" prop="resourceCode">
+              <el-input v-model="form.resourceCode" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="权限路径" prop="scopePath">
+              <el-input v-model="form.scopePath" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="接口类型" prop="scopeType">
+              <dict-select
+                :model-value="form.scopeType"
+                code="api_scope_type"
+                value-type="number"
+                placeholder="请选择接口类型"
+                @update:model-value="handleScopeTypeChange"
+                @load-error="dictionaryFailed = true"
+                @load-success="dictionaryFailed = false"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="备注" prop="remark">
+              <el-input
+                v-model="form.remark"
+                type="textarea"
+                :rows="4"
+                maxlength="255"
+                show-word-limit
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </form-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
-import { useStore } from 'vuex';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { add, remove, update, getLazyMenuList, getMenu } from '@/api/system/menu';
+import { computed, nextTick, ref, watch } from 'vue';
+import { Delete, Plus, Refresh } from '@element-plus/icons-vue';
+import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import ScopeMenuBrowser from '@/views/authority/components/scope-menu-browser.vue';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import ListPagination from '@/components/list-pagination/main.vue';
+import RowActions from '@/components/row-actions/main.vue';
+import FormDialog from '@/components/form-dialog/main.vue';
+import { useUserStore } from '@/store/user';
+import DictSelect from '@/components/dict-select/main.vue';
+import DictTag from '@/components/dict-tag/main.vue';
+import { usePagedList } from '@/composables/usePagedList';
+import { useRemoteDetail } from '@/composables/useRemoteDetail';
+import { useTableSelection } from '@/composables/useTableSelection';
 import {
   addApiScope,
+  getApiScopeDetail,
+  getApiScopeList,
   removeApiScope,
   updateApiScope,
-  getListApiScope,
-  getMenuApiScope,
 } from '@/api/system/scope';
 import { validData } from '@/utils/util';
-import iconList from '@/config/iconList';
+import type { CrudMode } from '@/types/crud';
+import type { PaginationChange } from '@/types/list';
+import type { DictionaryValue } from '@/types/option';
 
-// 菜单数据实体
-interface MenuEntity {
+interface ScopeMenuEntity {
   id: string;
   name?: string;
-  path?: string;
-  parentId?: string;
-  source?: string;
-  code?: string;
-  category?: number;
-  alias?: string;
-  action?: number;
-  sort?: number;
-  isOpen?: number;
-  remark?: string;
 }
 
-// 菜单新增与编辑共用的表单模型，字段均可选
-type MenuForm = Partial<MenuEntity>;
-
-// 接口权限数据实体
-interface ScopeEntity {
+interface ApiScopeEntity {
   id: string;
-  scopeName?: string;
+  menuId?: string;
   resourceCode?: string;
+  scopeName?: string;
   scopePath?: string;
   scopeType?: number;
   scopeTypeName?: string;
-  menuId?: string | number;
   remark?: string;
 }
 
-// 接口权限新增与编辑共用的表单模型，字段均可选
-type ScopeForm = Partial<ScopeEntity>;
+interface ScopeQuery {
+  scopeName?: string;
+  resourceCode?: string;
+}
 
-// 权限
-const store = useStore();
-const permission = computed(() => store.getters.permission);
+type ApiScopeForm = Partial<ApiScopeEntity>;
+type ApiScopeListResponse = Awaited<ReturnType<typeof getApiScopeList<ApiScopeEntity>>>;
 
-// 菜单树状态
-const crudRef = ref();
-const form = ref<MenuForm>({});
-const data = ref<MenuEntity[]>([]);
-const selectionList = ref<MenuEntity[]>([]);
-const query = ref<Partial<MenuEntity>>({});
-const loading = ref(true);
-const parentId = ref<string | number>(0);
-
-// 分页参数
-const page = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const createInitialQuery = (): ScopeQuery => ({ scopeName: '', resourceCode: '' });
+const createInitialForm = (menu?: ScopeMenuEntity): ApiScopeForm => ({
+  menuId: menu?.id,
+  resourceCode: '',
+  scopeName: '',
+  scopePath: '',
+  scopeType: undefined,
+  remark: '',
 });
 
-// scope 抽屉状态
-const crudScopeRef = ref();
-const formScope = ref<ScopeForm>({});
-const dataScope = ref<ScopeEntity[]>([]);
-const selectionListScope = ref<ScopeEntity[]>([]);
+const { permission } = storeToRefs(useUserStore());
+const canConfigure = computed(() => validData(permission.value.api_scope_setting, false));
+const activeMenu = ref<ScopeMenuEntity>();
 const drawerVisible = ref(false);
-const direction = ref<'ltr' | 'rtl' | 'ttb' | 'btt'>('rtl');
-const scopeMenuId = ref<string | number>(0);
-const scopeMenuName = ref('菜单');
-const scopeLoading = ref(false);
+const searchForm = ref<ScopeQuery>(createInitialQuery());
+const mode = ref<CrudMode>('add');
+const form = ref<ApiScopeForm>(createInitialForm());
+const dialogVisible = ref(false);
+const submitting = ref(false);
+const deleting = ref(false);
+const dictionaryFailed = ref(false);
+const formRef = ref<InstanceType<typeof ElForm>>();
+const tableRef = ref<TableInstance>();
+let menuContextVersion = 0;
 
-// scope 抽屉分页参数
-const pageScope = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
-});
-
-// 菜单侧选中行 id 集合，供批量删除使用
-const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
-
-// scope 侧选中行 id 集合，供批量删除使用
-const scopeIds = computed(() => selectionListScope.value.map(ele => ele.id).join(','));
-
-// 菜单树表格配置
-const option = reactive({
-  lazy: true,
-  tip: false,
-  simplePage: true,
-  searchShow: true,
-  searchMenuSpan: 6,
-  dialogWidth: '60%',
-  tree: true,
-  border: true,
-  index: true,
-  selection: true,
-  viewBtn: false,
-  editBtn: false,
-  addBtn: false,
-  delBtn: false,
-  menuWidth: 150,
-  dialogClickModal: false,
-  column: [
-    {
-      label: '菜单名称',
-      prop: 'name',
-      width: 300,
-      search: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单名称',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '路由地址',
-      prop: 'path',
-      rules: [
-        {
-          required: true,
-          message: '请输入路由地址',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '上级菜单',
-      prop: 'parentId',
-      type: 'tree',
-      dicUrl: '/blade-system/menu/tree',
-      hide: true,
-      props: {
-        label: 'title',
-      },
-      rules: [
-        {
-          required: false,
-          message: '请选择上级菜单',
-          trigger: 'click',
-        },
-      ],
-    },
-    {
-      label: '菜单图标',
-      prop: 'source',
-      type: 'icon',
-      slot: true,
-      width: 85,
-      iconList: iconList,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单图标',
-          trigger: 'click',
-        },
-      ],
-    },
-    {
-      label: '菜单编号',
-      prop: 'code',
-      search: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单编号',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单类型',
-      prop: 'category',
-      type: 'radio',
-      dicData: [
-        {
-          label: '菜单',
-          value: 1,
-        },
-        {
-          label: '按钮',
-          value: 2,
-        },
-      ],
-      hide: true,
-      rules: [
-        {
-          required: true,
-          message: '请选择菜单类型',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单别名',
-      prop: 'alias',
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单别名',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '按钮功能',
-      prop: 'action',
-      type: 'radio',
-      dicData: [
-        {
-          label: '工具栏',
-          value: 0,
-        },
-        {
-          label: '操作栏',
-          value: 1,
-        },
-        {
-          label: '工具操作栏',
-          value: 2,
-        },
-      ],
-      hide: true,
-      rules: [
-        {
-          required: true,
-          message: '请选择按钮功能',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单排序',
-      prop: 'sort',
-      type: 'number',
-      width: 85,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单排序',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '新窗口',
-      prop: 'isOpen',
-      type: 'radio',
-      dicData: [
-        {
-          label: '否',
-          value: 0,
-        },
-        {
-          label: '是',
-          value: 1,
-        },
-      ],
-      hide: true,
-    },
-    {
-      label: '菜单备注',
-      prop: 'remark',
-      type: 'textarea',
-      span: 24,
-      minRows: 6,
-      hide: true,
-    },
-  ],
-});
-
-// scope 抽屉表格配置
-const optionScope = reactive({
-  tip: false,
-  searchShow: true,
-  searchMenuSpan: 6,
-  border: true,
-  index: true,
-  viewBtn: true,
-  selection: true,
-  menuWidth: 250,
-  dialogWidth: 900,
-  dialogClickModal: false,
-  column: [
-    {
-      label: '权限名称',
-      prop: 'scopeName',
-      search: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入权限名称',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '权限编号',
-      prop: 'resourceCode',
-      search: true,
-      width: 180,
-      rules: [
-        {
-          required: true,
-          message: '请输入权限编号',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '权限路径',
-      prop: 'scopePath',
-      width: 180,
-      rules: [
-        {
-          required: true,
-          message: '请输入权限编号',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '接口类型',
-      type: 'select',
-      dicUrl: '/blade-system/dict/dictionary?code=api_scope_type',
-      props: {
-        label: 'dictValue',
-        value: 'dictKey',
-      },
-      dataType: 'number',
-      slot: true,
-      width: 100,
-      prop: 'scopeType',
-      rules: [
-        {
-          required: true,
-          message: '请输入通知类型',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '备注',
-      prop: 'remark',
-      span: 24,
-      hide: true,
-    },
-  ],
-});
-
-// 行操作按钮权限
-const permissionList = computed(() => ({
-  addBtn: validData(permission.value.menu_add, false),
-  viewBtn: validData(permission.value.menu_view, false),
-  delBtn: validData(permission.value.menu_delete, false),
-  editBtn: validData(permission.value.menu_edit, false),
-}));
-
-// 菜单侧：加载菜单树数据
-const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Partial<MenuEntity> = {}) => {
-  loading.value = true;
-  getLazyMenuList(parentId.value, Object.assign(params, query.value)).then(res => {
-    data.value = res.data.data;
-    loading.value = false;
-    selectionClear();
-  });
+const formRules: FormRules = {
+  scopeName: [{ required: true, message: '请输入权限名称', trigger: 'blur' }],
+  resourceCode: [{ required: true, message: '请输入权限编号', trigger: 'blur' }],
+  scopePath: [{ required: true, message: '请输入权限路径', trigger: 'blur' }],
+  scopeType: [{ required: true, message: '请选择接口类型', trigger: 'change' }],
 };
 
-// 菜单侧：懒加载子级菜单
-const treeLoad = (tree: MenuEntity, treeNode: object, resolve: (data: MenuEntity[]) => void) => {
-  const nodeParentId = tree.id;
-  getLazyMenuList(nodeParentId).then(res => {
-    resolve(res.data.data);
-  });
-};
-
-// 菜单侧：条件检索
-const searchChange = (params: Partial<MenuEntity>, done: () => void) => {
-  query.value = params;
-  parentId.value = '';
-  page.currentPage = 1;
-  onLoad(page, params);
-  done();
-};
-
-// 菜单侧：重置检索条件
-const searchReset = () => {
-  query.value = {};
-  parentId.value = 0;
-  onLoad(page);
-};
-
-// 菜单侧：切换页码
-const currentChange = (currentPage: number) => {
-  page.currentPage = currentPage;
-};
-
-// 菜单侧：调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.pageSize = pageSize;
-};
-
-// 菜单侧：刷新当前列表
-const refreshChange = () => {
-  onLoad(page, query.value);
-};
-
-// 菜单侧：记录当前选中行
-const selectionChange = (list: MenuEntity[]) => {
-  selectionList.value = list;
-};
-
-// 菜单侧：清空选中状态
-const selectionClear = () => {
-  selectionList.value = [];
-  crudRef.value.toggleSelection();
-};
-
-// 菜单侧：新增提交
-const rowSave = (row: MenuForm, done: () => void, loading: () => void) => {
-  add(row).then(
-    () => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
+const listState = usePagedList<ApiScopeEntity, ScopeQuery, ApiScopeListResponse>({
+  fetcher: async (current, size, query) => {
+    const contextVersion = menuContextVersion;
+    const menuId = activeMenu.value?.id;
+    if (!menuId) throw new Error('API 权限菜单上下文已失效');
+    const response = await getApiScopeList<ApiScopeEntity>(current, size, {
+      menuId,
+      scopeName: query.scopeName?.trim() || undefined,
+      resourceCode: query.resourceCode?.trim() || undefined,
+    });
+    if (contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) {
+      throw new Error('API 权限菜单上下文已变更');
     }
-  );
+    return response;
+  },
+  resolveResponse: response => response.data.data,
+  createInitialQuery,
+});
+const { data, query, page, loading, load, search, reset, refresh, changePage, changeSize } =
+  listState;
+const selection = useTableSelection<ApiScopeEntity>();
+const { selectedRows, ids, handleSelectionChange, clearSelection } = selection;
+const detail = useRemoteDetail<ApiScopeEntity, string>(async id => {
+  const response = await getApiScopeDetail<ApiScopeEntity>(id);
+  return response.data.data;
+});
+const { loading: detailLoading, failed: detailFailed } = detail;
+const drawerLocked = computed(() => submitting.value || deleting.value);
+const formUnavailable = computed(
+  () => detailLoading.value || detailFailed.value || dictionaryFailed.value || !activeMenu.value?.id
+);
+
+const clearTableSelection = () => {
+  clearSelection();
+  tableRef.value?.clearSelection();
+};
+watch(data, clearTableSelection, { flush: 'post' });
+
+const resetListState = () => {
+  data.value = [];
+  query.value = createInitialQuery();
+  page.value.currentPage = 1;
+  page.value.total = 0;
+  searchForm.value = createInitialQuery();
+  clearTableSelection();
 };
 
-// 菜单侧：编辑提交
-const rowUpdate = (row: MenuForm, index: number, done: () => void, loading: () => void) => {
-  update(row).then(
-    () => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
+const resetDialogState = () => {
+  detail.clear();
+  dictionaryFailed.value = false;
+  form.value = createInitialForm();
+  formRef.value?.clearValidate();
 };
 
-// 菜单侧：删除单行
-const rowDel = (row: MenuEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(row.id);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-    });
+const invalidateDrawerContext = () => {
+  menuContextVersion += 1;
+  resetDialogState();
+  dialogVisible.value = false;
+  resetListState();
+  activeMenu.value = undefined;
 };
 
-// 菜单侧：批量删除选中行
-const handleDelete = () => {
-  if (selectionList.value.length === 0) {
-    ElMessage.warning('请选择至少一条数据');
-    return;
-  }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(ids.value);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
-};
-
-// 菜单侧：打开表单前加载详情
-const beforeOpen = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getMenu(form.value.id).then(res => {
-      form.value = res.data.data;
-    });
-  }
-  done();
-};
-
-// scope 侧：打开权限配置抽屉
-const handleDataScope = (row: MenuEntity) => {
+const openDrawer = (menu: ScopeMenuEntity) => {
+  if (!canConfigure.value || drawerLocked.value || !menu.id) return;
+  menuContextVersion += 1;
+  activeMenu.value = { id: menu.id, name: menu.name };
+  resetDialogState();
+  resetListState();
   drawerVisible.value = true;
-  scopeMenuId.value = row.id;
-  scopeMenuName.value = row.name;
-  onLoadScope(pageScope);
+  void load();
 };
 
-// scope 侧：关闭抽屉
-const handleDrawerClose = (hide: () => void) => {
-  hide();
-};
-
-// scope 侧：加载权限列表
-const onLoadScope = (pageData: { currentPage: number; pageSize: number }, params: Partial<ScopeEntity> = {}) => {
-  scopeLoading.value = true;
-  const values = {
-    ...params,
-    menuId: scopeMenuId.value,
-  };
-  getListApiScope(pageData.currentPage, pageData.pageSize, Object.assign(values, query.value)).then(
-    res => {
-      const scopeData = res.data.data;
-      pageScope.total = scopeData.total;
-      dataScope.value = scopeData.records;
-      selectionListScope.value = [];
-      scopeLoading.value = false;
-    }
-  );
-};
-
-// scope 侧：条件检索
-const searchChangeScope = (params: Partial<ScopeEntity>, done: () => void) => {
-  onLoadScope(pageScope, params);
+const handleDrawerBeforeClose = (done: () => void) => {
+  if (drawerLocked.value) return;
+  invalidateDrawerContext();
   done();
 };
 
-// scope 侧：重置检索条件
-const searchResetScope = () => {
-  onLoadScope(pageScope);
+const handleSearch = () => void search({ ...searchForm.value });
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
+};
+const refreshList = () => void refresh();
+const handlePaginationChange = ({ currentPage, pageSize }: PaginationChange) => {
+  if (pageSize !== page.value.pageSize) void changeSize(pageSize);
+  else void changePage(currentPage);
 };
 
-// scope 侧：切换页码
-const currentChangeScope = (currentPage: number) => {
-  pageScope.currentPage = currentPage;
+const openAdd = () => {
+  if (!canConfigure.value || !activeMenu.value || drawerLocked.value) return;
+  resetDialogState();
+  mode.value = 'add';
+  form.value = createInitialForm(activeMenu.value);
+  dialogVisible.value = true;
+  nextTick(() => formRef.value?.clearValidate());
 };
 
-// scope 侧：调整每页条数
-const sizeChangeScope = (pageSize: number) => {
-  pageScope.pageSize = pageSize;
-};
-
-// scope 侧：记录当前选中行
-const selectionChangeScope = (list: ScopeEntity[]) => {
-  selectionListScope.value = list;
-};
-
-// scope 侧：新增提交
-const rowSaveScope = (row: ScopeForm, done: () => void, loading: () => void) => {
-  row = {
-    ...row,
-    menuId: scopeMenuId.value,
+const openDetail = async (row: ApiScopeEntity, dialogMode: 'edit' | 'view') => {
+  if (!canConfigure.value || !activeMenu.value || drawerLocked.value) return;
+  resetDialogState();
+  mode.value = dialogMode;
+  dialogVisible.value = true;
+  const contextVersion = menuContextVersion;
+  const menuId = activeMenu.value.id;
+  const entity = await detail.load(row.id);
+  if (!entity || contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) return;
+  if (entity.menuId && String(entity.menuId) !== menuId) {
+    detail.data.value = null;
+    detail.failed.value = true;
+    return;
+  }
+  form.value = {
+    ...entity,
+    scopeType: entity.scopeType === undefined ? undefined : Number(entity.scopeType),
   };
-  addApiScope(row).then(
-    () => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
+  await nextTick();
+  formRef.value?.clearValidate();
 };
 
-// scope 侧：编辑提交
-const rowUpdateScope = (row: ScopeForm, index: number, done: () => void, loading: () => void) => {
-  row = {
-    ...row,
-    menuId: scopeMenuId.value,
-  };
-  updateApiScope(row).then(
-    () => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
+const handleDialogCancel = () => resetDialogState();
+
+const handleScopeTypeChange = (value: DictionaryValue | DictionaryValue[] | null | undefined) => {
+  if (Array.isArray(value) || value === null || value === undefined || value === '') {
+    form.value.scopeType = undefined;
+    return;
+  }
+  form.value.scopeType = Number(value);
+  dictionaryFailed.value = false;
 };
 
-// scope 侧：删除单行
-const rowDelScope = (row: ScopeEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return removeApiScope(row.id);
-    })
-    .then(() => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
+const handleSubmit = async () => {
+  if (
+    !formRef.value ||
+    mode.value === 'view' ||
+    submitting.value ||
+    formUnavailable.value ||
+    !canConfigure.value ||
+    !activeMenu.value
+  ) {
+    return;
+  }
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  const contextVersion = menuContextVersion;
+  const menuId = activeMenu.value.id;
+  const payload: ApiScopeForm = { ...form.value, menuId };
+  delete payload.scopeTypeName;
+
+  submitting.value = true;
+  try {
+    const submitScope = mode.value === 'add' ? addApiScope : updateApiScope;
+    await submitScope(payload);
+    if (contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) return;
+    dialogVisible.value = false;
+    resetDialogState();
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // Axios 已处理接口错误，保留表单和菜单上下文供重试。
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const confirmDelete = async (deleteIds: string) => {
+  if (!canConfigure.value || !activeMenu.value || deleting.value) return;
+  const contextVersion = menuContextVersion;
+  const menuId = activeMenu.value.id;
+  try {
+    await ElMessageBox.confirm('确定将选择数据删除?', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     });
+    if (
+      !canConfigure.value ||
+      contextVersion !== menuContextVersion ||
+      menuId !== activeMenu.value?.id
+    ) {
+      return;
+    }
+    deleting.value = true;
+    await removeApiScope(deleteIds);
+    if (contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) return;
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 用户取消或接口失败时保留列表、查询和选择状态。
+  } finally {
+    deleting.value = false;
+  }
 };
 
-// scope 侧：批量删除选中行
-const handleDeleteScope = () => {
-  if (selectionListScope.value.length === 0) {
+const handleRowDelete = (row: ApiScopeEntity) => void confirmDelete(row.id);
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return removeApiScope(scopeIds.value);
-    })
-    .then(() => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudScopeRef.value.toggleSelection();
-    });
-};
-
-// scope 侧：打开表单前加载详情
-const beforeOpenScope = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getMenuApiScope(formScope.value.id).then(res => {
-      formScope.value = res.data.data;
-    });
-  }
-  done();
+  void confirmDelete(ids.value);
 };
 </script>
+
+<style scoped lang="scss">
+.scope-page,
+.scope-drawer__body {
+  min-width: 0;
+}
+
+.scope-form__alert {
+  margin-bottom: 18px;
+}
+
+:deep(.el-select) {
+  width: 100%;
+}
+</style>
+
+<style lang="scss">
+.scope-drawer .el-drawer__header {
+  flex: 0 0 auto;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--saber-border);
+  margin-bottom: 0;
+}
+
+.scope-drawer .el-drawer__body {
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+}
+</style>

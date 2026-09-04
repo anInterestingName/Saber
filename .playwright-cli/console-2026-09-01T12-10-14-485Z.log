@@ -1,0 +1,55 @@
+[      84ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[     299ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1312676ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1312933ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1313206ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1313388ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1313703ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1313882ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:2889/api/blade-develop/datasource/list?current=1&size=10:0
+[ 1313898ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1314171ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1314391ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1314682ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1314843ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:2889/api/blade-report/report/rest/list?current=1&size=10:0
+[ 1314858ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1315194ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1315316ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1315680ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1315792ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1316128ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1316272ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1348803ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1349005ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1349295ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1349472ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1349793ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1349976ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:2889/api/blade-develop/datasource/list?current=1&size=10:0
+[ 1349986ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1350252ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1350461ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1350756ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1350946ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:2889/api/blade-report/report/rest/list?current=1&size=10:0
+[ 1350962ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1351229ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1351410ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1351686ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1351884ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149
+[ 1352168ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2889/node_modules/.vite/deps/vue-i18n.js?v=88d4cd7b:123
+[ 1352367ms] [LOG] [Object, Object, Object, Object, Object, Object, Object] @ http://localhost:2889/src/store/modules/user.ts:149

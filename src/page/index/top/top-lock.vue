@@ -17,8 +17,9 @@
         <el-input v-model="form.passwd"
                   placeholder="请输入锁屏密码">
           <template #append>
-            <el-button @click="handleSetLock"
-                       icon="el-icon-lock"></el-button>
+            <el-button aria-label="确认锁屏密码" @click="handleSetLock">
+              <el-icon><Lock /></el-icon>
+            </el-button>
           </template>
         </el-input>
       </el-form-item>
@@ -28,9 +29,12 @@
 
 <script>
 import { validateNull } from "utils/validate";
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
+import { Lock } from '@element-plus/icons-vue';
+import { useCommonStore } from '@/store/common';
 export default {
   name: "top-lock",
+  components: { Lock },
   data () {
     return {
       box: false,
@@ -42,16 +46,19 @@ export default {
   created () { },
   mounted () { },
   computed: {
-    ...mapGetters(["lockPasswd"]),
+    ...mapState(useCommonStore, {
+      lockPasswd: store => store.lockPassword,
+    }),
   },
   props: {
     text: String
   },
   methods: {
+    ...mapActions(useCommonStore, ['setLockPassword', 'lock']),
     handleSetLock () {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          this.$store.commit("SET_LOCK_PASSWD", this.form.passwd);
+          this.setLockPassword(this.form.passwd);
           this.handleLock();
         }
       });
@@ -61,13 +68,12 @@ export default {
         this.box = true;
         return;
       }
-      this.$store.commit("SET_LOCK");
+      this.lock();
       setTimeout(() => {
         this.$router.push({ path: "/lock" });
       }, 100);
     }
   },
-  components: {}
 };
 </script>
 

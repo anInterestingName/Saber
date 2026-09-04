@@ -87,8 +87,7 @@ Saber/
 │   ├── mixins/                  # 混入（crud.js 按路径自动装配 option 与 api）
 │   ├── utils/                   # 工具函数（auth/crypto/sm2/validate/store/util/func）
 │   ├── lang/                    # 国际化（zh / en / ja）
-│   ├── styles/                  # 全局样式 & 多主题（theme/ 下多套配色）
-│   ├── mac/                     # macOS 风格主题外壳（index/login/lock）
+│   ├── styles/                  # 全局样式、明暗主题与动态主色
 │   └── page/                    # 页面布局框架（主布局、登录、锁屏）
 ├── vite/                        # Vite 插件配置（auto-import / compression / setup-extend）
 ├── vite.config.mts              # Vite 主配置（别名、开发服务器端口与代理，端口/代理目标由 .env 驱动）
@@ -146,7 +145,6 @@ Saber/
 - **动态路由**：`avue-router.ts` 将后端菜单数据（来自 `/blade-system/menu/routes`）转换为 Vue Router 路由，经 `formatPath` 处理后通过 `router.addRoute` 注入
 - **组件自动装配**：动态路由的 `component` 字段按 `views/{path}.vue` 约定通过 `import.meta.glob` 解析
 - **外链自动转 iframe**：`href` 匹配 `http(s)://` 时自动挂载 `components/iframe/main.vue`，同时将 `${token}` 占位符替换为当前 Token 实现透传
-- **macOS 皮肤**：`isMacOs` 为真时使用 `page/index/layout.vue` 之外的 `mac/` 布局
 
 ### 3.6 权限控制
 
@@ -169,7 +167,7 @@ Saber/
 
 本工程**页面层已统一为 `<script setup lang="ts">` Composition API + TypeScript**（`src/views/` 全量迁移完成，可参考 `src/views/system/dict.vue`），**基础设施层（api / utils / config / store / router / lang / option / mixins 及 main、axios、permission、error 等入口文件）亦已全量 `.ts` 化**。新增或修改一律使用此范式，禁止再写 Options API（`data()`/`methods`/`computed` 选项、`mapGetters`、`this.$xxx`），新增基础设施模块一律建 `.ts` 而非 `.js`。
 
-> 注：`src/components/`、`src/page/`、`src/mac/` 下的 `.vue` 尚未迁移，仍为 Options API，属渐进迁移中的混用状态；改动到这些目录时可顺手迁移，但不强制。`src/views/` 未使用 `mixins/crud.js`，option 一律内联在 `.vue` 内。
+> 注：`src/components/`、`src/page/` 下的部分 `.vue` 尚未迁移，仍为 Options API，属渐进迁移中的混用状态；改动到这些目录时可顺手迁移，但不强制。`src/views/` 未使用 `mixins/crud.js`，option 一律内联在 `.vue` 内。
 >
 > 仍保留为 `.js` 的仅两处，均为刻意保留：`src/mixins/crud.js`（Options API 混入工厂，其 `this` 上的 `listBefore`/`addAfter` 等钩子由消费组件提供，类型上无法表达，故由 tsconfig 的 `allowJs` + `checkJs:false` 承接）与 `vite/plugins/*.js`（Node 语境的构建插件，不在浏览器工程检查面内）。
 
@@ -219,8 +217,8 @@ Saber/
 ### 4.4 样式规范
 
 - 全局 SCSS 变量通过 `styles/variables.scss` 定义，`styles/mixin.scss` 提供常用 mixin
-- 多主题位于 `styles/theme/`（beautiful / cool / dark / white / star / vip 等），切换由 `store.common.themeName` 控制
-- 编写样式优先使用已有变量和 mixin，而非硬编码色值；新增主题时沿用 `theme/index.scss` 的 import 结构
+- 明暗主题和动态主色统一由 `styles/theme/tokens.scss`、`store.common.setting` 与 `utils/theme.ts` 管理
+- 编写样式优先使用已有变量和 mixin，不得重新引入独立彩色主题文件或硬编码主题色
 
 ### 4.5 全局注册的组件 / 属性
 

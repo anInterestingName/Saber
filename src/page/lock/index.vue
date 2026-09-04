@@ -1,90 +1,101 @@
 <template>
-  <div class="login-container"
-       @keyup.enter="handleLogin">
-    <div class="login-time">
-      {{time}}
-    </div>
-    <div class="login-weaper">
-      <div class="login-left animate__animated animate__fadeInLeft">
-        <img class="img"
-             src="/img/logo.png"
-             alt="">
-        <p class="title">{{ $t('login.info') }}</p>
+  <auth-layout>
+    <div class="auth-form-header auth-form-header--lock">
+      <div class="lock-avatar">
+        <el-icon><UserFilled /></el-icon>
       </div>
-      <div class="login-border animate__animated animate__fadeInRight">
-        <div class="login-main">
-          <div class="lock-form animate__animated animate__bounceInDown">
-            <div class="animate__animated"
-                 :class="{'shake':passwdError,'animate__bounceOut':pass}">
-              <h3 style="color:#333">{{userInfo.userName}}</h3>
-              <el-input placeholder="请输入登录密码"
-                        type="password"
-                        class="input-with-select animated"
-                        v-model="passwd"
-                        @keyup.enter="handleLogin">
-                <template #append>
-                  <i class="icon-bofangqi-suoping"
-                     @click="handleLogin"></i>
-                  &nbsp; &nbsp;
-                  <i class="icon-tuichu"
-                     @click="handleLogout"></i>
-                </template>
-              </el-input>
-            </div>
-          </div>
-        </div>
-      </div>
+      <span class="lock-user">{{ userInfo.userName }}</span>
+      <h1>{{ $t('login.locked') }}</h1>
+      <p>{{ $t('login.unlockHint') }}</p>
     </div>
-  </div>
+
+    <el-form
+      class="login-form lock-form"
+      :class="{ 'is-error': passwdError, 'is-leaving': pass }"
+      @submit.prevent="handleLogin"
+    >
+      <el-form-item>
+        <el-input
+          v-model="passwd"
+          type="password"
+          show-password
+          autocomplete="current-password"
+          :placeholder="$t('login.password')"
+        >
+          <template #prefix>
+            <el-icon><Lock /></el-icon>
+          </template>
+        </el-input>
+      </el-form-item>
+      <div class="lock-actions">
+        <el-button type="primary" class="login-submit" native-type="submit">
+          <el-icon><Unlock /></el-icon>
+          <span>{{ $t('login.unlock') }}</span>
+        </el-button>
+        <el-button class="lock-exit" @click="handleLogout">
+          <el-icon><SwitchButton /></el-icon>
+          <span>{{ $t('login.exit') }}</span>
+        </el-button>
+      </div>
+    </el-form>
+  </auth-layout>
 </template>
+
 <script>
-import { mapGetters, mapState } from "vuex";
+import { Lock, SwitchButton, Unlock, UserFilled } from '@element-plus/icons-vue';
+import AuthLayout from '@/components/auth-layout/main.vue';
+import { mapActions, mapState } from 'pinia';
+import { useCommonStore } from '@/store/common';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
+
 export default {
-  name: "lock",
-  data () {
+  name: 'lock',
+  components: {
+    AuthLayout,
+    Lock,
+    SwitchButton,
+    Unlock,
+    UserFilled,
+  },
+  data() {
     return {
-      time: "",
-      passwd: "",
+      passwd: '',
       passwdError: false,
       pass: false,
-      timer: null
     };
   },
-  created () {
-    this.getTime();
-    this.timer = setInterval(() => {
-      this.getTime();
-    }, 1000);
-  },
-  mounted () { },
-  unmounted () {
-    clearInterval(this.timer);
-  },
   computed: {
-    ...mapGetters(["userInfo", "tag", "lockPasswd"])
+    ...mapState(useUserStore, {
+      userInfo: store => store.userInfo || {},
+    }),
+    ...mapState(useTagsStore, {
+      tag: store => store.currentTag,
+    }),
+    ...mapState(useCommonStore, {
+      lockPasswd: store => store.lockPassword,
+    }),
   },
-  props: [],
   methods: {
-    getTime () {
-      this.time = this.$dayjs().format('YYYY年MM月DD日 HH:mm:ss')
-    },
-    handleLogout () {
-      this.$confirm("是否退出系统, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
+    ...mapActions(useUserStore, ['LogOut']),
+    ...mapActions(useCommonStore, ['clearLock']),
+    handleLogout() {
+      this.$confirm('是否退出系统, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
       }).then(() => {
-        this.$store.dispatch("LogOut").then(() => {
-          this.$router.push({ path: "/login" });
+        this.LogOut().then(() => {
+          this.$router.push({ path: '/login' });
         });
       });
     },
-    handleLogin () {
+    handleLogin() {
       if (this.passwd != this.lockPasswd) {
-        this.passwd = "";
+        this.passwd = '';
         this.$message({
-          message: "解锁密码错误,请重新输入",
-          type: "error"
+          message: '解锁密码错误,请重新输入',
+          type: 'error',
         });
         this.passwdError = true;
         setTimeout(() => {
@@ -94,16 +105,12 @@ export default {
       }
       this.pass = true;
       setTimeout(() => {
-        this.$store.commit("CLEAR_LOCK");
+        this.clearLock();
         this.$router.push({
-          path: this.tag.path
+          path: this.tag?.path || '/',
         });
       }, 1000);
-    }
+    },
   },
-  components: {}
 };
 </script>
-
-<style lang="scss">
-</style>

@@ -1,28 +1,125 @@
 <template>
-  <basic-container>
-    <avue-crud :option="option"
-               :data="data"
-               v-model="form"
-               :permission="permissionList"
-               :before-open="beforeOpen"
-               :page="page"
-               @search-change="searchChange"
-               @search-reset="searchReset"
-               @current-change="currentChange"
-               @size-change="sizeChange"
-               @on-load="onLoad">
-    </avue-crud>
-  </basic-container>
+  <div class="log-page">
+    <search-panel
+      :model="searchForm"
+      :loading="loading"
+      @search="handleSearch"
+      @reset="handleReset"
+    >
+      <el-col :xs="24" :sm="12" :md="8">
+        <el-form-item label="服务 ID">
+          <el-input v-model="searchForm.serviceId" clearable placeholder="请输入服务 ID" />
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="8">
+        <el-form-item label="服务 Host">
+          <el-input v-model="searchForm.serverHost" clearable placeholder="请输入服务 Host" />
+        </el-form-item>
+      </el-col>
+    </search-panel>
+
+    <list-panel title="接口日志">
+      <template #tools>
+        <el-tooltip content="刷新" placement="top">
+          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
+        </el-tooltip>
+      </template>
+
+      <el-table v-loading="loading" :data="data" row-key="id">
+        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+        <el-table-column prop="serviceId" label="服务 ID" min-width="150" show-overflow-tooltip />
+        <el-table-column
+          prop="serverHost"
+          label="服务 Host"
+          min-width="160"
+          show-overflow-tooltip
+        />
+        <el-table-column prop="serverIp" label="服务 IP" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="env" label="软件环境" min-width="110" show-overflow-tooltip />
+        <el-table-column prop="title" label="日志名" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="method" label="请求方法" min-width="110" show-overflow-tooltip />
+        <el-table-column prop="requestUri" label="请求接口" min-width="240" show-overflow-tooltip />
+        <el-table-column prop="createTime" label="日志时间" min-width="180" show-overflow-tooltip />
+        <el-table-column v-if="canView" label="操作" fixed="right" width="96" align="center">
+          <template #default="{ row }">
+            <row-actions show-view :disabled="loading" @view="openDetail(row as ApiLogListItem)" />
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <list-pagination
+          v-model:current-page="page.currentPage"
+          v-model:page-size="page.pageSize"
+          :total="page.total"
+          :disabled="loading"
+          @change="handlePageChange"
+        />
+      </template>
+    </list-panel>
+
+    <detail-drawer
+      v-model="drawerVisible"
+      title="接口日志详情"
+      :loading="detailLoading"
+      @close="handleDrawerClose"
+    >
+      <el-result v-if="detailFailed" status="error" title="日志详情加载失败">
+        <template #extra>
+          <el-button type="primary" :icon="Refresh" @click="retryDetail">重新加载</el-button>
+        </template>
+      </el-result>
+      <el-descriptions v-else-if="detailData" :column="2" border>
+        <el-descriptions-item label="服务 ID">{{
+          displayValue(detailData.serviceId)
+        }}</el-descriptions-item>
+        <el-descriptions-item label="服务 Host">
+          {{ displayValue(detailData.serverHost) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="服务 IP">{{
+          displayValue(detailData.serverIp)
+        }}</el-descriptions-item>
+        <el-descriptions-item label="软件环境">{{
+          displayValue(detailData.env)
+        }}</el-descriptions-item>
+        <el-descriptions-item label="日志名">{{
+          displayValue(detailData.title)
+        }}</el-descriptions-item>
+        <el-descriptions-item label="请求方法">{{
+          displayValue(detailData.method)
+        }}</el-descriptions-item>
+        <el-descriptions-item label="请求接口">{{
+          displayValue(detailData.requestUri)
+        }}</el-descriptions-item>
+        <el-descriptions-item label="日志时间">{{
+          displayValue(detailData.createTime)
+        }}</el-descriptions-item>
+        <el-descriptions-item label="用户代理" :span="2">
+          <pre class="log-detail__pre">{{ displayValue(detailData.userAgent) }}</pre>
+        </el-descriptions-item>
+        <el-descriptions-item label="请求数据" :span="2">
+          <pre class="log-detail__pre">{{ displayValue(detailData.params) }}</pre>
+        </el-descriptions-item>
+      </el-descriptions>
+    </detail-drawer>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
-import { useStore } from 'vuex';
+import { onMounted, ref } from 'vue';
+import { Refresh } from '@element-plus/icons-vue';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import ListPagination from '@/components/list-pagination/main.vue';
+import RowActions from '@/components/row-actions/main.vue';
+import DetailDrawer from '@/components/detail-drawer/main.vue';
+import { useCrudPermission } from '@/composables/useCrudPermission';
+import { usePagedList } from '@/composables/usePagedList';
+import { useRemoteDetail } from '@/composables/useRemoteDetail';
 import { getApiList, getApiLogs } from '@/api/logs';
-import { validData } from '@/utils/util';
+import type { PaginationChange } from '@/types/list';
 
-// 数据实体
-interface ApiLogEntity {
+interface ApiLogListItem {
   id: string;
   serviceId?: string;
   serverHost?: string;
@@ -32,144 +129,118 @@ interface ApiLogEntity {
   method?: string;
   requestUri?: string;
   createTime?: string;
+}
+
+interface ApiLogEntity extends ApiLogListItem {
   userAgent?: string;
   params?: string;
 }
 
-// 详情抽屉展示的表单模型，字段均可选
-type ApiLogForm = Partial<ApiLogEntity>;
+interface LogQuery {
+  serviceId?: string;
+  serverHost?: string;
+}
 
-// 权限
-const store = useStore();
-const permission = computed(() => store.getters.permission);
+type ApiLogListResponse = Awaited<ReturnType<typeof getApiList>>;
 
-// 表格数据状态
-const form = ref<ApiLogForm>({});
-const query = ref<Partial<ApiLogEntity>>({});
-const data = ref<ApiLogEntity[]>([]);
-
-// 分页参数
-const page = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const createInitialQuery = (): LogQuery => ({});
+const toListItem = (entity: ApiLogEntity): ApiLogListItem => ({
+  id: entity.id,
+  serviceId: entity.serviceId,
+  serverHost: entity.serverHost,
+  serverIp: entity.serverIp,
+  env: entity.env,
+  title: entity.title,
+  method: entity.method,
+  requestUri: entity.requestUri,
+  createTime: entity.createTime,
 });
 
-// 表格配置
-const option = reactive({
-  height: 'auto',
-  calcHeight: 210,
-  searchShow: true,
-  searchMenuSpan: 6,
-  tip: false,
-  border: true,
-  index: true,
-  viewBtn: true,
-  editBtn: false,
-  addBtn: false,
-  delBtn: false,
-  menuWidth: 120,
-  dialogType: 'drawer',
-  column: [
-    {
-      label: '服务id',
-      prop: 'serviceId',
-      search: true,
-    },
-    {
-      label: '服务host',
-      prop: 'serverHost',
-      search: true,
-    },
-    {
-      label: '服务ip',
-      prop: 'serverIp',
-    },
-    {
-      label: '软件环境',
-      prop: 'env',
-    },
-    {
-      label: '日志名',
-      prop: 'title',
-    },
-    {
-      label: '请求方法',
-      prop: 'method',
-    },
-    {
-      label: '请求接口',
-      prop: 'requestUri',
-    },
-    {
-      label: '日志时间',
-      prop: 'createTime',
-    },
-    {
-      label: '用户代理',
-      prop: 'userAgent',
-      span: 24,
-      hide: true,
-    },
-    {
-      label: '请求数据',
-      prop: 'params',
-      type: 'textarea',
-      span: 24,
-      minRows: 2,
-      hide: true,
-    },
-  ],
+const searchForm = ref<LogQuery>(createInitialQuery());
+const drawerVisible = ref(false);
+const detailId = ref<string>();
+
+const { data, page, loading, load, search, reset, refresh } = usePagedList<
+  ApiLogListItem,
+  LogQuery,
+  ApiLogListResponse
+>({
+  fetcher: (current, size, query) => getApiList(current, size, query),
+  resolveResponse: response => ({
+    records: response.data.data.records.map((item: ApiLogEntity) => toListItem(item)),
+    total: response.data.data.total,
+  }),
+  createInitialQuery,
+});
+const { view: canView } = useCrudPermission('log_api');
+const {
+  data: detailData,
+  loading: detailLoading,
+  failed: detailFailed,
+  load: loadDetail,
+  clear: clearDetail,
+} = useRemoteDetail<ApiLogEntity, string>(async id => {
+  const response = await getApiLogs(id);
+  return response.data.data;
 });
 
-// 行操作按钮权限，仅开放查看
-const permissionList = computed(() => ({
-  viewBtn: validData(permission.value.log_api_view, false),
-}));
+const displayValue = (value?: string) => value || '-';
 
-// 加载接口日志列表
-const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Partial<ApiLogEntity> = {}) => {
-  getApiList(pageData.currentPage, pageData.pageSize, Object.assign(params, query.value)).then(res => {
-    const listData = res.data.data;
-    page.total = listData.total;
-    data.value = listData.records;
-  });
+const handleSearch = () => {
+  void search({ ...searchForm.value });
 };
 
-// 条件检索
-const searchChange = (params: Partial<ApiLogEntity>, done: () => void) => {
-  query.value = params;
-  page.currentPage = 1;
-  onLoad(page, params);
-  done();
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
 };
 
-// 重置检索条件
-const searchReset = () => {
-  query.value = {};
-  onLoad(page);
+const handlePageChange = (nextPage: PaginationChange) => {
+  page.value = { ...page.value, ...nextPage };
+  void load();
 };
 
-// 切换页码
-const currentChange = (currentPage: number) => {
-  page.currentPage = currentPage;
+const openDetail = (row: ApiLogListItem) => {
+  clearDetail();
+  detailId.value = row.id;
+  drawerVisible.value = true;
+  void loadDetail(row.id);
 };
 
-// 调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.pageSize = pageSize;
+const retryDetail = () => {
+  if (detailId.value) void loadDetail(detailId.value);
 };
 
-// 打开详情抽屉前加载接口日志详情
-const beforeOpen = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getApiLogs(form.value.id).then(res => {
-      form.value = res.data.data;
-    });
-  }
-  done();
+const handleDrawerClose = () => {
+  clearDetail();
+  detailId.value = undefined;
 };
+
+onMounted(() => {
+  void load();
+});
 </script>
 
-<style>
+<style scoped lang="scss">
+.log-page {
+  min-width: 0;
+}
+
+.log-detail__pre {
+  max-height: 320px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 4px;
+  background: var(--saber-surface-muted);
+  color: var(--saber-text-secondary);
+  font-family: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+:deep(.el-descriptions__label) {
+  width: 112px;
+}
 </style>

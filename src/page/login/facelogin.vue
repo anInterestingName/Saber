@@ -1,42 +1,49 @@
 <template>
-  <basic-video ref="video"
-               :width="350">
-  </basic-video>
+  <div class="face-login">
+    <basic-video ref="video" :width="320"> </basic-video>
+  </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import basicVideo from '@/components/basic-video/main.vue'
+import { mapActions, mapState } from 'pinia';
+import basicVideo from '@/components/basic-video/main.vue';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 export default {
   components: {
-    basicVideo
+    basicVideo,
   },
-  data () {
+  data() {
     return {
+      timer: null,
       loginForm: {
-        username: "admin",
-        password: "123456",
-      }
-
-    }
+        username: 'admin',
+        password: '123456',
+      },
+    };
   },
-  created () {
-    setTimeout(() => {
-      this.handleLogin()
-    }, 6000)
+  created() {
+    this.timer = setTimeout(() => {
+      this.handleLogin();
+    }, 6000);
+  },
+  unmounted() {
+    clearTimeout(this.timer);
   },
   computed: {
-    ...mapGetters(["tagWel"])
+    ...mapState(useTagsStore, {
+      tagWel: store => store.homeTag,
+    }),
   },
   methods: {
-    handleLogin () {
-      this.$store.dispatch("LoginByUsername", this.loginForm).then(() => {
+    ...mapActions(useUserStore, ['LoginByUsername']),
+    handleLogin() {
+      this.LoginByUsername(this.loginForm).then(() => {
         this.$router.push(this.tagWel);
       });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
-<style>
-</style>
+<style></style>

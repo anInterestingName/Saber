@@ -12,23 +12,12 @@ export const validData = (val, defaultVal = false) => {
   }
   return validateNull(val) ? defaultVal : val;
 };
-/**
- * 在 Avue option 的 column 配置中按 prop 查找列对象。
- * 兼容扁平列数组 [{ prop }] 与分组列 [{ column: [{ prop }] }]。
- * @returns {import('@/types/column').ColumnSchema|null} 找到的 column 对象引用，未找到返回 null
- */
-export const findColumn = (arr, prop) => {
-  if (!Array.isArray(arr) || arr.length === 0) {
-    return null;
-  }
-  return arr.flatMap(item => item.column || [item]).find(col => col.prop === prop) || null;
-};
 //表单序列化
 export const serialize = data => {
   let list = [];
   Object.keys(data).forEach(ele => {
-    list.push(`${ele}=${data[ele]}`)
-  })
+    list.push(`${ele}=${data[ele]}`);
+  });
   return list.join('&');
 };
 export const getObjType = obj => {
@@ -43,7 +32,7 @@ export const getObjType = obj => {
     '[object RegExp]': 'regExp',
     '[object Undefined]': 'undefined',
     '[object Null]': 'null',
-    '[object Object]': 'object'
+    '[object Object]': 'object',
   };
   if (obj instanceof Element) {
     return 'element';
@@ -78,44 +67,26 @@ export const deepClone = data => {
 /**
  * 设置灰度模式
  */
-export const toggleGrayMode = (status) => {
-  if (status) {
-    document.body.className = document.body.className + ' grayMode';
-  } else {
-    document.body.className = document.body.className.replace(' grayMode', '');
-  }
+export const toggleGrayMode = status => {
+  document.body.classList.toggle('grayMode', status);
 };
-/**
- * 设置主题
- */
-export const setTheme = (name) => {
-  document.body.className = name;
-}
-
 /**
  * 加密处理
  */
-export const encryption = (params) => {
-  let {
-    data = {},
-    type,
-    param,
-    key
-  } = params;
+export const encryption = params => {
+  let { data = {}, type, param, key } = params;
   let result = JSON.parse(JSON.stringify(data));
   if (type === 'Base64') {
     param.forEach(ele => {
       result[ele] = Base64.stringify(result[ele]);
-    })
+    });
   } else if (type === 'Aes') {
     param.forEach(ele => {
-      result[ele] = sha256(result[ele], key)
-    })
-
+      result[ele] = sha256(result[ele], key);
+    });
   }
   return result;
 };
-
 
 /**
  * 浏览器判断是否全屏
@@ -130,20 +101,20 @@ export const fullscreenToggle = () => {
 /**
  * esc监听全屏
  */
-export const listenFullscreen = (callback) => {
-  function listen () {
-    callback()
+export const listenFullscreen = callback => {
+  function listen() {
+    callback();
   }
-  document.addEventListener("fullscreenchange", function () {
+  document.addEventListener('fullscreenchange', function () {
     listen();
   });
-  document.addEventListener("mozfullscreenchange", function () {
+  document.addEventListener('mozfullscreenchange', function () {
     listen();
   });
-  document.addEventListener("webkitfullscreenchange", function () {
+  document.addEventListener('webkitfullscreenchange', function () {
     listen();
   });
-  document.addEventListener("msfullscreenchange", function () {
+  document.addEventListener('msfullscreenchange', function () {
     listen();
   });
 };
@@ -228,7 +199,8 @@ export const diff = (obj1, obj2) => {
   delete obj1.close;
   const o1 = obj1 instanceof Object;
   const o2 = obj2 instanceof Object;
-  if (!o1 || !o2) { /*  判断不是对象  */
+  if (!o1 || !o2) {
+    /*  判断不是对象  */
     return obj1 === obj2;
   }
 
@@ -247,7 +219,7 @@ export const diff = (obj1, obj2) => {
     }
   }
   return true;
-}
+};
 /**
  * 根据字典的value显示label
  */
@@ -286,7 +258,9 @@ export const findArray = (dic, value) => {
  */
 export const randomLenNum = (len, date) => {
   let random = '';
-  random = Math.ceil(Math.random() * 100000000000000).toString().substr(0, len ? len : 4);
+  random = Math.ceil(Math.random() * 100000000000000)
+    .toString()
+    .substr(0, len ? len : 4);
   if (date) random = random + Date.now();
   return random;
 };
@@ -295,45 +269,63 @@ export const randomLenNum = (len, date) => {
  */
 export const openWindow = (url, title, w, h) => {
   // Fixes dual-screen position                            Most browsers       Firefox
-  const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : screen.left
-  const dualScreenTop = window.screenTop !== undefined ? window.screenTop : screen.top
+  const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : screen.left;
+  const dualScreenTop = window.screenTop !== undefined ? window.screenTop : screen.top;
 
-  const width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width
-  const height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height
+  const width = window.innerWidth
+    ? window.innerWidth
+    : document.documentElement.clientWidth
+    ? document.documentElement.clientWidth
+    : screen.width;
+  const height = window.innerHeight
+    ? window.innerHeight
+    : document.documentElement.clientHeight
+    ? document.documentElement.clientHeight
+    : screen.height;
 
-  const left = ((width / 2) - (w / 2)) + dualScreenLeft
-  const top = ((height / 2) - (h / 2)) + dualScreenTop
-  const newWindow = window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=yes, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left)
+  const left = width / 2 - w / 2 + dualScreenLeft;
+  const top = height / 2 - h / 2 + dualScreenTop;
+  const newWindow = window.open(
+    url,
+    title,
+    'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=yes, copyhistory=no, width=' +
+      w +
+      ', height=' +
+      h +
+      ', top=' +
+      top +
+      ', left=' +
+      left
+  );
 
   // Puts focus on the newWindow
   if (window.focus) {
-    newWindow.focus()
+    newWindow.focus();
   }
-}
+};
 
-
-export const getScreen = (isCollapse) => {
+export const getScreen = isCollapse => {
   if (document.body.clientWidth <= 768) {
-    return !isCollapse
+    return !isCollapse;
   } else {
-    return isCollapse
+    return isCollapse;
   }
-}
+};
 
 /**
  * 获取顶部地址栏地址
  */
 export const getTopUrl = () => {
-  return window.location.href.split("/#/")[0];
-}
+  return window.location.href.split('/#/')[0];
+};
 
 /**
  * 获取url参数
  * @param name 参数名
  */
-export const getQueryString = (name) => {
-  let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+export const getQueryString = name => {
+  let reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
   let r = window.location.search.substr(1).match(reg);
   if (r !== null) return unescape(decodeURI(r[2]));
   return null;
-}
+};

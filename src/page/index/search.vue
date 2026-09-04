@@ -1,31 +1,28 @@
 <template>
-  <div class="avue-searchs"
-       @click.self="handleEsc">
-    <div class="avue-searchs__title">Avue菜单搜索</div>
-    <div class="avue-searchs__content">
-      <div class="avue-searchs__form">
-        <el-input :placeholder="$t('search')"
-                  v-model="value"
-                  @keydown.esc="handleEsc">
+  <div class="saber-menu-search" @click.self="handleEsc">
+    <div class="saber-menu-search__title">菜单搜索</div>
+    <div class="saber-menu-search__content">
+      <div class="saber-menu-search__form">
+        <el-input :placeholder="$t('search')" v-model="value" @keydown.esc="handleEsc">
           <template #append>
-            <el-button icon="el-icon-search"></el-button>
+            <el-button aria-label="搜索">
+              <el-icon><Search /></el-icon>
+            </el-button>
           </template>
-
         </el-input>
-        <p>
-          <el-tag>你可以使用快捷键esc 关闭</el-tag>
-        </p>
       </div>
-      <div class="avue-searchs__list">
-        <el-scrollbar class="avue-searchs__scrollbar">
-          <div class="avue-searchs__item"
-               v-for="(item,index) in menus"
-               :key="index"
-               @click="handleSelect(item)">
-            <i :class="[item[iconKey],'avue-searchs__item-icon']"></i>
-            <span class="avue-searchs__item-title">{{item[labelKey]}}</span>
-            <div class="avue-searchs__item-path">
-              {{item[pathKey]}}
+      <div class="saber-menu-search__list">
+        <el-scrollbar class="saber-menu-search__scrollbar">
+          <div
+            class="saber-menu-search__item"
+            v-for="(item, index) in menus"
+            :key="index"
+            @click="handleSelect(item)"
+          >
+            <i :class="[item[iconKey], 'saber-menu-search__item-icon']"></i>
+            <span class="saber-menu-search__item-title">{{ item[labelKey] }}</span>
+            <div class="saber-menu-search__item-path">
+              {{ item[pathKey] }}
             </div>
           </div>
         </el-scrollbar>
@@ -35,49 +32,52 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { validateNull } from "@/utils/validate";
+import { mapActions, mapState } from 'pinia';
+import { validateNull } from '@/utils/validate';
+import { Search } from '@element-plus/icons-vue';
+import { useCommonStore } from '@/store/common';
+import { useUserStore } from '@/store/user';
 export default {
-  data () {
+  components: { Search },
+  data() {
     return {
-      value: "",
+      value: '',
       menus: [],
-      menuList: []
-    }
+      menuList: [],
+    };
   },
-  created () {
+  created() {
     this.getMenuList();
   },
   watch: {
-    value () {
+    value() {
       this.querySearch();
     },
-    menu () {
+    menu() {
       this.getMenuList();
-    }
+    },
   },
   computed: {
-    labelKey () {
-      return this.website.menu.label
+    labelKey() {
+      return this.website.menu.label;
     },
-    pathKey () {
-      return this.website.menu.path
+    pathKey() {
+      return this.website.menu.path;
     },
-    iconKey () {
-      return this.website.menu.icon
+    iconKey() {
+      return this.website.menu.icon;
     },
-    childrenKey () {
-      return (
-        this.website.menu.children
-      );
+    childrenKey() {
+      return this.website.menu.children;
     },
-    ...mapGetters(["menu"])
+    ...mapState(useUserStore, ['menu']),
   },
   methods: {
-    handleEsc () {
-      this.$store.commit('SET_IS_SEARCH', false)
+    ...mapActions(useCommonStore, ['setSearch']),
+    handleEsc() {
+      this.setSearch(false);
     },
-    getMenuList () {
+    getMenuList() {
       const findMenu = list => {
         for (let i = 0; i < list.length; i++) {
           const ele = Object.assign({}, list[i]);
@@ -92,54 +92,46 @@ export default {
       findMenu(this.menu);
       this.menus = this.menuList;
     },
-    querySearch () {
+    querySearch() {
       var restaurants = this.menuList;
-      var queryString = this.value
-      this.menus = queryString
-        ? this.menuList.filter(this.createFilter(queryString))
-        : restaurants;
+      var queryString = this.value;
+      this.menus = queryString ? this.menuList.filter(this.createFilter(queryString)) : restaurants;
     },
-    createFilter (queryString) {
+    createFilter(queryString) {
       return restaurant => {
-        return (
-          restaurant[this.labelKey].toLowerCase().indexOf(queryString.toLowerCase()) ===
-          0
-        );
+        return restaurant[this.labelKey].toLowerCase().indexOf(queryString.toLowerCase()) === 0;
       };
     },
-    handleSelect (item) {
-      this.value = "";
+    handleSelect(item) {
+      this.value = '';
       this.$router.push({
         path: item[this.pathKey],
-        query: item.query
+        query: item.query,
       });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-.avue-searchs {
+.saber-menu-search {
   padding-top: 50px;
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  color: var(--saber-text-primary);
+  background-color: var(--saber-surface);
   z-index: 1024;
   &__title {
-    margin-bottom: 60px;
+    margin-bottom: 40px;
     text-align: center;
-    font-size: 42px;
+    font-size: 28px;
     font-weight: bold;
-    letter-spacing: 2px;
-    text-indent: 2px;
+    letter-spacing: 0;
   }
   &__form {
     margin: 0 auto 50px auto;
     width: 50%;
     text-align: center;
-    p {
-      margin-top: 20px;
-    }
   }
   &__scrollbar {
     height: 400px;
@@ -150,16 +142,16 @@ export default {
     margin: 0 auto;
     width: 70%;
     border-radius: 4px;
-    border: 1px solid #ebeef5;
-    background-color: #fff;
+    border: 1px solid var(--saber-border);
+    background-color: var(--saber-surface-elevated);
     overflow: hidden;
-    color: #303133;
+    color: var(--saber-text-primary);
     transition: 0.3s;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   }
   &__item {
     padding: 5px 0;
-    border-bottom: 1px dashed #eee;
+    border-bottom: 1px dashed var(--saber-border);
     &-icon {
       margin-right: 5px;
       font-size: 18px;
@@ -167,11 +159,11 @@ export default {
     &-title {
       font-size: 20px;
       font-weight: 500;
-      color: #333;
+      color: var(--saber-text-primary);
     }
     &-path {
       line-height: 30px;
-      color: #666;
+      color: var(--saber-text-secondary);
     }
   }
 }

@@ -1,7 +1,7 @@
 <template>
-  <el-scrollbar class="avue-menu">
+  <el-scrollbar class="saber-menu">
     <div v-if="menu&&menu.length==0&&!isHorizontal"
-         class="avue-sidebar--tip">{{$t('menuTip')}}</div>
+         class="saber-sidebar--tip">{{$t('menuTip')}}</div>
     <el-menu unique-opened
              :default-active="activeMenu"
              :mode="setting.sidebar"
@@ -12,8 +12,11 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from 'pinia';
 import sidebarItem from "./sidebarItem.vue";
+import { useCommonStore } from '@/store/common';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 export default {
   name: "sidebar",
   components: { sidebarItem },
@@ -22,7 +25,11 @@ export default {
     this.index.openMenu()
   },
   computed: {
-    ...mapGetters(["isHorizontal", "setting", "menu", "tag", "isCollapse", "menuId"]),
+    ...mapState(useCommonStore, ['isHorizontal', 'setting', 'isCollapse']),
+    ...mapState(useUserStore, ['menu']),
+    ...mapState(useTagsStore, {
+      tag: store => store.currentTag,
+    }),
     activeMenu () {
       const route = this.$route;
       const { meta, path } = route;

@@ -27,13 +27,13 @@
     <el-row :span="24">
       <el-col :span="16">
         <basic-container>
-          <el-collapse v-model="activeNames" @change="handleChange">
+          <el-collapse v-model="activeNames">
             <el-collapse-item title="欢迎使用Saber" name="1">
-              <div>1.Saber是SpringBlade前端UI系统</div>
-              <div>2.对现有的avue2.0、element-ui库进行二次封装</div>
-              <div>3.100%兼容原生element-ui库</div>
-              <div>4.基于json驱动的模块配置，打造最好用的vuejs中后台脚手架</div>
-              <div>5.使用Saber可以大幅度提升开发效率，不再为重复工作发愁</div>
+              <div>1.Saber 是 SpringBlade 的 Vue 3 管理端</div>
+              <div>2.基于 Vue 3.5、TypeScript、Vite 5 与 Element Plus 构建</div>
+              <div>3.同时兼容 SpringBlade Boot 与 Cloud 后端接口</div>
+              <div>4.提供动态菜单、按钮权限、主题、国际化与标签页能力</div>
+              <div>5.业务页面统一采用 Composition API 与 TypeScript</div>
             </el-collapse-item>
             <el-collapse-item title="什么是BladeX" name="2">
               <div>1.BladeX是一款精心设计的微服务架构，提供 SpringCloud 全套解决方案</div>
@@ -143,11 +143,11 @@
               <span>
                 <el-tag>SpringBlade企业级微服务开发平台</el-tag>
               </span>
-              <el-divider content-position="right"><i class="el-icon-star-off" /></el-divider>
+              <el-divider content-position="right"><el-icon><Star /></el-icon></el-divider>
               <span>账号密码</span>
               <el-divider direction="vertical" />
               <el-tag effect="plain">管理员(admin)</el-tag>
-              <el-divider content-position="right"><i class="el-icon-star-off" /></el-divider>
+              <el-divider content-position="right"><el-icon><Star /></el-icon></el-divider>
               <span>官网地址</span>
               <el-divider direction="vertical" />
               <span>
@@ -155,7 +155,7 @@
                   >https://bladex.cn</el-link
                 >
               </span>
-              <el-divider content-position="right"><i class="el-icon-star-off" /></el-divider>
+              <el-divider content-position="right"><el-icon><Star /></el-icon></el-divider>
               <span>社区地址</span>
               <el-divider direction="vertical" />
               <span>
@@ -163,7 +163,7 @@
                   >https://sns.bladex.cn</el-link
                 >
               </span>
-              <el-divider content-position="right"><i class="el-icon-star-off" /></el-divider>
+              <el-divider content-position="right"><el-icon><Star /></el-icon></el-divider>
               <span>获取文档</span>
               <el-divider direction="vertical" />
               <span class="tag-group">
@@ -181,7 +181,7 @@
                   >收费版</el-tag
                 >
               </span>
-              <el-divider content-position="right"><i class="el-icon-star-off" /></el-divider>
+              <el-divider content-position="right"><el-icon><Star /></el-icon></el-divider>
               <span>获取源码</span>
               <el-divider direction="vertical" />
               <span class="tag-group">
@@ -206,7 +206,7 @@
         </el-col>
         <el-col :span="24">
           <basic-container>
-            <el-collapse v-model="logActiveNames" @change="handleChange">
+          <el-collapse v-model="logActiveNames">
               <el-collapse-item
                 title="5.0.1发布 增强角色判定与角色分配归属校验，建立全 TS 工程化底座"
                 name="48"
@@ -252,7 +252,7 @@
                 <div>19.[新增]Swagger @ApiOrder 注解，支持接口文档自定义排序</div>
                 <div>20.[新增]SysCache、DictCache、UserCache 系统缓存工具类</div>
                 <div>21.[新增]全局异常适配 SF7 方法级校验与 404、413 处理</div>
-                <div>22.[新增]Saber 新增 validData、findColumn 自研工具函数</div>
+                <div>22.[新增]Saber 新增通用数据处理工具函数</div>
                 <div>23.[优化]MybatisPlus IService 迁移至 spring.service 包</div>
                 <div>24.[优化]适配 Boot4 自动配置拆包，迁移底层模块 import</div>
                 <div>25.[优化]Servlet 编码配置前缀迁移为 spring.servlet.encoding</div>
@@ -261,11 +261,11 @@
                 <div>28.[优化]Saber 前端页面全量重构为 script setup + TypeScript</div>
               </el-collapse-item>
               <el-collapse-item title="4.10.0发布 新增TenantGuard租户守卫工具" name="46">
-                <div>1.[升级]Avue 至 3.9.x，适配新版 i18n 接入方式与表头样式</div>
+                <div>1.[升级]旧版组件库 至 3.9.x，适配新版 i18n 接入方式与表头样式</div>
                 <div>2.[新增]TenantGuard 租户守卫工具，规避线程工具指定租户ID时的越权风险</div>
                 <div>3.[新增]APPLICATION_AI_NAME 应用常量，统一 AI 模块命名规范</div>
                 <div>
-                  4.[修复]avue-crud 行 hover 状态下固定列背景色丢失，统一序号列与操作栏视觉表现
+                  4.[修复]旧版 CRUD 组件 行 hover 状态下固定列背景色丢失，统一序号列与操作栏视觉表现
                 </div>
                 <div>5.[优化]更新登录页品牌 logo 资源</div>
               </el-collapse-item>
@@ -432,8 +432,8 @@
                 <div>3.升级 Mybatis-Plus 至 3.5.3.2</div>
                 <div>4.升级 Mybatis-Plus-Generator 至 3.5.3.2</div>
                 <div>5.升级 Druid 至 1.2.19</div>
-                <div>6.升级 Avue2 至 2.10.16</div>
-                <div>7.升级 Avue3 至 3.2.19</div>
+                <div>6.升级 旧版组件库 至 2.10.16</div>
+                <div>7.升级 旧版组件库 至 3.2.19</div>
                 <div>8.新增 Token加密传输功能，提升系统安全性</div>
                 <div>9.新增 后端对Token加密增加强制校验的功能</div>
                 <div>10.优化 INode树形节点封装，增加泛型支持</div>
@@ -450,8 +450,8 @@
                 <div>8.升级 Seata 至 1.6.1</div>
                 <div>9.升级 Knife4j 至 4.1.0</div>
                 <div>10.升级 Log4j 至 2.20.0</div>
-                <div>11.升级 Avue2 至 2.10.10</div>
-                <div>12.升级 Avue3 至 3.2.13</div>
+                <div>11.升级 旧版组件库 至 2.10.10</div>
+                <div>12.升级 旧版组件库 至 3.2.13</div>
                 <div>13.新增 基于Vue3与Element-Plus版本的Saber正式发布</div>
                 <div>14.新增 关闭Token默认签名，用户需自行设置后启动服务</div>
                 <div>15.新增 Vue3版代码生成</div>
@@ -537,8 +537,8 @@
                 <div>2.升级 SpringCloud 至 2020.0.2</div>
                 <div>3.升级 AlibabaCloud 至 2.2.5.RELEASE</div>
                 <div>4.升级 FastJson 至 1.2.75</div>
-                <div>5.升级 Avue 至 2.8.2</div>
-                <div>6.升级 ElementUI 至 2.15.1</div>
+                <div>5.升级 旧版组件库 至 2.8.2</div>
+                <div>6.升级旧版 UI 组件库至 2.15.1</div>
                 <div>7.新增支持Nacos2.0长链接特性</div>
                 <div>8.优化七牛云地域配置为自动获取</div>
                 <div>9.优化Xss过滤支持通配符匹配逻辑</div>
@@ -550,7 +550,7 @@
                 <div>1.升级 SpringBoot 至 2.4.2</div>
                 <div>2.升级 SpringCloud 至 2020.0.1</div>
                 <div>3.升级 Mybatis-Plus 至 3.4.2</div>
-                <div>4.升级 Avue 至 2.7.6</div>
+                <div>4.升级 旧版组件库 至 2.7.6</div>
                 <div>5.升级适配 Knife4j 2.0.8</div>
                 <div>6.新增独立的Swagger网关</div>
                 <div>7.新增代码生成的SqlServer驱动判断</div>
@@ -567,7 +567,7 @@
                 <div>5.升级 Mybatis-Plus 至 3.4.1</div>
                 <div>6.升级 Knife4j 至 2.0.8</div>
                 <div>7.升级 Seata 至 1.4.1</div>
-                <div>8.升级 Avue 至 2.7.5</div>
+                <div>8.升级 旧版组件库 至 2.7.5</div>
                 <div>9.新增Sentinel自动熔断逻辑</div>
                 <div>10.新增Sentinel全局限流控制器</div>
                 <div>11.新增BladeCloudApplication注解</div>
@@ -625,7 +625,7 @@
                 <div>4.升级至 MybatisPlus 3.3.2</div>
                 <div>5.升级至 Kinfe4j 2.0.3</div>
                 <div>6.升级至 FastJson 1.2.70</div>
-                <div>7.升级至 Avue 2.5.3</div>
+                <div>7.升级至 旧版组件库 2.5.3</div>
                 <div>8.新增行政区划管理模块</div>
                 <div>9.优化用户导入的密码配置逻辑</div>
                 <div>10.优化INode结构支持懒加载数据格式</div>
@@ -638,7 +638,7 @@
               >
                 <div>1.升级至 SpringCloud Hoxton.SR3</div>
                 <div>2.升级至 SpringBoot 2.2.6.RELEASE</div>
-                <div>3.升级至 Avue 2.5.0</div>
+                <div>3.升级至 旧版组件库 2.5.0</div>
                 <div>4.升级Saber内核，采用最新版本API，优化交互体验</div>
                 <div>5.新增岗位管理模块</div>
                 <div>6.新增用户导入导出模块</div>
@@ -747,7 +747,7 @@
               </el-collapse-item>
               <el-collapse-item title="2.3.1发布 升级业务架构" name="4">
                 <div>1.升级 SpringBoot 2.1.5</div>
-                <div>2.前端框架Saber升级 element-ui 2.8.2</div>
+                <div>2.前端框架Saber升级 旧版 UI 组件库 2.8.2</div>
                 <div>3.Saber业务代码升级</div>
                 <div>4.优化Saber代码生成模板</div>
                 <div>5.统一日志业务表基础字段</div>
@@ -807,6 +807,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Star } from '@element-plus/icons-vue';
 import thirdRegister from '@/components/third-register/main.vue';
 
 defineOptions({ name: 'wel' });
@@ -815,10 +816,6 @@ defineOptions({ name: 'wel' });
 const activeNames = ref(['1', '2', '3', '5']);
 const logActiveNames = ref(['48']);
 
-// 折叠面板展开状态变化回调
-const handleChange = (val: string | number | Array<string | number>) => {
-  console.log(val);
-};
 </script>
 
 <style>

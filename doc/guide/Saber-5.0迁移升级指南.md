@@ -35,7 +35,7 @@
 | 目标范式 | `<script setup lang="ts">` + Composition API + 轻量 TS |
 | option 组织 | 一律**内联**在 `.vue` 内（`src/views/` **不使用** `mixins/crud.js`） |
 | 参照样板 | `src/views/system/dict.vue`（系统管理类）、`src/views/authority/role.vue`（权限/树类） |
-| 尚未迁移 | `src/components/`、`src/page/`、`src/mac/` 下的 `.vue` 仍为 Options API（属渐进迁移的允许混用状态） |
+| 尚未迁移 | `src/components/`、`src/page/` 下的部分 `.vue` 仍为 Options API（属渐进迁移的允许混用状态） |
 | 基础设施层 | 第三阶段已由 `.js` 全量转为 `.ts`（§10）；仅 `mixins/crud.js` 与 `vite/plugins/*.js` 保留 JS |
 | 工具链 | 第一阶段无新增；第二阶段引入 `vue-tsc` 类型门禁（§9.1）；第四阶段构建配置层转 `.mts` 并引入 `tsconfig.node.json` 独立检查工程（§11）。`pnpm build` 始终为 esbuild 纯转译 |
 
@@ -342,7 +342,7 @@ const rowSave = (row: DictForm, done: () => void, loading: () => void) => { /* .
 
 1. 对齐 `src/utils/validate.js`、`src/utils/util.js` 的函数命名（§2.1），确认新增 `validData` / `findColumn`（§3）。
 2. 全局搜索旧函数名残留并替换（§2.1 命令）。
-3. 排查 `src/page/`、`src/components/`、`src/mac/` 中对 `this.validData` / `this.findObject` / `this.validatenull` 等**已移除全局方法**的引用，改为显式 import（§2.2）。
+3. 排查 `src/page/`、`src/components/` 中对 `this.validData` / `this.findObject` / `this.validatenull` 等**已移除全局方法**的引用，改为显式 import（§2.2）。
 
 ### 阶段二 · 逐页面迁移 `src/views/`（对每个 `.vue`）
 
@@ -488,9 +488,6 @@ axios 自定义配置字段（`meta` / `cryptoToken`）、`window.axios` / `wind
 | `util.js findByValue` | 数组翻译未命中时误回填整个数组 | 回填当前元素 `ele` |
 | `utils/store.js` | boolean 反序列化走 `eval`；两处 `<=` 循环越界产出 `name: null` 脏条目 | 直取值 / 修正边界 |
 | `mixins/crud.js` | `rowDel` 默认取 `api['del']`，但全仓 API 删除函数均名 `remove`，调用必抛 TypeError | 默认改 `remove`；二开工程若确有 `del` 导出，经 `option.del` 显式指定 |
-| `mac/login.vue` | 提交未声明的 `this.loginForm`（data 中为 `form`），macOS 主题登录必然失败 | 改提交 `this.form` |
-| `mac/lock.vue` / `mac/index.vue` / `page/lock/index.vue` | `userInfo.username` 为旧字段（顶栏已于早期提交改为 `userName`，此三处漏改） | 锁屏 / mac 主题正确显示用户名 |
-| `mac/index.vue` / `page/lock/index.vue` / `codelogin.vue` | `setInterval` 未清理，组件销毁后定时器泄漏 | `timer` 状态 + `unmounted` 清理 |
 | `components/basic-video/plugin.js` | 监听不存在的 `loadmetadata` 事件，视频流就绪后不会自动播放 | 改 `loadedmetadata` |
 | `mockProdServer.js` | 引用不存在的 `mock/` 目录，坏引用死文件 | 删除 |
 

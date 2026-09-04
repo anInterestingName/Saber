@@ -41,7 +41,9 @@
 
 <script>
 import { isValidateMobile } from "utils/validate";
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 export default {
   name: "codelogin",
   data () {
@@ -83,7 +85,9 @@ export default {
     clearInterval(this.timer);
   },
   computed: {
-    ...mapGetters(["tagWel"]),
+    ...mapState(useTagsStore, {
+      tagWel: store => store.homeTag,
+    }),
     config () {
       return {
         MSGINIT: this.$t("login.msgText"),
@@ -94,6 +98,7 @@ export default {
   },
   props: [],
   methods: {
+    ...mapActions(useUserStore, ['LoginByPhone']),
     handleSend () {
       if (this.msgKey) return;
       this.msgText = this.msgTime + this.config.MSGSCUCCESS;
@@ -112,7 +117,7 @@ export default {
     handleLogin () {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
-          this.$store.dispatch("LoginByPhone", this.loginForm).then(() => {
+          this.LoginByPhone(this.loginForm).then(() => {
             this.$router.push(this.tagWel);
           });
         }

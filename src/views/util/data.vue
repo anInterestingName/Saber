@@ -1,199 +1,240 @@
 <template>
   <basic-container>
-    <h3>数据展示</h3>
-    <avue-data-pay :option="option"></avue-data-pay>
+    <div class="capability-page">
+      <header class="capability-page__header">
+        <div>
+          <h2>平台能力矩阵</h2>
+          <p>按使用场景查看当前前端能力及适用边界。</p>
+        </div>
+        <el-segmented v-model="activeGroup" :options="groupOptions" />
+      </header>
+
+      <div class="capability-page__content">
+        <section class="capability-page__table" aria-label="能力列表">
+          <el-table :data="visibleItems" row-key="name">
+            <el-table-column prop="name" label="能力名称" min-width="180" />
+            <el-table-column prop="scope" label="适用范围" min-width="260" />
+            <el-table-column label="状态" width="96" align="center">
+              <template #default="{ row }">
+                <el-tag :type="statusType[row.status]" effect="light">
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+        </section>
+
+        <aside class="capability-page__summary" aria-label="分组摘要">
+          <h3>{{ activeSummary.title }}</h3>
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="定位">{{ activeSummary.purpose }}</el-descriptions-item>
+            <el-descriptions-item label="可用能力">
+              {{ statusCount.available }} 项
+            </el-descriptions-item>
+            <el-descriptions-item label="规划能力">
+              {{ statusCount.planned }} 项
+            </el-descriptions-item>
+            <el-descriptions-item label="受限能力">
+              {{ statusCount.restricted }} 项
+            </el-descriptions-item>
+          </el-descriptions>
+          <el-alert
+            class="capability-page__note"
+            :title="activeSummary.note"
+            type="info"
+            :closable="false"
+            show-icon
+          />
+        </aside>
+      </div>
+    </div>
   </basic-container>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { computed, ref } from 'vue';
+import type { TagProps } from 'element-plus';
 
-// 弹窗显隐标记
-const box = ref(false);
+type CapabilityGroup = '基础能力' | '协作能力' | '治理能力';
+type CapabilityStatus = '可用' | '规划' | '受限';
 
-// 数据展示配置
-const option = reactive({
-  span: 8,
-  data: [
-    {
-      title: '后台模版',
-      src: '/img/bg/vip1.png',
-      money: '299',
-      dismoney: '199',
-      tip: '/永久',
-      color: '#808695',
-      subtext: '购买',
-      click: () => {
-        box.value = true;
-      },
-      list: [
-        {
-          title: '点击体验',
-          href: 'https://cli1.avue.top',
-          check: true,
-        },
-        {
-          title: '面向全屏幕尺寸的响应式适配能力',
-          check: true,
-        },
-        {
-          title: '支持IE9+等系列浏览器',
-          check: true,
-        },
-        {
-          title: '全新的前端错误日志监控机制',
-          check: true,
-        },
-        {
-          title: '基于最新的avuex底层开发',
-          check: true,
-        },
-        {
-          title: '前端路由动态服务端加载',
-          check: true,
-        },
-        {
-          title: '灵活的多款主题自由配置',
-          check: true,
-        },
-        {
-          title: '模块的可拆卸化,达到开箱即用',
-          check: true,
-        },
-        {
-          title: '免费的私人git私服',
-        },
-        {
-          title: '专属会员群',
-        },
-        {
-          title: '前端最新干货分享',
-        },
-        {
-          title: '赠送 Avue-cli脚手架文档（价值¥59.99）',
-          href: 'https://www.kancloud.cn/smallwei/avue',
-        },
-        {
-          title: '赠送 Avue 修仙系列视频教程',
-          href: 'https://www.bilibili.com/video/av24644922',
-          check: true,
-        },
-      ],
-    },
-    {
-      title: 'Avuex源码',
-      src: '/img/bg/vip2.png',
-      color: '#ffa820',
-      money: '999',
-      dismoney: '399',
-      tip: '/永久',
-      subtext: '购买',
-      click: () => {
-        box.value = true;
-      },
-      list: [
-        {
-          title: '一键集成表格的导出excel,打印,等功能',
-          check: true,
-        },
-        {
-          title: '底层代码可重用轻松对接多个UI框架',
-          check: true,
-        },
-        {
-          title: '底层更加完善的开发错误调试机制',
-          check: true,
-        },
-        {
-          title: '一套代码多个终端自适应',
-          check: true,
-        },
-        {
-          title: '一键集成表格的导出excel，打印，等常用功能',
-          check: true,
-        },
-        {
-          title: '表格的批量操作,表单的级联操作更加便捷',
-          check: true,
-        },
-        {
-          title: '新增大量常用组件（搜索，选项卡）',
-          check: true,
-        },
-        {
-          title: '新增大量全新可配置的骚属性',
-          check: true,
-        },
-        {
-          title: '丰富的数据展示模版组件包',
-          check: true,
-        },
-        {
-          title: '专属的开发者文档，助你快速掌握',
-          check: true,
-        },
-        {
-          title: '赠送 Avue-cli脚手架文档（价值¥59.99）',
-          href: 'https://www.kancloud.cn/smallwei/avue',
-          check: true,
-        },
-        {
-          title: '赠送 Avue 修仙系列视频教程',
-          href: 'https://www.bilibili.com/video/av24644922',
-          check: true,
-        },
-      ],
-    },
-    {
-      title: '全家桶',
-      src: '/img/bg/vip3.png',
-      color: '#ef4868',
-      money: '999.99',
-      dismoney: '399.99',
-      tip: '/永久',
-      subtext: '购买',
-      click: () => {
-        box.value = true;
-      },
-      list: [
-        {
-          title: '授权商业化开发,永久更新授权使用',
-          check: true,
-        },
-        {
-          title: '后期更新和新产品将全部免费',
-          check: true,
-        },
-        {
-          title: '拥有avuex系列的全部特权和全部源码',
-          check: true,
-        },
-        {
-          title: '免费的私人git私服',
-          check: true,
-        },
-        {
-          title: '专属会员群',
-          check: true,
-        },
-        {
-          title: '前端最新干货分享',
-          check: true,
-        },
-        {
-          title: '赠送 Avue-cli脚手架文档（价值¥59.99）',
-          href: 'https://www.kancloud.cn/smallwei/avue',
-          check: true,
-        },
-        {
-          title: '赠送 Avue 修仙系列视频教程',
-          href: 'https://www.bilibili.com/video/av24644922',
-          check: true,
-        },
-      ],
-    },
-  ],
-});
+interface CapabilityItem {
+  group: CapabilityGroup;
+  name: string;
+  scope: string;
+  status: CapabilityStatus;
+}
+
+interface CapabilitySummary {
+  title: string;
+  purpose: string;
+  note: string;
+}
+
+const groupOptions: CapabilityGroup[] = ['基础能力', '协作能力', '治理能力'];
+const activeGroup = ref<CapabilityGroup>('基础能力');
+const items: CapabilityItem[] = [
+  {
+    group: '基础能力',
+    name: '动态菜单与路由',
+    scope: '服务端菜单、站内页面、外链与标签页导航',
+    status: '可用',
+  },
+  {
+    group: '基础能力',
+    name: '响应式工作区',
+    scope: '桌面、平板和移动端管理页面',
+    status: '可用',
+  },
+  {
+    group: '基础能力',
+    name: '离线业务缓存',
+    scope: '需要跨会话保存业务数据的页面',
+    status: '受限',
+  },
+  {
+    group: '协作能力',
+    name: '国际化标题',
+    scope: '菜单、标签页和浏览器标题联动',
+    status: '可用',
+  },
+  {
+    group: '协作能力',
+    name: '文件上传与下载',
+    scope: '使用现有认证与资源服务的业务流程',
+    status: '可用',
+  },
+  {
+    group: '协作能力',
+    name: '实时协同编辑',
+    scope: '多人同时编辑同一业务记录',
+    status: '规划',
+  },
+  {
+    group: '治理能力',
+    name: '按钮权限',
+    scope: '菜单按钮显示与服务端最终授权',
+    status: '可用',
+  },
+  {
+    group: '治理能力',
+    name: '租户隔离',
+    scope: '由后端租户上下文控制的数据访问',
+    status: '可用',
+  },
+  {
+    group: '治理能力',
+    name: '客户端安全审计',
+    scope: '浏览器侧完整操作留痕与集中分析',
+    status: '规划',
+  },
+];
+
+const summaries: Record<CapabilityGroup, CapabilitySummary> = {
+  基础能力: {
+    title: '基础能力',
+    purpose: '支撑菜单导航、页面布局和通用交互。',
+    note: '示例仅展示本地数据，不会发起业务写请求。',
+  },
+  协作能力: {
+    title: '协作能力',
+    purpose: '覆盖国际化、资源流转和跨角色协作场景。',
+    note: '文件能力需由现有后端资源服务与账号权限共同提供。',
+  },
+  治理能力: {
+    title: '治理能力',
+    purpose: '呈现权限、租户和安全边界的当前状态。',
+    note: '前端权限只控制交互入口，服务端仍是最终安全边界。',
+  },
+};
+
+const statusType: Record<CapabilityStatus, TagProps['type']> = {
+  可用: 'success',
+  规划: 'info',
+  受限: 'warning',
+};
+
+const visibleItems = computed(() => items.filter(item => item.group === activeGroup.value));
+const activeSummary = computed(() => summaries[activeGroup.value]);
+const statusCount = computed(() => ({
+  available: visibleItems.value.filter(item => item.status === '可用').length,
+  planned: visibleItems.value.filter(item => item.status === '规划').length,
+  restricted: visibleItems.value.filter(item => item.status === '受限').length,
+}));
 </script>
-<style>
+
+<style scoped lang="scss">
+.capability-page {
+  min-width: 0;
+}
+
+.capability-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--saber-border);
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    color: var(--saber-text-primary);
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--saber-text-secondary);
+    line-height: 22px;
+  }
+}
+
+.capability-page__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  padding-top: 20px;
+}
+
+.capability-page__table {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.capability-page__summary {
+  min-width: 0;
+
+  h3 {
+    margin: 0 0 12px;
+    color: var(--saber-text-primary);
+    font-size: 16px;
+    line-height: 24px;
+  }
+}
+
+.capability-page__note {
+  margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+  .capability-page__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .capability-page__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  :deep(.el-segmented) {
+    width: 100%;
+  }
+}
 </style>

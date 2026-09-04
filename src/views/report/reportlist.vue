@@ -1,54 +1,120 @@
 <template>
-  <basic-container>
-    <avue-crud :option="option"
-               :table-loading="loading"
-               :data="data"
-               ref="crudRef"
-               v-model="form"
-               v-model:page="page"
-               :permission="permissionList"
-               @row-del="rowDel"
-               @search-change="searchChange"
-               @search-reset="searchReset"
-               @selection-change="selectionChange"
-               @current-change="currentChange"
-               @size-change="sizeChange"
-               @refresh-change="refreshChange"
-               @on-load="onLoad">
-      <template #menu-left>
-        <el-button type="danger"
-                   icon="el-icon-delete"
-                   plain
-                   @click="handleDelete">删 除
+  <div class="report-list-page">
+    <search-panel
+      :model="searchForm"
+      :loading="loading"
+      @search="handleSearch"
+      @reset="handleReset"
+    >
+      <el-col :xs="24" :sm="12" :md="8">
+        <el-form-item label="文件名">
+          <el-input v-model="searchForm.name" clearable placeholder="请输入文件名" />
+        </el-form-item>
+      </el-col>
+    </search-panel>
+
+    <list-panel title="报表列表">
+      <template #actions>
+        <el-button
+          type="danger"
+          plain
+          :icon="Delete"
+          :disabled="loading"
+          @click="handleBatchDelete"
+        >
+          删除
         </el-button>
       </template>
-      <template #menu="scope">
-        <el-button text
-                   type="primary"
-                   icon="el-icon-edit"
-                   @click.stop="handleDesign(scope.row.name)">设计
-        </el-button>
-        <el-button text
-                   type="primary"
-                   icon="el-icon-view"
-                   @click.stop="handlePreview(scope.row.name)">预览
-        </el-button>
+      <template #tools>
+        <el-tooltip content="刷新" placement="top">
+          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
+        </el-tooltip>
       </template>
-      <template #name="{row}">
-        <el-tag style="cursor:pointer"
-                @click="handlePreview(row.name)">{{ row.name }}</el-tag>
+
+      <el-table
+        ref="tableRef"
+        v-loading="loading"
+        :data="data"
+        row-key="id"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" fixed="left" width="48" />
+        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+        <el-table-column prop="name" label="文件名" min-width="240" show-overflow-tooltip>
+          <template #default="{ row }">
+            <el-button
+              type="primary"
+              link
+              :disabled="!row.name || loading"
+              @click="handlePreview(row.name)"
+            >
+              {{ row.name || '-' }}
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="创建时间" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="updateTime" label="更新时间" min-width="180" show-overflow-tooltip />
+        <el-table-column label="操作" fixed="right" width="200" align="center">
+          <template #default="{ row }">
+            <div class="report-actions">
+              <el-button
+                type="primary"
+                link
+                :icon="Edit"
+                :disabled="!row.name || loading"
+                @click="handleDesign(row.name)"
+              >
+                设计
+              </el-button>
+              <el-button
+                type="primary"
+                link
+                :icon="View"
+                :disabled="!row.name || loading"
+                @click="handlePreview(row.name)"
+              >
+                预览
+              </el-button>
+              <el-button
+                type="danger"
+                link
+                :icon="Delete"
+                :disabled="loading"
+                @click="handleRowDelete(row as ReportEntity)"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <list-pagination
+          v-model:current-page="page.currentPage"
+          v-model:page-size="page.pageSize"
+          :total="page.total"
+          :disabled="loading"
+          @change="handlePageChange"
+        />
       </template>
-    </avue-crud>
-  </basic-container>
+    </list-panel>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { onMounted, ref, watch } from 'vue';
+import { Delete, Edit, Refresh, View } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox, type TableInstance } from 'element-plus';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import ListPagination from '@/components/list-pagination/main.vue';
+import { usePagedList } from '@/composables/usePagedList';
+import { useTableSelection } from '@/composables/useTableSelection';
 import { getList, remove } from '@/api/report/report';
 import website from '@/config/website';
+import type { PaginationChange } from '@/types/list';
 
-// 数据实体
 interface ReportEntity {
   id: string;
   name?: string;
@@ -56,170 +122,121 @@ interface ReportEntity {
   updateTime?: string;
 }
 
-// 新增与编辑共用的表单模型，字段均可选
-type ReportForm = Partial<ReportEntity>;
+interface ReportQuery {
+  name?: string;
+}
 
-// 表格实例与数据状态
-const crudRef = ref();
-const form = ref<ReportForm>({});
-const data = ref<ReportEntity[]>([]);
-const selectionList = ref<ReportEntity[]>([]);
-const query = ref<Partial<ReportEntity>>({});
-const loading = ref(true);
+type ReportListResponse = Awaited<ReturnType<typeof getList>>;
+type ReportPage = 'designer' | 'preview';
 
-// 分页参数（整体替换，需用 ref）
-const page = ref({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const createInitialQuery = (): ReportQuery => ({});
+
+const searchForm = ref<ReportQuery>(createInitialQuery());
+const tableRef = ref<TableInstance>();
+
+const { data, page, loading, load, search, reset, refresh } = usePagedList<
+  ReportEntity,
+  ReportQuery,
+  ReportListResponse
+>({
+  fetcher: (current, size, query) => getList(current, size, query),
+  resolveResponse: response => ({
+    records: response.data.data.records,
+    total: response.data.data.total,
+  }),
+  createInitialQuery,
 });
+const { selectedRows, ids, handleSelectionChange, clearSelection } =
+  useTableSelection<ReportEntity>();
 
-// 选中行 id 集合，供批量删除使用
-const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
-
-// 表格配置
-const option = reactive({
-  height: 'auto',
-  calcHeight: 210,
-  tip: false,
-  searchShow: true,
-  searchMenuSpan: 6,
-  border: true,
-  index: true,
-  selection: true,
-  viewBtn: true,
-  dialogClickModal: false,
-  column: [
-    {
-      label: '文件名',
-      prop: 'name',
-      search: true,
-      slot: true,
-    },
-    {
-      label: '创建时间',
-      prop: 'createTime',
-    },
-    {
-      label: '更新时间',
-      prop: 'updateTime',
-    },
-  ],
-});
-
-// 行操作按钮权限，仅开放删除
-const permissionList = computed(() => ({
-  addBtn: false,
-  viewBtn: false,
-  delBtn: true,
-  editBtn: false,
-}));
-
-// 加载列表数据
-const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Partial<ReportEntity> = {}) => {
-  loading.value = true;
-  getList(pageData.currentPage, pageData.pageSize, Object.assign(params, query.value)).then(res => {
-    const list = res.data.data;
-    page.value.total = list.total;
-    data.value = list.records;
-    loading.value = false;
-    selectionClear();
-  });
+const clearTableSelection = () => {
+  clearSelection();
+  tableRef.value?.clearSelection();
 };
 
-// 条件检索
-const searchChange = (params: Partial<ReportEntity>, done: () => void) => {
-  query.value = params;
-  page.value.currentPage = 1;
-  onLoad(page.value, params);
-  done();
+watch(data, clearTableSelection, { flush: 'post' });
+
+const handleSearch = () => {
+  void search({ ...searchForm.value });
 };
 
-// 重置检索条件
-const searchReset = () => {
-  query.value = {};
-  onLoad(page.value);
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
 };
 
-// 切换页码
-const currentChange = (currentPage: number) => {
-  page.value.currentPage = currentPage;
+const handlePageChange = (nextPage: PaginationChange) => {
+  page.value = { ...page.value, ...nextPage };
+  void load();
 };
 
-// 调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.value.pageSize = pageSize;
-};
-
-// 刷新当前列表
-const refreshChange = () => {
-  onLoad(page.value, query.value);
-};
-
-// 记录当前选中行
-const selectionChange = (list: ReportEntity[]) => {
-  selectionList.value = list;
-};
-
-// 清空选中状态
-const selectionClear = () => {
-  selectionList.value = [];
-  crudRef.value.toggleSelection();
-};
-
-// 删除单行
-const rowDel = (row: ReportEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(row.id);
-    })
-    .then(() => {
-      onLoad(page.value);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
+const confirmDelete = async (deleteIds: string) => {
+  try {
+    await ElMessageBox.confirm('确定将选择数据删除?', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     });
+    await remove(deleteIds);
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 用户取消或接口失败时保留当前列表和选择状态。
+  }
 };
 
-// 批量删除选中行
-const handleDelete = () => {
-  if (selectionList.value.length === 0) {
+const handleRowDelete = (row: ReportEntity) => {
+  void confirmDelete(row.id);
+};
+
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(ids.value);
-    })
-    .then(() => {
-      onLoad(page.value);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
+  void confirmDelete(ids.value);
 };
 
-// 打开报表设计器
-const handleDesign = (name: string) => {
-  window.open(`${website.reportUrl}/designer?_u=blade-${name}`);
+const buildReportUrl = (pageName: ReportPage, name: string) => {
+  const url = new URL(website.reportUrl, window.location.origin);
+  url.pathname = `${url.pathname.replace(/\/$/, '')}/${pageName}`;
+  url.searchParams.set('_u', `blade-${name}`);
+  return url.toString();
 };
 
-// 打开报表预览
-const handlePreview = (name: string) => {
-  window.open(`${website.reportUrl}/preview?_u=blade-${name}`);
+const openReport = (pageName: ReportPage, name?: string) => {
+  if (!name) return;
+  const reportWindow = window.open(buildReportUrl(pageName, name), '_blank', 'noopener,noreferrer');
+  if (!reportWindow) ElMessage.warning('报表页面未能打开，请检查浏览器弹窗设置');
 };
+
+const handleDesign = (name?: string) => openReport('designer', name);
+const handlePreview = (name?: string) => openReport('preview', name);
+
+onMounted(() => {
+  void load();
+});
 </script>
 
-<style>
+<style scoped lang="scss">
+.report-list-page {
+  min-width: 0;
+}
+
+.report-actions {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  gap: 4px;
+
+  :deep(.el-button) {
+    min-width: 52px;
+    height: 32px;
+    margin-left: 0;
+    padding: 4px 6px;
+  }
+}
 </style>

@@ -8,12 +8,14 @@
                v-model="box"
                width="60%"
                append-to-body>
-      <el-button type="primary"
-                 icon="el-icon-upload"
-                 @click="send">上传服务器</el-button>
-      <el-button type="danger"
-                 icon="el-icon-delete"
-                 @click="clear">清空本地日志</el-button>
+      <el-button type="primary" @click="send">
+        <el-icon><Upload /></el-icon>
+        <span>上传服务器</span>
+      </el-button>
+      <el-button type="danger" @click="clear">
+        <el-icon><Delete /></el-icon>
+        <span>清空本地日志</span>
+      </el-button>
       <el-table :data="logsList">
         <el-table-column prop="type"
                          label="类型"
@@ -41,9 +43,12 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
+import { Delete, Upload } from '@element-plus/icons-vue';
+import { useLogsStore } from '@/store/logs';
 export default {
   name: "top-logs",
+  components: { Delete, Upload },
   data () {
     return {
       box: false
@@ -52,10 +57,15 @@ export default {
   created () { },
   mounted () { },
   computed: {
-    ...mapGetters(['logsList', "logsFlag", "logsLen"])
+    ...mapState(useLogsStore, {
+      logsList: store => store.logsList,
+      logsFlag: store => store.isEmpty,
+      logsLen: store => store.logCount,
+    }),
   },
   props: [],
   methods: {
+    ...mapActions(useLogsStore, ['SendLogs', 'clearLogs']),
     handleOpen () {
       this.box = true;
     },
@@ -66,7 +76,7 @@ export default {
         type: "warning"
       })
         .then(() => {
-          this.$store.dispatch("SendLogs").then(() => {
+          this.SendLogs().then(() => {
             this.box = false;
             this.$message({
               type: "success",
@@ -83,7 +93,7 @@ export default {
         type: "warning"
       })
         .then(() => {
-          this.$store.commit("CLEAR_LOGS");
+          this.clearLogs();
           this.box = false;
           this.$message({
             type: "success",

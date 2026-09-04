@@ -1,848 +1,586 @@
 <template>
-  <basic-container>
-    <avue-crud
-      :option="option"
-      :table-loading="loading"
-      :data="data"
-      ref="crudRef"
-      v-model="form"
-      :permission="permissionList"
-      :before-open="beforeOpen"
-      @row-del="rowDel"
-      @row-update="rowUpdate"
-      @row-save="rowSave"
-      @search-change="searchChange"
-      @search-reset="searchReset"
-      @selection-change="selectionChange"
-      @current-change="currentChange"
-      @size-change="sizeChange"
-      @refresh-change="refreshChange"
-      @on-load="onLoad"
-      @tree-load="treeLoad"
-    >
-      <template #menu="{ row }">
-        <el-button
-          text
-          type="primary"
-          icon="el-icon-setting"
-          v-if="permission.data_scope_setting"
-          plain
-          style="border: 0; background-color: transparent !important"
-          @click.stop="handleDataScope(row)"
-          >权限配置
-        </el-button>
-      </template>
-      <template #source="{ row }">
-        <div style="text-align: center">
-          <i :class="row.source" />
-        </div>
-      </template>
-    </avue-crud>
+  <div class="scope-page">
+    <scope-menu-browser
+      title="数据权限菜单"
+      :can-configure="canConfigure"
+      @configure="openDrawer"
+    />
+
     <el-drawer
-      :title="`[${scopeMenuName}] 数据权限配置`"
       v-model="drawerVisible"
-      :direction="direction"
+      class="scope-drawer"
+      :title="`[${activeMenu?.name || '菜单'}] 数据权限配置`"
+      direction="rtl"
       append-to-body
-      :before-close="handleDrawerClose"
-      size="1000px"
+      destroy-on-close
+      size="min(1000px, 100vw)"
+      :close-on-click-modal="!drawerLocked"
+      :close-on-press-escape="!drawerLocked"
+      :show-close="!drawerLocked"
+      :before-close="handleDrawerBeforeClose"
     >
-      <basic-container>
-        <avue-crud
-          :option="optionScope"
-          :data="dataScope"
-          :page="pageScope"
-          v-model="formScope"
-          :table-loading="scopeLoading"
-          ref="crudScopeRef"
-          @row-del="rowDelScope"
-          @row-update="rowUpdateScope"
-          @row-save="rowSaveScope"
-          :before-open="beforeOpenScope"
-          @search-change="searchChangeScope"
-          @search-reset="searchResetScope"
-          @selection-change="selectionChangeScope"
-          @current-change="currentChangeScope"
-          @size-change="sizeChangeScope"
-          @on-load="onLoadScope"
+      <div class="scope-drawer__body">
+        <search-panel
+          :model="searchForm"
+          :loading="loading"
+          @search="handleSearch"
+          @reset="handleReset"
         >
-          <template #menu-left>
-            <el-button type="danger" icon="el-icon-delete" plain @click="handleDeleteScope"
-              >删 除
+          <el-col :xs="24" :sm="12" :md="8">
+            <el-form-item label="权限名称">
+              <el-input v-model="searchForm.scopeName" clearable placeholder="请输入权限名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12" :md="8">
+            <el-form-item label="权限编号">
+              <el-input v-model="searchForm.resourceCode" clearable placeholder="请输入权限编号" />
+            </el-form-item>
+          </el-col>
+        </search-panel>
+
+        <list-panel title="数据权限规则" compact>
+          <template #actions>
+            <el-button
+              v-if="canConfigure"
+              type="primary"
+              :icon="Plus"
+              :disabled="loading || deleting"
+              @click="openAdd"
+            >
+              新增
+            </el-button>
+            <el-button
+              v-if="canConfigure"
+              type="danger"
+              plain
+              :icon="Delete"
+              :loading="deleting"
+              :disabled="loading"
+              @click="handleBatchDelete"
+            >
+              删除
             </el-button>
           </template>
-          <template #scopeType="{ row }">
-            <el-tag>{{ row.scopeTypeName }}</el-tag>
+          <template #tools>
+            <el-tooltip content="刷新" placement="top">
+              <el-button
+                circle
+                :icon="Refresh"
+                :loading="loading"
+                :disabled="deleting"
+                aria-label="刷新"
+                @click="refreshList"
+              />
+            </el-tooltip>
           </template>
-        </avue-crud>
-      </basic-container>
+
+          <el-table
+            ref="tableRef"
+            v-loading="loading"
+            :data="data"
+            row-key="id"
+            @selection-change="handleSelectionChange"
+          >
+            <el-table-column type="selection" width="48" />
+            <el-table-column type="index" label="#" width="60" align="center" />
+            <el-table-column
+              prop="scopeName"
+              label="权限名称"
+              min-width="180"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="resourceCode"
+              label="权限编号"
+              min-width="150"
+              show-overflow-tooltip
+            />
+            <el-table-column
+              prop="scopeColumn"
+              label="权限字段"
+              min-width="140"
+              show-overflow-tooltip
+            />
+            <el-table-column label="规则类型" width="170" align="center">
+              <template #default="{ row }">
+                <dict-tag code="data_scope_type" :value="row.scopeType" value-type="number" />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" fixed="right" width="210" align="center">
+              <template #default="{ row }">
+                <row-actions
+                  :show-view="canConfigure"
+                  :show-edit="canConfigure"
+                  :show-delete="canConfigure"
+                  :disabled="deleting || loading"
+                  @view="openDetail(row as DataScopeEntity, 'view')"
+                  @edit="openDetail(row as DataScopeEntity, 'edit')"
+                  @delete="handleRowDelete(row as DataScopeEntity)"
+                />
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <template #footer>
+            <list-pagination
+              :current-page="page.currentPage"
+              :page-size="page.pageSize"
+              :total="page.total"
+              :disabled="loading || deleting"
+              @change="handlePaginationChange"
+            />
+          </template>
+        </list-panel>
+      </div>
     </el-drawer>
-  </basic-container>
+
+    <form-dialog
+      v-model="dialogVisible"
+      :mode="mode"
+      entity-name="数据权限"
+      :submitting="submitting"
+      :loading="detailLoading"
+      :confirm-disabled="formUnavailable"
+      width="820px"
+      destroy-on-close
+      @confirm="handleSubmit"
+      @cancel="handleDialogCancel"
+    >
+      <el-alert
+        v-if="detailFailed || dictionaryFailed"
+        class="scope-form__alert"
+        type="error"
+        :closable="false"
+        show-icon
+      >
+        <template #title>
+          {{
+            detailFailed ? '详情加载失败，请关闭后重试' : '规则类型加载失败，请在规则类型字段重试'
+          }}
+        </template>
+      </el-alert>
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="formRules"
+        :disabled="mode === 'view' || detailLoading || detailFailed"
+        label-width="88px"
+      >
+        <el-row :gutter="24">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="权限名称" prop="scopeName">
+              <el-input v-model="form.scopeName" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="权限编号" prop="resourceCode">
+              <el-input v-model="form.resourceCode" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="权限字段" prop="scopeColumn">
+              <el-input v-model="form.scopeColumn" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="规则类型" prop="scopeType">
+              <dict-select
+                :model-value="form.scopeType"
+                code="data_scope_type"
+                value-type="number"
+                placeholder="请选择规则类型"
+                @update:model-value="handleScopeTypeChange"
+                @load-error="dictionaryFailed = true"
+                @load-success="dictionaryFailed = false"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="可见字段" prop="scopeField">
+              <el-input v-model="form.scopeField" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="权限类名" prop="scopeClass">
+              <el-input v-model="form.scopeClass" maxlength="500" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col v-if="form.scopeType === 5" :span="24">
+            <el-form-item label="规则值" prop="scopeValue">
+              <el-input
+                v-model="form.scopeValue"
+                type="textarea"
+                :rows="5"
+                maxlength="2000"
+                show-word-limit
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="备注" prop="remark">
+              <el-input
+                v-model="form.remark"
+                type="textarea"
+                :rows="3"
+                maxlength="255"
+                show-word-limit
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </form-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
-import { useStore } from 'vuex';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { baseUrl } from '@/config/env';
-import { add, remove, update, getLazyMenuList, getMenu } from '@/api/system/menu';
+import { computed, nextTick, ref, watch } from 'vue';
+import { Delete, Plus, Refresh } from '@element-plus/icons-vue';
+import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import ScopeMenuBrowser from '@/views/authority/components/scope-menu-browser.vue';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import ListPagination from '@/components/list-pagination/main.vue';
+import RowActions from '@/components/row-actions/main.vue';
+import FormDialog from '@/components/form-dialog/main.vue';
+import { useUserStore } from '@/store/user';
+import DictSelect from '@/components/dict-select/main.vue';
+import DictTag from '@/components/dict-tag/main.vue';
+import { usePagedList } from '@/composables/usePagedList';
+import { useRemoteDetail } from '@/composables/useRemoteDetail';
+import { useTableSelection } from '@/composables/useTableSelection';
 import {
   addDataScope,
+  getDataScopeDetail,
+  getDataScopeList,
   removeDataScope,
   updateDataScope,
-  getListDataScope,
-  getMenuDataScope,
 } from '@/api/system/scope';
-import iconList from '@/config/iconList';
-import func from '@/utils/func';
 import { validData } from '@/utils/util';
-import type { ColumnSchema } from '@/types/column';
+import type { CrudMode } from '@/types/crud';
+import type { PaginationChange } from '@/types/list';
+import type { DictionaryValue } from '@/types/option';
 
-// 菜单数据实体
-interface MenuEntity {
+interface ScopeMenuEntity {
   id: string;
-  name: string;
-  code: string;
-  path?: string;
-  parentId?: string;
-  source?: string;
-  category?: number;
-  alias?: string;
-  action?: number;
-  sort?: number;
-  isOpen?: number;
-  remark?: string;
+  name?: string;
+  code?: string;
 }
 
-// 菜单新增与编辑共用的表单模型，字段均可选
-type MenuForm = Partial<MenuEntity>;
-
-// 数据权限数据实体
-interface ScopeEntity {
+interface DataScopeEntity {
   id: string;
-  scopeName?: string;
+  menuId?: string;
   resourceCode?: string;
-  scopeColumn?: string;
-  scopeType?: number | string;
+  scopeName?: string;
   scopeField?: string;
   scopeClass?: string;
+  scopeColumn?: string;
+  scopeType?: number;
   scopeValue?: string;
-  remark?: string;
   scopeTypeName?: string;
-  menuId?: string | number;
+  remark?: string;
 }
 
-// 数据权限新增与编辑共用的表单模型，字段均可选
-type ScopeForm = Partial<ScopeEntity>;
+interface ScopeQuery {
+  scopeName?: string;
+  resourceCode?: string;
+}
 
-// 权限
-const store = useStore();
-const permission = computed(() => store.getters.permission);
+type DataScopeForm = Partial<DataScopeEntity>;
+type DataScopeListResponse = Awaited<ReturnType<typeof getDataScopeList<DataScopeEntity>>>;
 
-// 菜单树状态
-const crudRef = ref();
-const form = ref<MenuForm>({});
-const data = ref<MenuEntity[]>([]);
-const selectionList = ref<MenuEntity[]>([]);
-const query = ref<Partial<MenuEntity>>({});
-const loading = ref(true);
-const parentId = ref<string | number>(0);
+const createInitialQuery = (): ScopeQuery => ({ scopeName: '', resourceCode: '' });
+const typeDefaults: { [key: number]: { label: string; column: string } | undefined } = {
+  1: { label: '全部可见', column: '-' },
+  2: { label: '本人可见', column: 'create_user' },
+  3: { label: '所在机构可见', column: 'create_dept' },
+  4: { label: '所在机构可见及子级可见', column: 'create_dept' },
+  5: { label: '自定义', column: '' },
+};
 
-// 分页参数
-const page = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const createInitialForm = (menu?: ScopeMenuEntity): DataScopeForm => ({
+  menuId: menu?.id,
+  resourceCode: menu?.code ?? '',
+  scopeName: menu ? `${menu.name || '菜单'} [全部可见]` : '',
+  scopeField: '*',
+  scopeClass: '',
+  scopeColumn: '-',
+  scopeType: 1,
+  scopeValue: '',
+  remark: '',
 });
 
-// scope 抽屉状态
-const crudScopeRef = ref();
-const formScope = ref<ScopeForm>({});
-const dataScope = ref<ScopeEntity[]>([]);
-const selectionListScope = ref<ScopeEntity[]>([]);
+const { permission } = storeToRefs(useUserStore());
+const canConfigure = computed(() => validData(permission.value.data_scope_setting, false));
+const activeMenu = ref<ScopeMenuEntity>();
 const drawerVisible = ref(false);
-const direction = ref<'ltr' | 'rtl' | 'ttb' | 'btt'>('rtl');
-const scopeMenuId = ref<string | number>(0);
-const scopeMenuCode = ref('');
-const scopeMenuName = ref('菜单');
-const scopeLoading = ref(false);
-const watchMode = ref(true);
+const searchForm = ref<ScopeQuery>(createInitialQuery());
+const mode = ref<CrudMode>('add');
+const form = ref<DataScopeForm>(createInitialForm());
+const dialogVisible = ref(false);
+const submitting = ref(false);
+const deleting = ref(false);
+const dictionaryFailed = ref(false);
+const formRef = ref<InstanceType<typeof ElForm>>();
+const tableRef = ref<TableInstance>();
+let menuContextVersion = 0;
 
-// scope 抽屉分页参数
-const pageScope = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
-});
-
-// 菜单侧选中行 id 集合，供批量删除使用
-const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
-
-// scope 侧选中行 id 集合，供批量删除使用
-const scopeIds = computed(() => selectionListScope.value.map(ele => ele.id).join(','));
-
-// 菜单树表格配置
-const option = reactive({
-  lazy: true,
-  tip: false,
-  simplePage: true,
-  searchShow: true,
-  searchMenuSpan: 6,
-  dialogWidth: '60%',
-  tree: true,
-  border: true,
-  index: true,
-  selection: true,
-  viewBtn: false,
-  editBtn: false,
-  addBtn: false,
-  delBtn: false,
-  menuWidth: 150,
-  dialogClickModal: false,
-  column: [
-    {
-      label: '菜单名称',
-      prop: 'name',
-      search: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单名称',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '路由地址',
-      prop: 'path',
-      rules: [
-        {
-          required: true,
-          message: '请输入路由地址',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '上级菜单',
-      prop: 'parentId',
-      type: 'tree',
-      dicUrl: baseUrl + '/blade-system/menu/tree',
-      hide: true,
-      props: {
-        label: 'title',
-      },
-      rules: [
-        {
-          required: false,
-          message: '请选择上级菜单',
-          trigger: 'click',
-        },
-      ],
-    },
-    {
-      label: '菜单图标',
-      prop: 'source',
-      type: 'icon',
-      slot: true,
-      width: 100,
-      iconList: iconList,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单图标',
-          trigger: 'click',
-        },
-      ],
-    },
-    {
-      label: '菜单编号',
-      prop: 'code',
-      search: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单编号',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单类型',
-      prop: 'category',
-      type: 'radio',
-      dicData: [
-        {
-          label: '菜单',
-          value: 1,
-        },
-        {
-          label: '按钮',
-          value: 2,
-        },
-      ],
-      hide: true,
-      rules: [
-        {
-          required: true,
-          message: '请选择菜单类型',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单别名',
-      prop: 'alias',
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单别名',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '按钮功能',
-      prop: 'action',
-      type: 'radio',
-      dicData: [
-        {
-          label: '工具栏',
-          value: 0,
-        },
-        {
-          label: '操作栏',
-          value: 1,
-        },
-        {
-          label: '工具操作栏',
-          value: 2,
-        },
-      ],
-      hide: true,
-      rules: [
-        {
-          required: true,
-          message: '请选择按钮功能',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '菜单排序',
-      prop: 'sort',
-      type: 'number',
-      width: 100,
-      rules: [
-        {
-          required: true,
-          message: '请输入菜单排序',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '新窗口',
-      prop: 'isOpen',
-      type: 'radio',
-      dicData: [
-        {
-          label: '否',
-          value: 0,
-        },
-        {
-          label: '是',
-          value: 1,
-        },
-      ],
-      hide: true,
-    },
-    {
-      label: '菜单备注',
-      prop: 'remark',
-      type: 'textarea',
-      span: 24,
-      minRows: 6,
-      hide: true,
-    },
-  ],
-});
-
-// scope 抽屉表格配置
-const optionScope = reactive({
-  tip: false,
-  searchShow: true,
-  searchMenuSpan: 6,
-  border: true,
-  index: true,
-  viewBtn: true,
-  selection: true,
-  menuWidth: 250,
-  dialogWidth: 900,
-  dialogClickModal: false,
-  column: [
-    {
-      label: '权限名称',
-      prop: 'scopeName',
-      search: true,
-      value: '',
-      rules: [
-        {
-          required: true,
-          message: '请输入数据权限名称',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '权限编号',
-      prop: 'resourceCode',
-      search: true,
-      width: 100,
-      rules: [
-        {
-          required: true,
-          message: '请输入数据权限编号',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '权限字段',
-      prop: 'scopeColumn',
-      width: 130,
-      rules: [
-        {
-          required: true,
-          message: '请输入数据权限编号',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '规则类型',
-      type: 'select',
-      dicUrl: baseUrl + '/blade-system/dict/dictionary?code=data_scope_type',
-      props: {
-        label: 'dictValue',
-        value: 'dictKey',
-      },
-      dataType: 'number',
-      slot: true,
-      width: 140,
-      prop: 'scopeType',
-      rules: [
-        {
-          required: true,
-          message: '请输入通知类型',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '可见字段',
-      prop: 'scopeField',
-      span: 24,
-      hide: true,
-      value: '*',
-      rules: [
-        {
-          required: true,
-          message: '请输入数据权限可见的字段',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '权限类名',
-      prop: 'scopeClass',
-      span: 24,
-      hide: true,
-      rules: [
-        {
-          required: true,
-          message: '请输入MybatisMapper对应方法的完整类名路径',
-          trigger: 'blur',
-        },
-      ],
-    },
-    {
-      label: '规则值',
-      prop: 'scopeValue',
-      span: 24,
-      minRows: 5,
-      type: 'textarea',
-      display: true,
-      hide: true,
-    },
-    {
-      label: '备注',
-      prop: 'remark',
-      span: 24,
-      hide: true,
-    },
-  ],
-});
-
-// 行操作按钮权限
-const permissionList = computed(() => ({
-  addBtn: validData(permission.value.menu_add, false),
-  viewBtn: validData(permission.value.menu_view, false),
-  delBtn: validData(permission.value.menu_delete, false),
-  editBtn: validData(permission.value.menu_edit, false),
-}));
-
-// 菜单侧：加载菜单树数据
-const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Partial<MenuEntity> = {}) => {
-  loading.value = true;
-  getLazyMenuList(parentId.value, Object.assign(params, query.value)).then(res => {
-    data.value = res.data.data;
-    loading.value = false;
-    selectionClear();
-  });
+const formRules: FormRules = {
+  scopeName: [{ required: true, message: '请输入数据权限名称', trigger: 'blur' }],
+  resourceCode: [{ required: true, message: '请输入数据权限编号', trigger: 'blur' }],
+  scopeColumn: [{ required: true, message: '请输入数据权限字段', trigger: 'blur' }],
+  scopeType: [{ required: true, message: '请选择规则类型', trigger: 'change' }],
+  scopeField: [{ required: true, message: '请输入数据权限可见字段', trigger: 'blur' }],
+  scopeClass: [{ required: true, message: '请输入 Mapper 方法完整类名', trigger: 'blur' }],
 };
 
-// 菜单侧：懒加载子级菜单
-const treeLoad = (tree: MenuEntity, treeNode: object, resolve: (data: MenuEntity[]) => void) => {
-  const parentMenuId = tree.id;
-  getLazyMenuList(parentMenuId).then(res => {
-    resolve(res.data.data);
-  });
-};
-
-// 菜单侧：条件检索
-const searchChange = (params: Partial<MenuEntity>, done: () => void) => {
-  query.value = params;
-  parentId.value = '';
-  page.currentPage = 1;
-  onLoad(page, params);
-  done();
-};
-
-// 菜单侧：重置检索条件
-const searchReset = () => {
-  query.value = {};
-  parentId.value = 0;
-  onLoad(page);
-};
-
-// 菜单侧：切换页码
-const currentChange = (currentPage: number) => {
-  page.currentPage = currentPage;
-};
-
-// 菜单侧：调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.pageSize = pageSize;
-};
-
-// 菜单侧：刷新当前列表
-const refreshChange = () => {
-  onLoad(page, query.value);
-};
-
-// 菜单侧：记录当前选中行
-const selectionChange = (list: MenuEntity[]) => {
-  selectionList.value = list;
-};
-
-// 菜单侧：清空选中状态
-const selectionClear = () => {
-  selectionList.value = [];
-  crudRef.value.toggleSelection();
-};
-
-// 菜单侧：新增提交
-const rowSave = (row: MenuForm, done: () => void, loading: () => void) => {
-  add(row).then(
-    () => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
-};
-
-// 菜单侧：编辑提交
-const rowUpdate = (row: MenuForm, index: number, done: () => void, loading: () => void) => {
-  update(row).then(
-    () => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
-};
-
-// 菜单侧：删除单行
-const rowDel = (row: MenuEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(row.id);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
+const listState = usePagedList<DataScopeEntity, ScopeQuery, DataScopeListResponse>({
+  fetcher: async (current, size, query) => {
+    const contextVersion = menuContextVersion;
+    const menuId = activeMenu.value?.id;
+    if (!menuId) throw new Error('数据权限菜单上下文已失效');
+    const response = await getDataScopeList<DataScopeEntity>(current, size, {
+      menuId,
+      scopeName: query.scopeName?.trim() || undefined,
+      resourceCode: query.resourceCode?.trim() || undefined,
     });
-};
-
-// 菜单侧：批量删除选中行
-const handleDelete = () => {
-  if (selectionList.value.length === 0) {
-    ElMessage.warning('请选择至少一条数据');
-    return;
-  }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(ids.value);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
-};
-
-// 菜单侧：打开表单前加载详情
-const beforeOpen = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getMenu(form.value.id).then(res => {
-      form.value = res.data.data;
-    });
-  }
-  done();
-};
-
-// scope 侧：打开权限配置抽屉
-const handleDataScope = (row: MenuEntity) => {
-  drawerVisible.value = true;
-  scopeMenuId.value = row.id;
-  scopeMenuCode.value = row.code;
-  scopeMenuName.value = row.name;
-  onLoadScope(pageScope);
-};
-
-// scope 侧：关闭抽屉
-const handleDrawerClose = (hide: () => void) => {
-  hide();
-};
-
-// scope 侧：根据规则类型联动回填权限字段
-const initScope = () => {
-  const scopeType = func.toInt(formScope.value.scopeType);
-  const watchModeValue = watchMode.value;
-  let column = '-',
-    name = '暂无';
-  if (scopeType === 1) {
-    column = '-';
-    name = '全部可见';
-  } else if (scopeType === 2) {
-    column = 'create_user';
-    name = '本人可见';
-  } else if (scopeType === 3) {
-    column = 'create_dept';
-    name = '所在机构可见';
-  } else if (scopeType === 4) {
-    column = 'create_dept';
-    name = '所在机构可见及子级可见';
-  } else if (scopeType === 5) {
-    column = '';
-    name = '自定义';
-  }
-  crudScopeRef.value.option.column.filter((item: ColumnSchema) => {
-    if (watchModeValue) {
-      if (item.prop === 'scopeName') {
-        formScope.value.scopeName = `${scopeMenuName.value} [${name}]`;
-      }
-      if (item.prop === 'resourceCode') {
-        formScope.value.resourceCode = scopeMenuCode.value;
-      }
-      if (item.prop === 'scopeColumn') {
-        formScope.value.scopeColumn = column;
-      }
+    if (contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) {
+      throw new Error('数据权限菜单上下文已变更');
     }
-    if (item.prop === 'scopeValue') {
-      item.display = scopeType === 5;
-    }
-  });
-};
-
-// scope 侧：监听规则类型变化，触发字段联动
-watch(
-  () => formScope.value.scopeType,
-  () => {
-    initScope();
-  }
+    return response;
+  },
+  resolveResponse: response => response.data.data,
+  createInitialQuery,
+});
+const { data, query, page, loading, load, search, reset, refresh, changePage, changeSize } =
+  listState;
+const selection = useTableSelection<DataScopeEntity>();
+const { selectedRows, ids, handleSelectionChange, clearSelection } = selection;
+const detail = useRemoteDetail<DataScopeEntity, string>(async id => {
+  const response = await getDataScopeDetail<DataScopeEntity>(id);
+  return response.data.data;
+});
+const { loading: detailLoading, failed: detailFailed } = detail;
+const drawerLocked = computed(() => submitting.value || deleting.value);
+const formUnavailable = computed(
+  () => detailLoading.value || detailFailed.value || dictionaryFailed.value || !activeMenu.value?.id
 );
 
-// scope 侧：加载权限列表
-const onLoadScope = (pageParam: { currentPage: number; pageSize: number }, params: Partial<ScopeEntity> = {}) => {
-  scopeLoading.value = true;
-  const values = {
-    ...params,
-    menuId: scopeMenuId.value,
-  };
-  getListDataScope(pageParam.currentPage, pageParam.pageSize, Object.assign(values, query.value)).then(res => {
-    const pageData = res.data.data;
-    pageScope.total = pageData.total;
-    dataScope.value = pageData.records;
-    selectionListScope.value = [];
-    scopeLoading.value = false;
-  });
+const clearTableSelection = () => {
+  clearSelection();
+  tableRef.value?.clearSelection();
+};
+watch(data, clearTableSelection, { flush: 'post' });
+
+const resetListState = () => {
+  data.value = [];
+  query.value = createInitialQuery();
+  page.value.currentPage = 1;
+  page.value.total = 0;
+  searchForm.value = createInitialQuery();
+  clearTableSelection();
 };
 
-// scope 侧：条件检索
-const searchChangeScope = (params: Partial<ScopeEntity>, done: () => void) => {
-  onLoadScope(pageScope, params);
+const resetDialogState = () => {
+  detail.clear();
+  dictionaryFailed.value = false;
+  form.value = createInitialForm();
+  formRef.value?.clearValidate();
+};
+
+const invalidateDrawerContext = () => {
+  menuContextVersion += 1;
+  resetDialogState();
+  dialogVisible.value = false;
+  resetListState();
+  activeMenu.value = undefined;
+};
+
+const openDrawer = (menu: ScopeMenuEntity) => {
+  if (!canConfigure.value || drawerLocked.value || !menu.id) return;
+  menuContextVersion += 1;
+  activeMenu.value = { id: menu.id, name: menu.name, code: menu.code };
+  resetDialogState();
+  resetListState();
+  drawerVisible.value = true;
+  void load();
+};
+
+const handleDrawerBeforeClose = (done: () => void) => {
+  if (drawerLocked.value) return;
+  invalidateDrawerContext();
   done();
 };
 
-// scope 侧：重置检索条件
-const searchResetScope = () => {
-  onLoadScope(pageScope);
+const handleSearch = () => void search({ ...searchForm.value });
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
+};
+const refreshList = () => void refresh();
+const handlePaginationChange = ({ currentPage, pageSize }: PaginationChange) => {
+  if (pageSize !== page.value.pageSize) void changeSize(pageSize);
+  else void changePage(currentPage);
 };
 
-// scope 侧：切换页码
-const currentChangeScope = (currentPage: number) => {
-  pageScope.currentPage = currentPage;
+const openAdd = () => {
+  if (!canConfigure.value || !activeMenu.value || drawerLocked.value) return;
+  resetDialogState();
+  mode.value = 'add';
+  form.value = createInitialForm(activeMenu.value);
+  dialogVisible.value = true;
+  nextTick(() => formRef.value?.clearValidate());
 };
 
-// scope 侧：调整每页条数
-const sizeChangeScope = (pageSize: number) => {
-  pageScope.pageSize = pageSize;
-};
-
-// scope 侧：记录当前选中行
-const selectionChangeScope = (list: ScopeEntity[]) => {
-  selectionListScope.value = list;
-};
-
-// scope 侧：新增提交
-const rowSaveScope = (row: ScopeForm, done: () => void, loading: () => void) => {
-  row = {
-    ...row,
-    menuId: scopeMenuId.value,
+const openDetail = async (row: DataScopeEntity, dialogMode: 'edit' | 'view') => {
+  if (!canConfigure.value || !activeMenu.value || drawerLocked.value) return;
+  resetDialogState();
+  mode.value = dialogMode;
+  dialogVisible.value = true;
+  const contextVersion = menuContextVersion;
+  const menuId = activeMenu.value.id;
+  const entity = await detail.load(row.id);
+  if (!entity || contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) return;
+  if (entity.menuId && String(entity.menuId) !== menuId) {
+    detail.data.value = null;
+    detail.failed.value = true;
+    return;
+  }
+  form.value = {
+    ...entity,
+    scopeType: entity.scopeType === undefined ? undefined : Number(entity.scopeType),
   };
-  addDataScope(row).then(
-    () => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
+  await nextTick();
+  formRef.value?.clearValidate();
 };
 
-// scope 侧：编辑提交
-const rowUpdateScope = (row: ScopeForm, index: number, done: () => void, loading: () => void) => {
-  row = {
-    ...row,
-    menuId: scopeMenuId.value,
+const handleDialogCancel = () => resetDialogState();
+
+const handleScopeTypeChange = (value: DictionaryValue | DictionaryValue[] | null | undefined) => {
+  if (Array.isArray(value) || value === null || value === undefined || value === '') {
+    form.value.scopeType = undefined;
+    return;
+  }
+  const scopeType = Number(value);
+  form.value.scopeType = scopeType;
+  dictionaryFailed.value = false;
+  const defaults = typeDefaults[scopeType];
+  if (!defaults || !activeMenu.value) return;
+  form.value.scopeColumn = defaults.column;
+  if (scopeType !== 5) form.value.scopeValue = '';
+  if (mode.value === 'add') {
+    form.value.scopeName = `${activeMenu.value.name || '菜单'} [${defaults.label}]`;
+    form.value.resourceCode = activeMenu.value.code ?? '';
+  }
+};
+
+const handleSubmit = async () => {
+  if (
+    !formRef.value ||
+    mode.value === 'view' ||
+    submitting.value ||
+    formUnavailable.value ||
+    !canConfigure.value ||
+    !activeMenu.value
+  ) {
+    return;
+  }
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  const contextVersion = menuContextVersion;
+  const menuId = activeMenu.value.id;
+  const payload: DataScopeForm = {
+    ...form.value,
+    menuId,
+    scopeValue: form.value.scopeType === 5 ? form.value.scopeValue ?? '' : '',
   };
-  updateDataScope(row).then(
-    () => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      done();
-    },
-    error => {
-      window.console.log(error);
-      loading();
-    }
-  );
+  delete payload.scopeTypeName;
+
+  submitting.value = true;
+  try {
+    const submitScope = mode.value === 'add' ? addDataScope : updateDataScope;
+    await submitScope(payload);
+    if (contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) return;
+    dialogVisible.value = false;
+    resetDialogState();
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // Axios 已处理接口错误，保留表单和菜单上下文供重试。
+  } finally {
+    submitting.value = false;
+  }
 };
 
-// scope 侧：删除单行
-const rowDelScope = (row: ScopeEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return removeDataScope(row.id);
-    })
-    .then(() => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
+const confirmDelete = async (deleteIds: string) => {
+  if (!canConfigure.value || !activeMenu.value || deleting.value) return;
+  const contextVersion = menuContextVersion;
+  const menuId = activeMenu.value.id;
+  try {
+    await ElMessageBox.confirm('确定将选择数据删除?', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     });
+    if (
+      !canConfigure.value ||
+      contextVersion !== menuContextVersion ||
+      menuId !== activeMenu.value?.id
+    ) {
+      return;
+    }
+    deleting.value = true;
+    await removeDataScope(deleteIds);
+    if (contextVersion !== menuContextVersion || menuId !== activeMenu.value?.id) return;
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 用户取消或接口失败时保留列表、查询和选择状态。
+  } finally {
+    deleting.value = false;
+  }
 };
 
-// scope 侧：批量删除选中行
-const handleDeleteScope = () => {
-  if (selectionListScope.value.length === 0) {
+const handleRowDelete = (row: DataScopeEntity) => void confirmDelete(row.id);
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return removeDataScope(scopeIds.value);
-    })
-    .then(() => {
-      onLoadScope(pageScope);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudScopeRef.value.toggleSelection();
-    });
-};
-
-// scope 侧：打开表单前处理（新增触发联动，编辑加载详情）
-const beforeOpenScope = (done: () => void, type: string) => {
-  if (['add'].includes(type)) {
-    watchMode.value = true;
-    initScope();
-  }
-  if (['edit', 'view'].includes(type)) {
-    watchMode.value = false;
-    getMenuDataScope(formScope.value.id).then(res => {
-      formScope.value = res.data.data;
-    });
-  }
-  done();
+  void confirmDelete(ids.value);
 };
 </script>
+
+<style scoped lang="scss">
+.scope-page,
+.scope-drawer__body {
+  min-width: 0;
+}
+
+.scope-form__alert {
+  margin-bottom: 18px;
+}
+
+:deep(.el-select) {
+  width: 100%;
+}
+</style>
+
+<style lang="scss">
+.scope-drawer .el-drawer__header {
+  flex: 0 0 auto;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--saber-border);
+  margin-bottom: 0;
+}
+
+.scope-drawer .el-drawer__body {
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+}
+</style>

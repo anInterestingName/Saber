@@ -1,0 +1,6 @@
+[      71ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2890/node_modules/.vite/deps/vue-i18n.js?v=ce2d35c9:123
+[  236965ms] [WARNING] 编辑区域高度 < 300px 这可能会导致 modal hoverbar 定位异常
+Textarea height < 300px . This may be cause modal and hoverbar position error [div.w-e-scroll] @ http://localhost:2890/node_modules/.vite/deps/@wangeditor_editor-for-vue.js?v=28aa976f:11335
+[  427618ms] [WARNING] [intlify] Legacy API mode has been deprecated in v11. Use Composition API mode instead.
+About how to use the Composition API mode, see https://vue-i18n.intlify.dev/guide/advanced/composition.html @ http://localhost:2890/node_modules/.vite/deps/vue-i18n.js?v=ce2d35c9:123

@@ -1,0 +1,44 @@
+- main [ref=f2e3]:
+  - heading "三项查询条件" [level=2] [ref=f2e4]
+  - generic [ref=f2e10]:
+    - generic [ref=f2e12]:
+      - generic [ref=f2e13]: 条件 1
+      - textbox "条件 1" [ref=f2e17]:
+        - /placeholder: 请输入条件 1
+    - generic [ref=f2e19]:
+      - generic [ref=f2e20]: 条件 2
+      - textbox "条件 2" [ref=f2e24]:
+        - /placeholder: 请输入条件 2
+    - generic [ref=f2e26]:
+      - generic [ref=f2e27]: 条件 3
+      - textbox "条件 3" [ref=f2e31]:
+        - /placeholder: 请输入条件 3
+    - generic [ref=f2e32]:
+      - button "重置" [ref=f2e33] [cursor=pointer]
+      - button "查询" [ref=f2e38] [cursor=pointer]
+  - heading "五项查询条件" [level=2] [ref=f2e43]
+  - generic [ref=f2e49]:
+    - generic [ref=f2e51]:
+      - generic [ref=f2e52]: 条件 1
+      - textbox "条件 1" [ref=f2e56]:
+        - /placeholder: 请输入条件 1
+    - generic [ref=f2e58]:
+      - generic [ref=f2e59]: 条件 2
+      - textbox "条件 2" [ref=f2e63]:
+        - /placeholder: 请输入条件 2
+    - generic [ref=f2e65]:
+      - generic [ref=f2e66]: 条件 3
+      - textbox "条件 3" [ref=f2e70]:
+        - /placeholder: 请输入条件 3
+    - generic [ref=f2e88]:
+      - generic [ref=f2e89]: 条件 4
+      - textbox "条件 4" [ref=f2e93]:
+        - /placeholder: 请输入条件 4
+    - generic [ref=f2e95]:
+      - generic [ref=f2e96]: 条件 5
+      - textbox "条件 5" [ref=f2e100]:
+        - /placeholder: 请输入条件 5
+    - generic [ref=f2e71]:
+      - button "重置" [ref=f2e72] [cursor=pointer]
+      - button "查询" [ref=f2e77] [cursor=pointer]
+      - button "收起" [expanded] [active] [ref=f2e101] [cursor=pointer]

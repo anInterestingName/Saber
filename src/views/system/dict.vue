@@ -1,51 +1,164 @@
 <template>
-  <basic-container>
-    <avue-crud :option="option"
-               :table-loading="loading"
-               :data="data"
-               ref="crudRef"
-               v-model="form"
-               :permission="permissionList"
-               :before-open="beforeOpen"
-               @row-del="rowDel"
-               @row-update="rowUpdate"
-               @row-save="rowSave"
-               @search-change="searchChange"
-               @search-reset="searchReset"
-               @selection-change="selectionChange"
-               @current-change="currentChange"
-               @size-change="sizeChange"
-               @on-load="onLoad">
-      <template #menu-left>
-        <el-button type="danger"
-                   icon="el-icon-delete"
-                   v-if="permission.dict_delete"
-                   plain
-                   @click="handleDelete">删 除
+  <div class="tree-management-page">
+    <search-panel
+      :model="searchForm"
+      :loading="loading"
+      @search="handleSearch"
+      @reset="handleReset"
+    >
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="字典编号">
+          <el-input v-model="searchForm.code" clearable placeholder="请输入字典编号" />
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="字典名称">
+          <el-input v-model="searchForm.dictValue" clearable placeholder="请输入字典名称" />
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-form-item label="字典备注">
+          <el-input v-model="searchForm.remark" clearable placeholder="请输入字典备注" />
+        </el-form-item>
+      </el-col>
+    </search-panel>
+
+    <list-panel title="字典列表">
+      <template #actions>
+        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+        <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
+          删除
         </el-button>
       </template>
-      <template #menu="scope">
-        <el-button text
-                   type="primary"
-                   icon="el-icon-plus"
-                   @click.stop="handleAdd(scope.row)"
-                   v-if="userInfo.authority.includes('admin')">新增子项
-        </el-button>
+      <template #tools>
+        <el-tooltip content="刷新" placement="top">
+          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
+        </el-tooltip>
       </template>
-    </avue-crud>
-  </basic-container>
+
+      <el-table
+        ref="tableRef"
+        v-loading="loading"
+        :data="data"
+        row-key="id"
+        :expand-row-keys="tableExpandedRowKeys"
+        :tree-props="{ children: 'children' }"
+        @expand-change="handleTableExpandChange"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="48" />
+        <el-table-column type="index" label="#" width="60" align="center" />
+        <el-table-column prop="code" label="字典编号" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="dictValue" label="字典名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="dictKey" label="字典键值" width="120" align="center" />
+        <el-table-column prop="sort" label="字典排序" width="110" align="center" />
+        <el-table-column prop="remark" label="字典备注" min-width="180" show-overflow-tooltip />
+        <el-table-column label="操作" fixed="right" width="300" align="center">
+          <template #default="{ row }">
+            <row-actions
+              :show-view="canView"
+              :show-edit="canEdit"
+              :show-delete="canDelete"
+              @view="openDetail(row as DictEntity, 'view')"
+              @edit="openDetail(row as DictEntity, 'edit')"
+              @delete="handleRowDelete(row as DictEntity)"
+            >
+              <template v-if="isAdmin" #extra>
+                <el-button type="primary" link :icon="Plus" @click="openChild(row as DictEntity)">
+                  新增子项
+                </el-button>
+              </template>
+            </row-actions>
+          </template>
+        </el-table-column>
+      </el-table>
+    </list-panel>
+
+    <form-dialog
+      v-model="dialogVisible"
+      :mode="mode"
+      entity-name="字典"
+      :submitting="submitting"
+      :loading="formLoading"
+      destroy-on-close
+      @confirm="handleSubmit"
+      @cancel="handleDialogCancel"
+    >
+      <el-alert v-if="detailFailed || parentOptionsFailed" type="error" :closable="false" show-icon>
+        <template #title>数据加载失败，请关闭后重试</template>
+      </el-alert>
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="formRules"
+        :disabled="mode === 'view' || formLoading || detailFailed || parentOptionsFailed"
+        label-width="88px"
+      >
+        <el-form-item label="字典编号" prop="code">
+          <el-input v-model="form.code" :disabled="Boolean(parentContext)" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="字典名称" prop="dictValue">
+          <el-input v-model="form.dictValue" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="上级字典" prop="parentId">
+          <el-tree-select
+            v-model="form.parentId"
+            :data="parentOptions"
+            :props="parentTreeProps"
+            node-key="id"
+            check-strictly
+            clearable
+            filterable
+            :disabled="Boolean(parentContext)"
+            placeholder="请选择上级字典"
+          />
+        </el-form-item>
+        <el-row :gutter="24">
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="字典键值" prop="dictKey">
+              <el-input-number v-model="form.dictKey" :min="0" controls-position="right" />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="12">
+            <el-form-item label="字典排序" prop="sort">
+              <el-input-number v-model="form.sort" :min="0" controls-position="right" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="字典备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            :rows="4"
+            maxlength="500"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+    </form-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
-import { useStore } from 'vuex';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { Delete, Plus, Refresh } from '@element-plus/icons-vue';
+import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import SearchPanel from '@/components/search-panel/main.vue';
+import ListPanel from '@/components/list-panel/main.vue';
+import RowActions from '@/components/row-actions/main.vue';
+import FormDialog from '@/components/form-dialog/main.vue';
+import { useCrudPermission } from '@/composables/useCrudPermission';
+import { useUserStore } from '@/store/user';
+import { useRemoteDetail } from '@/composables/useRemoteDetail';
+import { useRemoteOptions } from '@/composables/useRemoteOptions';
+import { useTableSelection } from '@/composables/useTableSelection';
+import { useTreeList } from '@/composables/useTreeList';
 import { add, getDict, getDictTree, getList, remove, update } from '@/api/system/dict';
-import { validData, findColumn } from '@/utils/util';
-import type { ColumnSchema } from '@/types/column';
+import type { CrudMode } from '@/types/crud';
+import type { TreeNode } from '@/types/tree';
 
-// 数据实体
-interface DictEntity {
+interface DictEntity extends TreeNode {
   id: string;
   code?: string;
   dictValue?: string;
@@ -53,262 +166,212 @@ interface DictEntity {
   dictKey?: number;
   sort?: number;
   remark?: string;
+  children?: DictEntity[];
 }
 
-// 新增与编辑共用的表单模型，字段均可选
-type DictForm = Partial<DictEntity>;
+interface DictQuery {
+  code?: string;
+  dictValue?: string;
+  remark?: string;
+}
 
-// 权限
-const store = useStore();
-const userInfo = computed(() => store.getters.userInfo);
-const permission = computed(() => store.getters.permission);
+type DictForm = Partial<Omit<DictEntity, 'children'>>;
+type DictListResponse = Awaited<ReturnType<typeof getList<DictEntity>>>;
 
-// 表格实例与数据状态
-const crudRef = ref();
-const form = ref<DictForm>({});
-const data = ref<DictEntity[]>([]);
-const selectionList = ref<DictEntity[]>([]);
-const query = ref<Partial<DictEntity>>({});
-const loading = ref(true);
-
-// 分页参数
-const page = reactive({
-  pageSize: 10,
-  currentPage: 1,
-  total: 0,
+const createInitialQuery = (): DictQuery => ({});
+const createInitialForm = (): DictForm => ({
+  code: '',
+  dictValue: '',
+  parentId: undefined,
+  dictKey: undefined,
+  sort: undefined,
+  remark: '',
 });
 
-// 选中行 id 集合，供批量删除使用
-const ids = computed(() => selectionList.value.map(ele => ele.id).join(','));
+const { isAdmin } = storeToRefs(useUserStore());
+const searchForm = ref<DictQuery>(createInitialQuery());
+const form = ref<DictForm>(createInitialForm());
+const mode = ref<CrudMode>('add');
+const dialogVisible = ref(false);
+const submitting = ref(false);
+const parentContext = ref<{ parentId: string; code: string }>();
+const formRef = ref<InstanceType<typeof ElForm>>();
+const tableRef = ref<TableInstance>();
 
-// 表格配置
-const option = reactive({
-  searchShow: true,
-  searchMenuSpan: 6,
-  tip: false,
-  tree: true,
-  border: true,
-  index: true,
-  selection: true,
-  viewBtn: true,
-  menuWidth: 350,
-  column: [
-    {
-      label: '字典编号',
-      prop: 'code',
-      search: true,
-      span: 24,
-      rules: [{
-        required: true,
-        message: '请输入字典编号',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '字典名称',
-      prop: 'dictValue',
-      search: true,
-      rules: [{
-        required: true,
-        message: '请输入字典名称',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '上级字典',
-      prop: 'parentId',
-      type: 'tree',
-      dicData: [],
-      hide: true,
-      props: {
-        label: 'title',
-      },
-      rules: [{
-        required: false,
-        message: '请选择上级字典',
-        trigger: 'click',
-      }],
-    },
-    {
-      label: '字典键值',
-      prop: 'dictKey',
-      type: 'number',
-      rules: [{
-        required: true,
-        message: '请输入字典键值',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '字典排序',
-      prop: 'sort',
-      type: 'number',
-      rules: [{
-        required: true,
-        message: '请输入字典排序',
-        trigger: 'blur',
-      }],
-    },
-    {
-      label: '字典备注',
-      prop: 'remark',
-      search: true,
-      span: 24,
-      hide: true,
-    },
-  ],
+const formRules: FormRules = {
+  code: [{ required: true, message: '请输入字典编号', trigger: 'blur' }],
+  dictValue: [{ required: true, message: '请输入字典名称', trigger: 'blur' }],
+  dictKey: [{ required: true, message: '请输入字典键值', trigger: 'change' }],
+  sort: [{ required: true, message: '请输入字典排序', trigger: 'change' }],
+};
+
+const { data, loading, expandedRowKeys, load, search, reset, refresh, handleExpandChange } =
+  useTreeList<DictEntity, DictQuery, DictListResponse>({
+    fetcher: query => getList<DictEntity>(query),
+    resolveResponse: response => response.data.data,
+    createInitialQuery,
+  });
+const { selectedRows, ids, handleSelectionChange, clearSelection } =
+  useTableSelection<DictEntity>();
+const { add: canAdd, view: canView, edit: canEdit, delete: canDelete } = useCrudPermission('dict');
+const detail = useRemoteDetail<DictEntity, string>(async id => {
+  const response = await getDict<DictEntity>(id);
+  return response.data.data;
 });
-
-// 行操作按钮权限
-const permissionList = computed(() => ({
-  addBtn: validData(permission.value.dict_add, false),
-  viewBtn: validData(permission.value.dict_view, false),
-  delBtn: validData(permission.value.dict_delete, false),
-  editBtn: validData(permission.value.dict_edit, false),
+const parentState = useRemoteOptions<TreeNode>(async () => {
+  const response = await getDictTree();
+  return response.data.data;
+});
+const {
+  options: parentOptions,
+  loading: parentOptionsLoading,
+  failed: parentOptionsFailed,
+} = parentState;
+const { loading: detailLoading, failed: detailFailed } = detail;
+const formLoading = computed(() => detailLoading.value || parentOptionsLoading.value);
+const tableExpandedRowKeys = computed(() => expandedRowKeys.value.map(String));
+const currentAndDescendantIds = computed(() => {
+  const keys = new Set<string>();
+  const collect = (rows?: DictEntity[]) =>
+    rows?.forEach(row => {
+      keys.add(row.id);
+      collect(row.children);
+    });
+  const find = (rows: DictEntity[]): DictEntity | undefined => {
+    for (const row of rows) {
+      if (row.id === form.value.id) return row;
+      const child = find(row.children ?? []);
+      if (child) return child;
+    }
+  };
+  collect(find(data.value)?.children);
+  if (form.value.id) keys.add(form.value.id);
+  return keys;
+});
+const parentTreeProps = computed(() => ({
+  children: 'children',
+  label: 'title',
+  disabled: (node: TreeNode) => currentAndDescendantIds.value.has(String(node.id)),
 }));
 
-// 加载列表数据，并刷新上级字典树
-const onLoad = (pageData: { currentPage: number; pageSize: number }, params: Partial<DictEntity> = {}) => {
-  loading.value = true;
-  getList(pageData.currentPage, pageData.pageSize, Object.assign(params, query.value)).then(res => {
-    data.value = res.data.data;
-    loading.value = false;
-    getDictTree().then(res => {
-      const column = findColumn(option.column, 'parentId');
-      if (column) column.dicData = res.data.data;
+const clearTableSelection = () => {
+  clearSelection();
+  tableRef.value?.clearSelection();
+};
+
+watch(data, clearTableSelection, { flush: 'post' });
+
+const handleSearch = () => void search({ ...searchForm.value });
+const handleTableExpandChange = (row: DictEntity, expanded: boolean | DictEntity[]) => {
+  const isExpanded = Array.isArray(expanded)
+    ? expanded.some(item => item.id === row.id)
+    : expanded;
+  handleExpandChange(row, isExpanded);
+};
+const handleReset = () => {
+  searchForm.value = createInitialQuery();
+  void reset();
+};
+
+const resetDialogState = () => {
+  detail.clear();
+  parentState.clear();
+  parentContext.value = undefined;
+  formRef.value?.clearValidate();
+};
+
+const openAdd = () => {
+  resetDialogState();
+  mode.value = 'add';
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  void parentState.load();
+  nextTick(() => formRef.value?.clearValidate());
+};
+
+const openChild = (row: DictEntity) => {
+  resetDialogState();
+  mode.value = 'add';
+  parentContext.value = { parentId: row.id, code: row.code ?? '' };
+  form.value = { ...createInitialForm(), parentId: row.id, code: row.code };
+  dialogVisible.value = true;
+  void parentState.load();
+  nextTick(() => formRef.value?.clearValidate());
+};
+
+const openDetail = async (row: DictEntity, dialogMode: 'edit' | 'view') => {
+  resetDialogState();
+  mode.value = dialogMode;
+  form.value = createInitialForm();
+  dialogVisible.value = true;
+  const [, entity] = await Promise.all([parentState.load(), detail.load(row.id)]);
+  if (entity) {
+    const detailForm = { ...entity };
+    delete detailForm.children;
+    form.value = detailForm;
+  }
+  await nextTick();
+  formRef.value?.clearValidate();
+};
+
+const handleDialogCancel = () => resetDialogState();
+
+const handleSubmit = async () => {
+  if (!formRef.value || submitting.value || formLoading.value || parentOptionsFailed.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+
+  submitting.value = true;
+  try {
+    const submit = mode.value === 'add' ? add : update;
+    await submit({ ...form.value });
+    dialogVisible.value = false;
+    resetDialogState();
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // Axios 已处理接口错误，保留当前输入供重试。
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const confirmDelete = async (deleteIds: string) => {
+  try {
+    await ElMessageBox.confirm('确定将选择数据删除?', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
     });
-  });
+    await remove(deleteIds);
+    clearTableSelection();
+    await refresh();
+    ElMessage.success('操作成功!');
+  } catch {
+    // 用户取消或接口失败时保持当前列表状态。
+  }
 };
 
-// 条件检索
-const searchChange = (params: Partial<DictEntity>, done: () => void) => {
-  query.value = params;
-  page.currentPage = 1;
-  onLoad(page, params);
-  done();
-};
-
-// 重置检索条件
-const searchReset = () => {
-  query.value = {};
-  onLoad(page);
-};
-
-// 切换页码
-const currentChange = (currentPage: number) => {
-  page.currentPage = currentPage;
-};
-
-// 调整每页条数
-const sizeChange = (pageSize: number) => {
-  page.pageSize = pageSize;
-};
-
-// 记录当前选中行
-const selectionChange = (list: DictEntity[]) => {
-  selectionList.value = list;
-};
-
-// 新增子字典，预填并锁定字典编号与上级字典
-const handleAdd = (row: DictEntity) => {
-  crudRef.value.modelValue.code = row.code;
-  crudRef.value.modelValue.parentId = row.id;
-  crudRef.value.option.column.filter((item: ColumnSchema) => {
-    if (item.prop === 'code') {
-      item.value = row.code;
-      item.addDisabled = true;
-    }
-    if (item.prop === 'parentId') {
-      item.value = row.id;
-      item.addDisabled = true;
-    }
-  });
-  crudRef.value.rowAdd();
-};
-
-// 新增保存
-const rowSave = (row: DictForm, done: () => void, loading: () => void) => {
-  add(row).then(() => {
-    done();
-    onLoad(page);
-    ElMessage({
-      type: 'success',
-      message: '操作成功!',
-    });
-  }, error => {
-    window.console.log(error);
-    loading();
-  });
-};
-
-// 编辑保存
-const rowUpdate = (row: DictForm, index: number, done: () => void, loading: () => void) => {
-  update(row).then(() => {
-    done();
-    onLoad(page);
-    ElMessage({
-      type: 'success',
-      message: '操作成功!',
-    });
-  }, error => {
-    window.console.log(error);
-    loading();
-  });
-};
-
-// 删除单行
-const rowDel = (row: DictEntity) => {
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(row.id);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-    });
-};
-
-// 批量删除选中行
-const handleDelete = () => {
-  if (selectionList.value.length === 0) {
+const handleRowDelete = (row: DictEntity) => void confirmDelete(row.id);
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
     ElMessage.warning('请选择至少一条数据');
     return;
   }
-  ElMessageBox.confirm('确定将选择数据删除?', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      return remove(ids.value);
-    })
-    .then(() => {
-      onLoad(page);
-      ElMessage({
-        type: 'success',
-        message: '操作成功!',
-      });
-      crudRef.value.toggleSelection();
-    });
+  void confirmDelete(ids.value);
 };
 
-// 编辑或查看前加载字典详情
-const beforeOpen = (done: () => void, type: string) => {
-  if (['edit', 'view'].includes(type)) {
-    getDict(form.value.id).then(res => {
-      form.value = res.data.data;
-    });
-  }
-  done();
-};
+onMounted(() => void load());
 </script>
 
-<style>
+<style scoped lang="scss">
+.tree-management-page {
+  min-width: 0;
+}
+
+:deep(.el-input-number),
+:deep(.el-tree-select) {
+  width: 100%;
+}
 </style>
