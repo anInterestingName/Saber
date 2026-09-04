@@ -69,3 +69,44 @@
     }
   }
 }
+
+.saber-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  color: var(--saber-text-tertiary);
+  background: transparent;
+  border: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    color: var(--el-color-primary);
+    background-color: var(--saber-surface-muted);
+  }
+
+  &:focus-visible {
+    color: var(--el-color-primary);
+    box-shadow: 0 0 0 2px var(--saber-surface), 0 0 0 4px var(--el-color-primary);
+  }
+
+  .el-icon {
+    font-size: 14px;
+  }
+
+  &--edge {
+    position: absolute;
+    top: 64px;
+    right: -14px;
+    z-index: 12;
+    width: 28px;
+    height: 28px;
+    background-color: var(--saber-surface-elevated);
+    border: 1px solid var(--saber-border);
+    border-radius: 50%;
+    box-shadow: var(--saber-shadow);
+  }
+}

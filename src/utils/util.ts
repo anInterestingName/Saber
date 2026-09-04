@@ -304,8 +304,10 @@ export const openWindow = (url, title, w, h) => {
   }
 };
 
-export const getScreen = isCollapse => {
-  if (document.body.clientWidth <= 768) {
+export const SIDEBAR_MOBILE_BREAKPOINT = 992;
+
+export const getScreen = (isCollapse: boolean) => {
+  if (document.documentElement.clientWidth <= SIDEBAR_MOBILE_BREAKPOINT) {
     return !isCollapse;
   } else {
     return isCollapse;

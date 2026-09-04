@@ -1,6 +1,9 @@
 <template>
   <div class="saber-shell"
-       :class="{'saber-shell--collapsed':isCollapse,}">
+       :class="{
+         'saber-shell--collapsed':isCollapse&&!isMobile&&!isHorizontal,
+         'saber-shell--mobile-open':isMobile&&isMobileMenuOpen&&validSidebar,
+       }">
     <div class="saber-layout"
          :class="{'saber-layout--horizontal':isHorizontal}">
       <div class="saber-sidebar"
@@ -11,7 +14,7 @@
       </div>
       <div class="saber-main">
         <!-- 顶部导航栏 -->
-        <top ref="top" />
+        <top ref="top" :sidebar-visible="validSidebar" />
         <!-- 顶部标签卡 -->
         <tags />
         <search class="saber-view"
@@ -64,6 +67,8 @@ export default {
       'isRefresh',
       'isLock',
       'isCollapse',
+      'isMobile',
+      'isMobileMenuOpen',
       'isSearch',
       'setting',
     ]),
@@ -78,8 +83,24 @@ export default {
     }
   },
   props: [],
+  watch: {
+    validSidebar(visible) {
+      if (!visible) this.closeMobileMenu();
+    },
+  },
+  mounted() {
+    this.handleViewportChange();
+    window.addEventListener('resize', this.handleViewportChange);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.handleViewportChange);
+  },
   methods: {
+    ...mapActions(useCommonStore, ['closeMobileMenu', 'setViewportWidth']),
     ...mapActions(useUserStore, ['GetMenu']),
+    handleViewportChange() {
+      this.setViewportWidth(window.innerWidth);
+    },
     //打开菜单
     openMenu (item = {}) {
       this.GetMenu(item.id).then(data => {

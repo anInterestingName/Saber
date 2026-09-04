@@ -1,0 +1,33 @@
+# 定义 Compose 项目名称，使容器、网络等资源统一使用 saber 前缀。
+name: saber
+
+# 定义本项目需要由 Docker Compose 管理的服务集合。
+services:
+  # 定义提供 Saber 前端页面的 Nginx 容器服务。
+  web:
+    # 使用 compose.env 指定的标签拉取私有 GHCR 镜像，未设置标签时立即报错。
+    image: ghcr.io/aninterestingname/saber:${SABER_IMAGE_TAG:?请在 compose.env 中设置 SABER_IMAGE_TAG}
+    # 每次执行 up 或 pull 时都向 GHCR 检查并拉取当前标签对应的镜像。
+    pull_policy: always
+    # Docker daemon 或服务器重启后自动恢复服务，手动停止后保持停止。
+    restart: unless-stopped
+    # 定义宿主机与容器之间的端口映射列表。
+    ports:
+      # 默认只监听宿主机回环地址 8080，并转发到容器内的 Nginx 80 端口。
+      - '${SABER_BIND_ADDRESS:-127.0.0.1}:${SABER_HTTP_PORT:-8080}:80'
+    # 禁止容器内进程通过 setuid 或类似机制获得额外权限。
+    security_opt:
+      # 启用 Linux 内核的 no-new-privileges 安全限制。
+      - 'no-new-privileges:true'
+    # 为 Nginx 优雅退出预留十秒，超时后 Docker 才强制终止容器。
+    stop_grace_period: 10s
+    # 配置容器标准输出日志的保存方式和轮转限制。
+    logging:
+      # 使用 Docker 默认的 JSON 文件日志驱动。
+      driver: json-file
+      # 定义 JSON 日志驱动的容量限制选项。
+      options:
+        # 单个日志文件达到十兆字节后执行轮转。
+        max-size: '10m'
+        # 最多保留三个日志文件，避免长期运行占满磁盘。
+        max-file: '3'

@@ -19,16 +19,6 @@
     }
   }
 }
-.saber-breadcrumb {
-  height: 100%;
-  i {
-    font-size: 30px !important;
-  }
-  &--active {
-    transform: rotate(90deg);
-  }
-}
-
 .top-user {
   margin-left: 12px;
   display: flex;
@@ -88,6 +78,15 @@
   left: 10px;
 }
 
+.saber-sidebar-toggle--header {
+  width: 40px;
+  height: vars.$top_height;
+
+  .el-icon {
+    font-size: 20px;
+  }
+}
+
 .top-bar__right {
   right: 10px;
   display: flex;
@@ -108,7 +107,7 @@
 
 .top-bar__title {
   height: 100%;
-  padding-left: 50px;
+  padding-left: 16px;
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;

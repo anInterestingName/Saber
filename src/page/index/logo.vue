@@ -22,8 +22,7 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import website from '@/config/website';
 import { useCommonStore } from '@/store/common';
-import { getScreen } from '@/utils/util';
 
-const { isCollapse } = storeToRefs(useCommonStore());
-const isCompact = computed(() => getScreen(isCollapse.value));
+const { isCollapse, isHorizontal, isMobile } = storeToRefs(useCommonStore());
+const isCompact = computed(() => !isHorizontal.value && !isMobile.value && isCollapse.value);
 </script>

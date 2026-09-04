@@ -1,0 +1,138 @@
+# 定义工作流在 GitHub Actions 页面显示的名称。
+name: 发布私有 GHCR 镜像
+
+# 定义触发本工作流的 GitHub 事件。
+on:
+  # 配置推送事件触发规则。
+  push:
+    # 只在推送符合语义化版本格式的 Git 标签时自动发布。
+    tags:
+      # 匹配示例包括 v5.0.1 和 v5.1.0，不匹配普通分支推送。
+      - 'v*.*.*'
+  # 允许维护者在 GitHub Actions 页面手动触发发布。
+  workflow_dispatch:
+    # 定义手动触发时可填写的参数。
+    inputs:
+      # 定义手动发布所使用的镜像标签参数。
+      image_tag:
+        # 说明该参数会成为冒号后的 Docker 镜像标签。
+        description: '镜像标签，例如 manual、test-20260904 或 v5.0.1'
+        # 要求手动触发者必须提供镜像标签。
+        required: true
+        # 提供适合首次验证的默认标签。
+        default: 'manual'
+        # 将输入值限定为普通字符串。
+        type: string
+
+# 按最小权限原则声明工作流令牌可以执行的操作。
+permissions:
+  # 允许检出仓库代码，但不允许修改仓库内容。
+  contents: read
+  # 允许将构建完成的容器镜像写入 GitHub Packages。
+  packages: write
+
+# 定义整个工作流共享的环境变量。
+env:
+  # 指定私有镜像完整名称；GHCR 要求仓库路径使用小写字符。
+  IMAGE_NAME: ghcr.io/aninterestingname/saber
+  # 自动发布使用 Git 标签，手动发布使用维护者输入的标签。
+  IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.ref_name }}
+
+# 防止同一个 Git 引用被同时发布多次。
+concurrency:
+  # 使用工作流名称和 Git 引用组成并发分组键。
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # 已开始的镜像发布不自动取消，避免推送过程中产生不完整结果。
+  cancel-in-progress: false
+
+# 定义工作流包含的任务集合。
+jobs:
+  # 定义构建并发布镜像的唯一任务标识。
+  publish:
+    # 定义任务在 GitHub Actions 页面显示的中文名称。
+    name: 构建并发布镜像
+    # 使用 GitHub 托管的最新 Ubuntu Linux 运行器。
+    runs-on: ubuntu-latest
+    # 将任务最长执行时间限制为三十分钟，避免异常任务无限占用额度。
+    timeout-minutes: 30
+    # 定义任务按顺序执行的步骤。
+    steps:
+      # 第一步检出触发本次工作流的源码和锁文件。
+      - name: 检出仓库代码
+        # 固定到 actions/checkout v7.0.1 的完整提交，防止可变标签被重新指向其他代码。
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      # 第二步在登录和构建前校验自动或手动生成的 Docker 镜像标签。
+      - name: 校验镜像标签
+        # 明确使用 Bash 的正则表达式能力执行标签校验。
+        shell: bash
+        # 将待校验标签作为局部环境变量传入脚本，避免重复长表达式。
+        env:
+          # 读取工作流前面统一计算出的镜像标签。
+          CANDIDATE_TAG: ${{ env.IMAGE_TAG }}
+        # 将多行标签校验脚本作为一个步骤执行。
+        run: |
+          # Docker 标签必须以字母、数字或下划线开头，且总长度不能超过 128 个字符。
+          if [[ ! "${CANDIDATE_TAG}" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]]; then
+            # 使用 GitHub Actions 错误注解显示不合法标签和允许的字符范围。
+            echo "::error::镜像标签 ${CANDIDATE_TAG} 不合法，只允许字母、数字、下划线、点和连字符，最长 128 个字符。"
+            # 返回非零退出码，阻止使用错误标签登录和构建镜像。
+            exit 1
+          # 结束镜像标签不合法的条件分支。
+          fi
+
+      # 第三步创建支持缓存和多阶段构建的 Docker Buildx 构建器。
+      - name: 配置 Docker Buildx
+        # 固定到 docker/setup-buildx-action v4.3.0 的完整提交，锁定实际执行代码。
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
+
+      # 第四步使用当前工作流的临时令牌登录 GHCR。
+      - name: 登录 GitHub Container Registry
+        # 固定到 docker/login-action v4.6.0 的完整提交，锁定凭据处理逻辑。
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        # 向登录 Action 传入 GHCR 地址和临时认证信息。
+        with:
+          # 指定登录目标为 GitHub Container Registry。
+          registry: ghcr.io
+          # 使用触发工作流的 GitHub 用户作为登录用户名。
+          username: ${{ github.actor }}
+          # 使用 GitHub 自动生成且任务结束后失效的临时令牌。
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 第五步执行 Docker 多阶段构建并在成功后推送私有镜像。
+      - name: 构建并推送 GHCR 镜像
+        # 为后续摘要步骤提供镜像摘要 digest 输出。
+        id: build
+        # 固定到 docker/build-push-action v7.3.0 的完整提交，锁定镜像发布逻辑。
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        # 向构建 Action 传入上下文、Dockerfile、标签和缓存配置。
+        with:
+          # 使用仓库根目录作为 Docker 构建上下文。
+          context: .
+          # 指定本项目实际使用的 Dockerfile 路径。
+          file: ./src/docker/Dockerfile
+          # 固定生成适用于常见 Linux x86-64 服务器的镜像。
+          platforms: linux/amd64
+          # 只有前面所有构建步骤成功后才将镜像推送到 GHCR。
+          push: true
+          # 使用仓库镜像名和当前发布标签组成唯一镜像引用。
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          # 写入源码仓库地址，便于 GHCR 将镜像追溯到当前仓库。
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          # 从 GitHub Actions Cache 恢复之前保存的 BuildKit 构建层。
+          cache-from: type=gha
+          # 将本次所有可复用 BuildKit 构建层保存到 GitHub Actions Cache。
+          cache-to: type=gha,mode=max
+          # 每次构建前尝试拉取基础镜像的最新可用内容。
+          pull: true
+
+      # 最后一步把可复制的镜像地址和不可变摘要写入任务摘要。
+      - name: 输出发布摘要
+        # 明确使用 Bash 执行摘要输出命令。
+        shell: bash
+        # 将多行脚本作为一个步骤执行。
+        run: |
+          # 输出带标签的镜像地址，方便维护者复制到部署命令中。
+          echo "镜像：${IMAGE_NAME}:${IMAGE_TAG}" >> "${GITHUB_STEP_SUMMARY}"
+          # 输出内容摘要，部署系统可使用 digest 精确锁定本次产物。
+          echo "摘要：${{ steps.build.outputs.digest }}" >> "${GITHUB_STEP_SUMMARY}"

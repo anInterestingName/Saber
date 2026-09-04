@@ -1,0 +1,32 @@
+# 排除 Git 历史，避免把无关对象发送到 Docker 构建器。
+.git
+# 排除 GitHub 工作流，因为前端容器构建不需要 CI 配置。
+.github
+# 排除本机安装的依赖，容器会依据锁文件重新安装 Linux 依赖。
+node_modules
+# 排除本机构建产物，容器会在 Node.js 构建阶段重新生成 dist。
+dist
+# 排除 pnpm 本地缓存，避免上传大量且与容器平台不一致的包文件。
+.pnpm-store
+# 排除 Playwright 本地执行证据，避免增加构建上下文体积。
+.playwright-cli
+# 排除本地输出目录，避免把测试或调试产物带入构建阶段。
+output
+# 排除项目文档，前端生产构建不读取 doc 目录。
+doc
+# 排除 JetBrains IDE 的本地项目配置。
+.idea
+# 排除 Visual Studio Code 的本地项目配置。
+.vscode
+# 排除 Claude 本地代理配置和缓存。
+.claude
+# 排除仅供开发机使用且可能包含环境差异的本地环境文件。
+.env.local
+# 排除各模式的本地环境覆盖文件，同时保留受版本控制的 .env.production。
+.env.*.local
+# 排除所有运行日志，避免将调试信息带入镜像构建上下文。
+*.log
+# 排除服务器使用的 Compose 清单，前端构建阶段不需要部署编排配置。
+src/docker/docker-compose.yaml
+# 排除 Compose 变量示例，镜像内容不依赖服务器部署参数。
+src/docker/compose.env.example
