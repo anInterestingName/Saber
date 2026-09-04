@@ -1,5 +1,5 @@
 # 定义工作流在 GitHub Actions 页面显示的名称。
-name: 发布私有 GHCR 镜像
+name: 发布公开 GHCR 镜像
 
 # 定义触发本工作流的 GitHub 事件。
 on:
@@ -28,12 +28,12 @@ on:
 permissions:
   # 允许检出仓库代码，但不允许修改仓库内容。
   contents: read
-  # 允许将构建完成的容器镜像写入 GitHub Packages。
+  # 允许将构建完成的容器镜像写入 GitHub Packages，公开镜像的推送仍需要写权限。
   packages: write
 
 # 定义整个工作流共享的环境变量。
 env:
-  # 指定私有镜像完整名称；GHCR 要求仓库路径使用小写字符。
+  # 指定公开镜像完整名称；GHCR 要求仓库路径使用小写字符。
   IMAGE_NAME: ghcr.io/aninterestingname/saber
   # 自动发布使用 Git 标签，手动发布使用维护者输入的标签。
   IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.ref_name }}
@@ -99,7 +99,7 @@ jobs:
           # 使用 GitHub 自动生成且任务结束后失效的临时令牌。
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 第五步执行 Docker 多阶段构建并在成功后推送私有镜像。
+      # 第五步执行 Docker 多阶段构建并在成功后推送 GHCR 镜像。
       - name: 构建并推送 GHCR 镜像
         # 为后续摘要步骤提供镜像摘要 digest 输出。
         id: build
@@ -132,7 +132,13 @@ jobs:
         shell: bash
         # 将多行脚本作为一个步骤执行。
         run: |
-          # 输出带标签的镜像地址，方便维护者复制到部署命令中。
-          echo "镜像：${IMAGE_NAME}:${IMAGE_TAG}" >> "${GITHUB_STEP_SUMMARY}"
-          # 输出内容摘要，部署系统可使用 digest 精确锁定本次产物。
-          echo "摘要：${{ steps.build.outputs.digest }}" >> "${GITHUB_STEP_SUMMARY}"
+          # 使用一个命令组集中生成三行发布摘要，避免重复打开同一文件。
+          {
+            # 输出带标签的镜像地址，方便维护者复制到部署命令中。
+            echo "镜像：${IMAGE_NAME}:${IMAGE_TAG}"
+            # 输出内容摘要，部署系统可使用 digest 精确锁定本次产物。
+            echo "摘要：${{ steps.build.outputs.digest }}"
+            # 提醒首次发布后确认包为 Public，因为镜像公开属于包级设置。
+            echo "可见性：首次发布后请在 Package settings 确认为 Public"
+          # 结束摘要命令组，并将全部输出一次性追加到 GitHub 任务摘要文件。
+          } >> "${GITHUB_STEP_SUMMARY}"

@@ -1,4 +1,4 @@
-# GitHub Actions 构建并发布私有 GHCR 镜像详细设计文档
+# GitHub Actions 构建并发布公开 GHCR 测试镜像详细设计文档
 
 ## 1. 文档信息
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | 功能/模块 | CI/CD、Docker、Nginx、GHCR |
 | 设计编号 | DESIGN-REQ-2026-008 |
-| 文档版本 | 0.3 |
+| 文档版本 | 0.4 |
 | 关联需求 | [REQ-2026-008](../requirements/REQ-2026-008-ghcr-image-publishing.md) |
 | 关联测试 | [TEST-REQ-2026-008](../test/TEST-REQ-2026-008-ghcr-image-publishing.md) |
 | 目标版本/迭代 | Saber 5.x / 容器化发布 |
@@ -28,7 +28,7 @@ Nginx 运行阶段。Nginx 提供 History 路由回退、静态资源缓存、�
 | DEC-003 | Dockerfile 内执行完整前端构建 | 本地、CI 共用同一 Linux 构建环境 | 镜像构建时间高于直接复制本地 `dist` |
 | DEC-004 | 最终阶段仅保留 Nginx 和 `dist` | 降低镜像体积和攻击面 | 运行容器不能执行 Node.js 命令 |
 | DEC-005 | 不在容器内终止 TLS | 证书生命周期应由反向代理或 Ingress 管理 | 容器只暴露 80 端口 |
-| DEC-006 | 首次真实发布后人工确认 Private | 工作流负责发布，不引入额外管理员 PAT 修改包设置 | 首次发布存在一个人工验收步骤 |
+| DEC-006 | 首次真实发布后人工确认 Public | 测试阶段需要匿名拉取，包可见性由管理员在 Package settings 设置 | Public 不可改回 Private |
 | DEC-007 | Action 固定到当前发布版本的完整提交 SHA | 防止可变版本标签被重新指向未审查代码 | 升级 Action 时需显式更新 SHA 和注释版本 |
 | DEC-008 | Compose 清单与镜像分离下载 | GHCR 只保存镜像，部署清单由 Git 仓库提供版本历史 | 服务器需先取得清单，再执行镜像拉取 |
 
@@ -36,11 +36,11 @@ Nginx 运行阶段。Nginx 提供 History 路由回退、静态资源缓存、�
 
 | 文件/组件 | 职责 | 输入 | 输出 |
 | --- | --- | --- | --- |
-| `.github/workflows/publish-ghcr.yml` | 定义触发、权限、GHCR 登录、Buildx 构建和推送 | Git 标签或人工输入 | 私有 GHCR 镜像 |
+| `.github/workflows/publish-ghcr.yml` | 定义触发、权限、GHCR 登录、Buildx 构建和推送 | Git 标签或人工输入 | 公开 GHCR 测试镜像 |
 | `src/docker/Dockerfile` | 完成前端构建和最小运行镜像组装 | 源码、锁文件、生产环境配置 | Nginx OCI 镜像 |
 | `src/docker/nginx.conf` | 提供静态站点、路由回退、缓存和探活 | HTTP 请求 | 静态资源或 `index.html` |
 | `.dockerignore` | 限制发送给 Docker daemon 的上下文 | 仓库工作区 | 精简构建上下文 |
-| `src/docker/docker-compose.yaml` | 定义私有镜像、端口、重启、安全和日志策略 | `compose.env` | 可运行的 Saber 服务 |
+| `src/docker/docker-compose.yaml` | 定义公开镜像、端口、重启、安全和日志策略 | `compose.env` | 可运行的 Saber 服务 |
 | `src/docker/compose.env.example` | 提供非敏感 Compose 参数示例 | 镜像标签、监听地址、端口 | 服务器本地变量文件模板 |
 | `src/docker/README.md` | 说明部署文件下载、登录、拉取、启动、升级和回滚 | Git 版本、GHCR 只读凭据 | 运维操作步骤 |
 
@@ -62,7 +62,7 @@ sequenceDiagram
     Buildx->>Builder: frozen 安装、类型检查、build:prod
     Builder-->>Runtime: 复制 dist
     Runtime-->>Buildx: 输出最终镜像
-    Buildx->>GHCR: 推送指定标签
+    Buildx->>GHCR: 推送指定标签并由管理员确认 Public
 ```
 
 失败边界：检出、登录、依赖安装、类型检查、生产构建、镜像组装或推送任一步失败，Job 均以非零状态
@@ -110,7 +110,7 @@ sequenceDiagram
 - 默认端口映射为 `127.0.0.1:8080:80`，防止绕过宿主机 HTTPS 反向代理直接访问容器。
 - 不固定 `container_name`，由 Compose 使用项目名 `saber` 管理容器和网络资源。
 - 启用 `no-new-privileges`，设置十秒优雅停止，并限制 JSON 日志为三个十兆字节文件。
-- Compose 清单不保存 GHCR Token；私有仓库认证复用服务器执行 `docker login ghcr.io` 后的凭据。
+- Compose 清单不保存 GHCR Token；包设为 Public 后由服务器匿名拉取。
 - 生产环境从对应 Git 版本标签下载清单，避免使用随 `main` 变化的部署配置。
 
 ## 7. 配置与安全
@@ -118,8 +118,8 @@ sequenceDiagram
 | 检查项 | 设计 |
 | --- | --- |
 | GHCR 写认证 | 仓库运行时生成的 `GITHUB_TOKEN` |
-| GHCR 读认证 | 部署端单独保存的 `read:packages` Token，不写入仓库 |
-| 包可见性 | 首次发布后在 Packages 设置中确认 Private |
+| GHCR 读认证 | Public 包允许匿名拉取，部署端不保存 Token |
+| 包可见性 | 首次发布后在 Packages 设置中确认 Public；该操作不可逆 |
 | 敏感信息 | 不作为 Docker ARG、ENV、标签或日志内容 |
 | Actions 来源 | 使用 GitHub 官方与 Docker 官方 Action，并固定到 2026-09-04 当前版本的完整提交 SHA |
 | 构建输入 | 锁文件、源码和 `.env.production`；排除本地缓存、Git 元数据和构建产物 |
@@ -130,14 +130,14 @@ sequenceDiagram
 ## 8. 测试、发布与回滚
 
 测试范围包括配置静态检查、`pnpm run type-check`、Docker 构建、Nginx 配置检查、根路径、History
-子路由、健康检查和 Docker Compose 渲染。本地检查均已通过；真实 GHCR 推送和 Compose 私有拉取
+子路由、健康检查和 Docker Compose 渲染。本地检查均已通过；真实 GHCR 推送和 Compose 匿名拉取
 需要配置提交后的 GitHub Actions 环境，当前标记为阻塞而不是以本地构建替代。
 
 发布步骤：
 
 1. 合并配置后在 GitHub Actions 手动使用 `manual` 标签验证首次发布。
-2. 在 Packages 页面确认 `ghcr.io/aninterestingname/saber` 为 Private 且已关联仓库。
-3. 使用只读 Token 在目标服务器拉取 `manual` 镜像并执行冒烟测试。
+2. 在 Packages 页面将 `ghcr.io/aninterestingname/saber` 确认为 Public 且已关联仓库。
+3. 在未登录 GHCR 的目标服务器匿名拉取 `manual` 镜像并执行冒烟测试。
 4. 创建正式版本标签，例如 `v5.0.1`，生成正式镜像。
 
 回滚通过重新部署上一个已验证的版本标签完成，不覆盖历史版本标签。数据库不涉及，无迁移和降级步骤。
@@ -146,13 +146,14 @@ sequenceDiagram
 
 | 风险 | 控制措施 | 状态 |
 | --- | --- | --- |
-| 首次 GHCR 包可见性未确认 | 首次发布后人工检查 Private | 待执行 |
+| Public 设置不可逆 | 仅将当前测试包公开；未来私有发布使用新包名 | 已接受 |
 | Docker Hub 或本地 daemon 不可用 | 将本地容器验证标记阻塞，以 GitHub Actions Linux 构建补验 | 开放 |
 | API 地址与部署拓扑不一致 | 默认沿用现有生产配置，网关代理另行设计 | 开放 |
 | 基础镜像标签后续变化 | 发布前定期升级并重新验证；正式高安全环境可进一步固定 digest | 接受 |
 
 | 日期 | 版本 | 变更内容 | 修改人 |
 | --- | --- | --- | --- |
+| 2026-09-04 | 0.4 | 测试发布改为 Public，部署端改为匿名拉取并记录不可逆边界 | Codex |
 | 2026-09-04 | 0.3 | 增加 Compose 部署清单、变量契约、下载流程、安全默认值和回滚设计 | Codex |
 | 2026-09-04 | 0.2 | 完成实现，本地 Linux 镜像构建、Nginx 路由、缓存与健康检查通过 | Codex |
 | 2026-09-04 | 0.1 | 确定 GHCR、Buildx、多阶段镜像、Nginx History 回退和最小权限方案 | Codex |

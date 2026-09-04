@@ -5,7 +5,7 @@ name: saber
 services:
   # 定义提供 Saber 前端页面的 Nginx 容器服务。
   web:
-    # 使用 compose.env 指定的标签拉取私有 GHCR 镜像，未设置标签时立即报错。
+    # 使用 compose.env 指定的标签拉取公开 GHCR 镜像，未设置标签时立即报错。
     image: ghcr.io/aninterestingname/saber:${SABER_IMAGE_TAG:?请在 compose.env 中设置 SABER_IMAGE_TAG}
     # 每次执行 up 或 pull 时都向 GHCR 检查并拉取当前标签对应的镜像。
     pull_policy: always

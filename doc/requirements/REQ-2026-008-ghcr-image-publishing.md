@@ -1,12 +1,12 @@
-# GitHub Actions 构建并发布私有 GHCR 镜像需求文档
+# GitHub Actions 构建并发布公开 GHCR 测试镜像需求文档
 
 ## 1. 文档信息
 
 | 项目 | 内容 |
 | --- | --- |
-| 需求名称 | GitHub Actions 构建并发布私有 GHCR 镜像 |
+| 需求名称 | GitHub Actions 构建并发布公开 GHCR 测试镜像 |
 | 需求编号 | REQ-2026-008 |
-| 文档版本 | 0.3 |
+| 文档版本 | 0.4 |
 | 所属模块 | CI/CD、Docker、Nginx、GHCR |
 | 目标版本/迭代 | Saber 5.x / 容器化发布 |
 | 文档状态 | 开发中 |
@@ -21,12 +21,12 @@
 ### 2.1 摘要
 
 当前仓库只有将本地 `dist` 复制到 Nginx 的基础 Dockerfile，没有自动构建和镜像发布链路。
-本需求使用 GitHub Actions 完成类型检查、生产构建、Docker 镜像构建和私有 GHCR 发布，并为新增
+本需求使用 GitHub Actions 完成类型检查、生产构建、Docker 镜像构建和公开 GHCR 测试发布，并为新增
 部署配置的每个有效行提供紧邻的中文解释，便于维护者学习和调整。
 
 ### 2.2 需求目标
 
-1. 推送符合 `v*.*.*` 的 Git 标签或手动触发工作流时，构建并发布私有 GHCR 镜像。
+1. 推送符合 `v*.*.*` 的 Git 标签或手动触发工作流时，构建并发布公开 GHCR 测试镜像。
 2. 使用 Node.js 22、固定 pnpm 版本和锁文件完成可重复的 Linux 容器构建。
 3. 最终运行镜像只包含 Nginx、静态资源和必要配置，不包含源码及 Node.js 依赖。
 4. Nginx 支持 Vue Router History 模式刷新回退及容器健康检查。
@@ -45,7 +45,7 @@
 
 | 故事编号 | 优先级 | 用户故事 | 典型场景 | 依赖 |
 | --- | --- | --- | --- | --- |
-| US-001 | Must | 作为发布人员，我希望打版本标签后自动生成私有镜像，以便稳定部署 Saber。 | GitHub Release 前后 | GitHub Actions、GHCR |
+| US-001 | Must | 作为发布人员，我希望打版本标签后自动生成公开测试镜像，以便无凭据验证 Saber 部署。 | GitHub Release 前后 | GitHub Actions、GHCR |
 | US-002 | Must | 作为维护人员，我希望每行配置都有中文说明，以便理解并安全修改发布参数。 | 学习或排查 CI/CD | 无 |
 | US-003 | Must | 作为运维人员，我希望前端子路由刷新可用且容器可被探活。 | Docker、Kubernetes 或反向代理部署 | Nginx |
 
@@ -74,7 +74,7 @@ flowchart TD
     E --> F{生产构建成功?}
     F -- 否 --> G[工作流失败且不发布镜像]
     F -- 是 --> H[生成仅含 Nginx 与 dist 的运行镜像]
-    H --> I[推送私有 GHCR 镜像]
+    H --> I[推送 GHCR 镜像并确认 Public]
     I --> J([按标签拉取部署])
 ```
 
@@ -83,10 +83,10 @@ flowchart TD
 
 ## 5. 功能需求与验收标准
 
-### 5.1 REQ-001 私有 GHCR 发布
+### 5.1 REQ-001 公开 GHCR 测试发布
 
 - `AC-001`：Given 仓库 Actions 具备 Packages 写权限，When 推送 `v*.*.*` 标签，Then 工作流将
-  `ghcr.io/aninterestingname/saber:<标签>` 推送到 GHCR。
+  `ghcr.io/aninterestingname/saber:<标签>` 推送到 GHCR，首次发布后管理员将包确认为 Public。
 - `AC-002`：Given 维护者手动触发工作流，When 输入合法镜像标签，Then 工作流按该标签构建并发布。
 - `AC-003`：Given 工作流执行，When 登录 GHCR，Then 仅使用 `GITHUB_TOKEN`，仓库中不存在明文 PAT。
 
@@ -110,7 +110,8 @@ flowchart TD
 
 ### 5.5 REQ-005 Docker Compose 部署
 
-- `AC-011`：Given 服务器已登录私有 GHCR，When 使用变量文件执行 `docker compose pull`，Then 按
+- `AC-011`：Given GHCR 包已设置为 Public，When 未登录 GHCR 的服务器使用变量文件执行
+  `docker compose pull`，Then 按
   `SABER_IMAGE_TAG` 拉取 `ghcr.io/aninterestingname/saber` 镜像。
 - `AC-012`：Given 镜像拉取成功，When 执行 `docker compose up -d`，Then 服务默认只绑定
   `127.0.0.1:8080`，继承镜像健康检查并配置自动重启。
@@ -124,11 +125,11 @@ flowchart TD
 | BR-001 | GHCR 镜像路径必须使用全小写 | 镜像名称 | Docker 构建或推送失败 |
 | BR-002 | 正式发布标签采用 `v主版本.次版本.修订版本` | Git 标签触发 | 不自动触发发布 |
 | BR-003 | Actions 不保存长期 GHCR 写凭据 | 工作流认证 | 安全审查不通过 |
-| BR-004 | 部署端只授予 `read:packages` | 服务器拉取 | 不允许使用写权限 Token |
+| BR-004 | Public 测试镜像允许匿名拉取 | 服务器拉取 | 不要求保存 GitHub Token 或 PAT |
 | BR-005 | TLS 在外部反向代理或 Ingress 终止 | 运行容器 | 容器只监听 HTTP 80 |
 
-GitHub Actions 通过仓库 `GITHUB_TOKEN` 写入 Packages。生产服务器拉取私有镜像所需的凭据不属于
-仓库文件，不得提交到 Git；凭据应通过服务器密钥管理、CI 环境密钥或 Kubernetes Secret 提供。
+GitHub Actions 通过仓库 `GITHUB_TOKEN` 写入 Packages。包切换为 Public 后，服务器匿名拉取，不需要
+保存 GitHub Token 或 PAT；写权限令牌仍只存在于 GitHub Actions 运行期间。
 
 ## 7. 页面、API、数据库与兼容影响
 
@@ -142,13 +143,13 @@ GitHub Actions 通过仓库 `GITHUB_TOKEN` 写入 Packages。生产服务器拉�
 
 | 类别 | 要求 | 验证标准 |
 | --- | --- | --- |
-| 安全 | 最小 Actions 权限、无明文凭据、私有包 | 静态检查和首次发布后人工确认 |
+| 安全 | 最小 Actions 写权限、无明文凭据、公开包不包含秘密 | 静态检查和首次发布后人工确认 |
 | 可重复性 | 固定 Node 主版本、pnpm 精确版本和锁文件 | Docker 构建日志 |
 | 可维护性 | 配置有效行均有中文解释 | 人工逐行审查 |
 | 可用性 | History 路由回退和 `/healthz` 探活 | 容器请求验证 |
 
-开放项：首次真实推送后，需要仓库管理员在 GitHub Packages 页面确认镜像可见性为 Private，并验证
-目标服务器能够使用只读 Token 拉取镜像。当前代码仓库为 Public 不改变镜像必须保持 Private 的要求。
+开放项：首次真实推送后，需要仓库管理员在 GitHub Packages 页面将镜像可见性确认为 Public，并验证
+未登录 GHCR 的目标服务器可以匿名拉取。Public 为不可逆设置，后续需要私有镜像时应使用新的包名。
 
 ## 9. 实施与变更记录
 
@@ -157,12 +158,13 @@ GitHub Actions 通过仓库 `GITHUB_TOKEN` 写入 Packages。生产服务器拉�
   紧邻中文解释。
 - 本地验证结果：`pnpm run type-check`、actionlint 1.7.12、Linux Docker 多阶段构建、`nginx -t`、
   `/healthz`、History 子路由回退和缓存响应头均通过。最终镜像约 33.2 MB，不包含 Node.js 和源码目录。
-- 未完成验收项：配置尚未提交并推送，真实 GHCR 私有发布、Packages 可见性和目标服务器只读拉取
-  尚未执行，因此需求保持“开发中（开发完成，待远端验收）”。
+- 未完成验收项：公开模式尚未合并到默认分支 `main` 并触发工作流，真实 GHCR 发布、Packages
+  Public 可见性和目标服务器匿名拉取尚未执行，因此需求保持“开发中（开发完成，待远端验收）”。
 - 数据库设计：不涉及。
 
 | 日期 | 版本 | 变更内容 | 修改人 |
 | --- | --- | --- | --- |
+| 2026-09-04 | 0.4 | 测试阶段改为 Public 包和匿名拉取，移除部署端 PAT 依赖 | Codex |
 | 2026-09-04 | 0.3 | 增加 Docker Compose 清单、变量示例和服务器拉取、启动、升级及回滚流程 | Codex |
 | 2026-09-04 | 0.2 | 完成配置实现和本地容器验证，记录真实 GHCR 发布待验收 | Codex |
 | 2026-09-04 | 0.1 | 建立 GHCR 私有镜像发布、容器构建、Nginx 回退和逐行中文解释需求 | Codex |

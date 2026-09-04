@@ -1,10 +1,10 @@
-# Saber 私有 GHCR 镜像部署说明
+# Saber 公开 GHCR 镜像部署说明
 
 ## 文件关系
 
 - `docker-compose.yaml` 是服务器部署清单，需要先从 GitHub 代码仓库取得。
 - `compose.env.example` 是非敏感变量示例，服务器复制为 `compose.env` 后填写镜像标签和端口。
-- `docker compose pull` 根据 Compose 文件中的 `image` 拉取 GHCR 私有镜像，但不会启动容器。
+- `docker compose pull` 根据 Compose 文件中的 `image` 匿名拉取公开 GHCR 镜像，但不会启动容器。
 - `docker compose up -d` 创建或更新容器；由于配置了 `pull_policy: always`，执行时也会检查远端镜像。
 
 ## 1. 下载部署文件
@@ -37,18 +37,14 @@ SABER_HTTP_PORT=8080
 这些参数只用于 Compose 字符串替换，不会进入前端容器环境，也不能改变已经编译进静态资源的
 `VITE_APP_*` 配置。不要把 GitHub Token 或密码写入 `compose.env`。
 
-## 3. 登录私有 GHCR
+## 3. 确认 GHCR 包为公开
 
-在服务器创建仅有 `read:packages` 权限的 GitHub Personal Access Token classic，然后执行：
+首次 Actions 发布后，在 GitHub 用户主页依次进入 `Packages`、`saber`、`Package settings`，在
+`Danger Zone` 中将可见性修改为 `Public`。公开设置是不可逆操作，后续不能再改回 Private。
 
-```bash
-read -rsp 'GHCR Token: ' GHCR_TOKEN
-echo
-printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u anInterestingName --password-stdin
-unset GHCR_TOKEN
-```
+包变为 Public 后，服务器不需要执行 `docker login ghcr.io`，也不需要保存 GitHub Token 或 PAT。
 
-## 4. 校验、拉取和启动
+## 4. 校验、匿名拉取和启动
 
 ```bash
 docker compose --env-file compose.env -f docker-compose.yaml config
