@@ -32,9 +32,11 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapActions, mapState } from 'pinia';
 import { validateNull } from '@/utils/validate';
 import { Search } from '@element-plus/icons-vue';
+import { useCommonStore } from '@/store/common';
+import { useUserStore } from '@/store/user';
 export default {
   components: { Search },
   data() {
@@ -68,11 +70,12 @@ export default {
     childrenKey() {
       return this.website.menu.children;
     },
-    ...mapGetters(['menu']),
+    ...mapState(useUserStore, ['menu']),
   },
   methods: {
+    ...mapActions(useCommonStore, ['setSearch']),
     handleEsc() {
-      this.$store.commit('SET_IS_SEARCH', false);
+      this.setSearch(false);
     },
     getMenuList() {
       const findMenu = list => {

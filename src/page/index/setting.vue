@@ -147,11 +147,12 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import { Check, RefreshLeft, Setting } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import { useCommonStore } from '@/store/common';
 import { applyTheme, primaryColorOptions } from '@/utils/theme';
-import type { AppSetting, LayoutMode, ThemeMode } from '@/types/setting';
+import type { LayoutMode, ThemeMode } from '@/types/setting';
 
 type BooleanSettingKey = 'tag' | 'collapse' | 'search' | 'fullscreen' | 'lock' | 'debug';
 
@@ -160,11 +161,11 @@ interface SettingOption {
   key: BooleanSettingKey;
 }
 
-const store = useStore();
+const commonStore = useCommonStore();
+const { setting } = storeToRefs(commonStore);
 const show = ref(false);
 const viewportWidth = ref(window.innerWidth);
 
-const setting = computed<AppSetting>(() => store.getters.setting);
 const themeMode = computed<ThemeMode>(() => setting.value.theme);
 const drawerSize = computed(() => `${Math.min(viewportWidth.value, 320)}px`);
 
@@ -192,26 +193,26 @@ const toolOptions: SettingOption[] = [
 ];
 
 const setThemeMode = (mode: ThemeMode) => {
-  store.commit('SET_SETTING', { theme: mode });
-  applyTheme(store.getters.setting);
+  commonStore.setSetting({ theme: mode });
+  applyTheme(setting.value);
 };
 
 const setPrimaryColor = (colorPrimary: string) => {
-  store.commit('SET_SETTING', { colorPrimary });
-  applyTheme(store.getters.setting);
+  commonStore.setSetting({ colorPrimary });
+  applyTheme(setting.value);
 };
 
 const setLayout = (layout: LayoutMode) => {
-  store.commit('SET_LAYOUT', layout);
+  commonStore.setLayout(layout);
 };
 
 const updateSetting = (key: BooleanSettingKey, value: string | number | boolean) => {
-  store.commit('SET_SETTING', { [key]: Boolean(value) });
+  commonStore.setSetting({ [key]: Boolean(value) });
 };
 
 const resetSetting = () => {
-  store.commit('RESET_SETTING');
-  applyTheme(store.getters.setting);
+  commonStore.resetSetting();
+  applyTheme(setting.value);
   ElMessage.success('已恢复默认设置');
 };
 

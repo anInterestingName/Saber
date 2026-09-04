@@ -72,11 +72,13 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapActions, mapState } from 'pinia';
 import website from '@/config/website';
 import { getCaptcha } from '@/api/user';
 import { getTopUrl } from 'utils/util';
 import { info } from '@/api/system/tenant';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 export default {
   name: 'userlogin',
   data() {
@@ -119,10 +121,13 @@ export default {
   },
   mounted() {},
   computed: {
-    ...mapGetters(['tagWel']),
+    ...mapState(useTagsStore, {
+      tagWel: store => store.homeTag,
+    }),
   },
   props: [],
   methods: {
+    ...mapActions(useUserStore, ['LoginByUsername']),
     refreshCode() {
       getCaptcha().then(res => {
         const data = res.data.data;
@@ -138,8 +143,7 @@ export default {
             text: '登录中,请稍后',
             background: 'rgba(0, 0, 0, 0.7)',
           });
-          this.$store
-            .dispatch('LoginByUsername', this.loginForm)
+          this.LoginByUsername(this.loginForm)
             .then(() => {
               loading.close();
               this.$router.push(this.tagWel);

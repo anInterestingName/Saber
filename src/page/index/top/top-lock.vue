@@ -29,8 +29,9 @@
 
 <script>
 import { validateNull } from "utils/validate";
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
 import { Lock } from '@element-plus/icons-vue';
+import { useCommonStore } from '@/store/common';
 export default {
   name: "top-lock",
   components: { Lock },
@@ -45,16 +46,19 @@ export default {
   created () { },
   mounted () { },
   computed: {
-    ...mapGetters(["lockPasswd"]),
+    ...mapState(useCommonStore, {
+      lockPasswd: store => store.lockPassword,
+    }),
   },
   props: {
     text: String
   },
   methods: {
+    ...mapActions(useCommonStore, ['setLockPassword', 'lock']),
     handleSetLock () {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          this.$store.commit("SET_LOCK_PASSWD", this.form.passwd);
+          this.setLockPassword(this.form.passwd);
           this.handleLock();
         }
       });
@@ -64,13 +68,12 @@ export default {
         this.box = true;
         return;
       }
-      this.$store.commit("SET_LOCK");
+      this.lock();
       setTimeout(() => {
         this.$router.push({ path: "/lock" });
       }, 100);
     }
   },
-  components: {}
 };
 </script>
 

@@ -6,8 +6,6 @@
  * isToken是否需要token
  */
 import axios from 'axios'
-import store from '@/store/';
-import router from '@/router/'
 import { serialize } from 'utils/util'
 import { getToken } from 'utils/auth'
 import { ElMessage } from 'element-plus'
@@ -18,6 +16,29 @@ import { Base64 } from 'js-base64';
 import { isURL } from 'utils/validate';
 import { baseUrl } from '@/config/env';
 import crypto from '@/utils/crypto';
+
+type UnauthorizedHandler = () => Promise<void>;
+
+let unauthorizedHandler: UnauthorizedHandler | undefined;
+let unauthorizedTask: Promise<void> | null = null;
+
+export const setUnauthorizedHandler = (handler: UnauthorizedHandler) => {
+  unauthorizedHandler = handler;
+};
+
+const handleUnauthorized = () => {
+  if (!unauthorizedHandler) return Promise.resolve();
+  if (!unauthorizedTask) {
+    unauthorizedTask = unauthorizedHandler()
+      .catch(error => {
+        if (import.meta.env.DEV) console.error('401 会话清理失败', error);
+      })
+      .finally(() => {
+        unauthorizedTask = null;
+      });
+  }
+  return unauthorizedTask;
+};
 
 axios.defaults.timeout = 10000;
 // 仅 2xx 响应进入业务状态处理，HTTP 错误统一在失败拦截器恢复页面状态。
@@ -64,8 +85,10 @@ axios.interceptors.response.use(res => {
   const message = res.data?.msg || '未知错误';
   //如果在白名单里则自行catch逻辑处理
   if (statusWhiteList.includes(status)) return Promise.reject(res);
-  //如果是401则跳转到登录页面
-  if (status === 401) store.dispatch('FedLogOut').then(() => router.push({ path: '/login' }));
+  if (status === 401) {
+    void handleUnauthorized();
+    return Promise.reject(new Error(message));
+  }
   // 如果请求为非200否者默认统一处理
   if (status !== 200) {
     ElMessage({
@@ -82,7 +105,10 @@ axios.interceptors.response.use(res => {
   const statusWhiteList = website.statusWhiteList || [];
   const message = response?.data?.msg || error?.message || '未知错误';
   if (statusWhiteList.includes(status)) return Promise.reject(error);
-  if (status === 401) store.dispatch('FedLogOut').then(() => router.push({ path: '/login' }));
+  if (status === 401) {
+    void handleUnauthorized();
+    return Promise.reject(error instanceof Error ? error : new Error(message));
+  }
   ElMessage({
     message,
     type: 'error'

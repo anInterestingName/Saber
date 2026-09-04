@@ -1,14 +1,10 @@
 import { computed } from 'vue';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '@/store/user';
 import { validData } from '@/utils/util';
 
-interface PermissionMap {
-  [key: string]: boolean | undefined;
-}
-
 export const useCrudPermission = (moduleName: string) => {
-  const store = useStore();
-  const permission = computed<PermissionMap>(() => store.getters.permission ?? {});
+  const { permission } = storeToRefs(useUserStore());
   const hasPermission = (action: string) =>
     computed(() => validData(permission.value[`${moduleName}_${action}`], false));
 

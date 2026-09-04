@@ -5,8 +5,10 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapActions, mapState } from 'pinia';
 import basicVideo from '@/components/basic-video/main.vue';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 export default {
   components: {
     basicVideo,
@@ -29,11 +31,14 @@ export default {
     clearTimeout(this.timer);
   },
   computed: {
-    ...mapGetters(['tagWel']),
+    ...mapState(useTagsStore, {
+      tagWel: store => store.homeTag,
+    }),
   },
   methods: {
+    ...mapActions(useUserStore, ['LoginByUsername']),
     handleLogin() {
-      this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
+      this.LoginByUsername(this.loginForm).then(() => {
         this.$router.push(this.tagWel);
       });
     },

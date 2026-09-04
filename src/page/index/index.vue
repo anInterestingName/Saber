@@ -21,7 +21,7 @@
              v-show="!isSearch"
              v-if="isRefresh">
           <router-view #="{ Component }">
-            <keep-alive :include="$store.getters.tagsKeep">
+            <keep-alive :include="tagsKeep">
               <component :is="Component" />
             </keep-alive>
           </router-view>
@@ -34,7 +34,10 @@
 <script>
 import index from '@/mixins/index'
 import { validateNull } from 'utils/validate'
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
+import { useCommonStore } from '@/store/common';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 import tags from "./tags.vue";
 import search from "./search.vue";
 import logo from "./logo.vue";
@@ -56,7 +59,18 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["isHorizontal", "isRefresh", "isLock", "isCollapse", "isSearch", "menu", "setting",]),
+    ...mapState(useCommonStore, [
+      'isHorizontal',
+      'isRefresh',
+      'isLock',
+      'isCollapse',
+      'isSearch',
+      'setting',
+    ]),
+    ...mapState(useUserStore, ['menu']),
+    ...mapState(useTagsStore, {
+      tagsKeep: store => store.keepAliveNames,
+    }),
     validSidebar () {
       return !(
         (this.$route.meta || {}).menu === false || (this.$route.query || {}).menu === 'false'
@@ -65,9 +79,10 @@ export default {
   },
   props: [],
   methods: {
+    ...mapActions(useUserStore, ['GetMenu']),
     //打开菜单
     openMenu (item = {}) {
-      this.$store.dispatch("GetMenu", item.id).then(data => {
+      this.GetMenu(item.id).then(data => {
         if (data.length !== 0) {
           this.$router.$dynamicRouter.formatRoutes(data, true);
           if (!validateNull(item.path)) {

@@ -199,12 +199,13 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { Delete, Plus, Refresh, Setting } from '@element-plus/icons-vue';
 import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import SearchPanel from '@/components/search-panel/main.vue';
 import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import { useUserStore } from '@/store/user';
 import IconSelect from '@/components/icon-select/main.vue';
 import TreeCheckPanel from '@/components/tree-check-panel/main.vue';
 import { useCrudPermission } from '@/composables/useCrudPermission';
@@ -257,8 +258,8 @@ const createInitialForm = (): TopMenuForm => ({
   path: '',
 });
 
-const store = useStore();
-const canSetting = computed(() => validData(store.getters.permission?.topmenu_setting, false));
+const { permission } = storeToRefs(useUserStore());
+const canSetting = computed(() => validData(permission.value.topmenu_setting, false));
 const searchForm = ref<TopMenuQuery>(createInitialQuery());
 const form = ref<TopMenuForm>(createInitialForm());
 const mode = ref<CrudMode>('add');

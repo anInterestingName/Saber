@@ -1,8 +1,6 @@
-import website from '@/config/website';
-import { getToken } from '@/utils/auth';
 import type { RouteLocationNormalized, RouteRecordRaw, Router } from 'vue-router';
-import type { Store } from 'vuex';
 import type { MenuItem, MenuMeta } from '@/types/menu';
+import type { TagItem, useTagsStore } from '@/store/tags';
 
 const modules = import.meta.glob<{ default: { name?: string } }>('../**/**/*.vue');
 
@@ -10,14 +8,14 @@ const isURL = (value?: string) => /^https?:\/\/.*/.test(value ?? '');
 
 interface InstallOptions {
   router: Router;
-  store: Store<object>;
+  tagsStore: ReturnType<typeof useTagsStore>;
   i18n: { global: { t: (key: string) => string; te: (key: string) => boolean } };
   keepAlive?: boolean;
 }
 
 export interface DynamicRouterManager {
   setTitle: (title?: string) => void;
-  closeTag: (value?: string | object) => void;
+  closeTag: (value?: string | TagItem) => void;
   generateTitle: (
     item: MenuItem | RouteLocationNormalized,
     props?: { query?: string; label?: string; meta?: string }
@@ -31,18 +29,18 @@ type DynamicRouteRecord = RouteRecordRaw & {
 };
 
 export const installDynamicRouter = (options: InstallOptions) => {
-  const { router, store, i18n, keepAlive } = options;
+  const { router, tagsStore, i18n, keepAlive } = options;
   const setTitle = (title?: string) => {
     const defaultTitle = i18n.global.t('title');
     document.title = title ? `${title} | ${defaultTitle}` : defaultTitle;
   };
 
-  const closeTag = (value?: string | object) => {
-    let tag = value || store.getters.tag;
+  const closeTag = (value?: string | TagItem) => {
+    let tag = typeof value === 'string' ? undefined : value || tagsStore.currentTag || undefined;
     if (typeof value === 'string') {
-      tag = store.getters.tagList.find(item => item.fullPath === value);
+      tag = tagsStore.tagList.find(item => item.fullPath === value);
     }
-    if (tag) store.commit('DEL_TAG', tag);
+    if (tag) tagsStore.deleteTag(tag);
   };
 
   const generateTitle = (
@@ -124,38 +122,4 @@ export const installDynamicRouter = (options: InstallOptions) => {
     formatRoutes,
   };
   router.$dynamicRouter = manager;
-};
-
-export const formatMenuPaths = (menuItem: MenuItem, first?: boolean) => {
-  const icon = menuItem.source;
-  menuItem.source = icon || website.menu.iconDefault;
-  menuItem.meta = menuItem.meta || {};
-  const iframeComponent = 'components/iframe/main';
-  const createIframeUrl = (href: string) => {
-    let processedHref = href.replace(/&/g, '#');
-    if (processedHref.includes('${token}')) {
-      processedHref = processedHref.replace(/\$\{token\}/g, getToken() ?? '');
-    }
-    return processedHref;
-  };
-  const children = menuItem.children ?? [];
-  const isChild = children.length > 0;
-  if (!isChild && first) {
-    menuItem.component = `views${menuItem.path ?? ''}`;
-    if (isURL(menuItem.path)) {
-      menuItem.component = iframeComponent;
-      menuItem.query = { url: createIframeUrl(menuItem.path ?? '') };
-    }
-    return;
-  }
-  children.forEach(child => {
-    child.component = `views${child.path ?? ''}`;
-    if (isURL(child.path)) {
-      const href = child.path ?? '';
-      child.path = `${menuItem.path ?? ''}/${child.code ?? ''}`;
-      child.component = iframeComponent;
-      child.query = { url: createIframeUrl(href) };
-    }
-    formatMenuPaths(child);
-  });
 };

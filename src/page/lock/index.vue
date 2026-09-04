@@ -44,7 +44,10 @@
 <script>
 import { Lock, SwitchButton, Unlock, UserFilled } from '@element-plus/icons-vue';
 import AuthLayout from '@/components/auth-layout/main.vue';
-import { mapGetters } from 'vuex';
+import { mapActions, mapState } from 'pinia';
+import { useCommonStore } from '@/store/common';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 
 export default {
   name: 'lock',
@@ -63,16 +66,26 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(['userInfo', 'tag', 'lockPasswd']),
+    ...mapState(useUserStore, {
+      userInfo: store => store.userInfo || {},
+    }),
+    ...mapState(useTagsStore, {
+      tag: store => store.currentTag,
+    }),
+    ...mapState(useCommonStore, {
+      lockPasswd: store => store.lockPassword,
+    }),
   },
   methods: {
+    ...mapActions(useUserStore, ['LogOut']),
+    ...mapActions(useCommonStore, ['clearLock']),
     handleLogout() {
       this.$confirm('是否退出系统, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
       }).then(() => {
-        this.$store.dispatch('LogOut').then(() => {
+        this.LogOut().then(() => {
           this.$router.push({ path: '/login' });
         });
       });
@@ -92,9 +105,9 @@ export default {
       }
       this.pass = true;
       setTimeout(() => {
-        this.$store.commit('CLEAR_LOCK');
+        this.clearLock();
         this.$router.push({
-          path: this.tag.path,
+          path: this.tag?.path || '/',
         });
       }, 1000);
     },

@@ -216,13 +216,14 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { Delete, Plus, Refresh } from '@element-plus/icons-vue';
 import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import ScopeMenuBrowser from '@/views/authority/components/scope-menu-browser.vue';
 import SearchPanel from '@/components/search-panel/main.vue';
 import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import { useUserStore } from '@/store/user';
 import DictSelect from '@/components/dict-select/main.vue';
 import DictTag from '@/components/dict-tag/main.vue';
 import { usePagedList } from '@/composables/usePagedList';
@@ -274,8 +275,8 @@ const createInitialForm = (menu?: ScopeMenuEntity): ApiScopeForm => ({
   remark: '',
 });
 
-const store = useStore();
-const canConfigure = computed(() => validData(store.getters.permission?.api_scope_setting, false));
+const { permission } = storeToRefs(useUserStore());
+const canConfigure = computed(() => validData(permission.value.api_scope_setting, false));
 const activeMenu = ref<ScopeMenuEntity>();
 const drawerVisible = ref(false);
 const searchForm = ref<ScopeQuery>(createInitialQuery());

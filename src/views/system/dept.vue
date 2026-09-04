@@ -152,12 +152,13 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { Delete, Plus, Refresh } from '@element-plus/icons-vue';
 import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import SearchPanel from '@/components/search-panel/main.vue';
 import ListPanel from '@/components/list-panel/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
 import { useCrudPermission } from '@/composables/useCrudPermission';
+import { useUserStore } from '@/store/user';
 import { useRemoteDetail } from '@/composables/useRemoteDetail';
 import { useRemoteOptions } from '@/composables/useRemoteOptions';
 import { useTableSelection } from '@/composables/useTableSelection';
@@ -198,8 +199,7 @@ const createInitialForm = (): DeptForm => ({
   remark: '',
 });
 
-const store = useStore();
-const isAdmin = computed(() => store.getters.userInfo?.authority?.includes('admin') ?? false);
+const { isAdmin } = storeToRefs(useUserStore());
 const searchForm = ref<DeptQuery>(createInitialQuery());
 const form = ref<DeptForm>(createInitialForm());
 const mode = ref<CrudMode>('add');

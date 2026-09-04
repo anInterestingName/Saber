@@ -17,7 +17,9 @@
 
 <script>
 import { ArrowDown } from '@element-plus/icons-vue';
-import { mapGetters } from 'vuex';
+import { mapActions, mapState } from 'pinia';
+import { useCommonStore } from '@/store/common';
+import { useTagsStore } from '@/store/tags';
 export default {
   name: 'top-lang',
   components: {
@@ -29,7 +31,10 @@ export default {
   created() {},
   mounted() {},
   computed: {
-    ...mapGetters(['language', 'tag']),
+    ...mapState(useCommonStore, ['language']),
+    ...mapState(useTagsStore, {
+      tag: store => store.currentTag,
+    }),
     languageLabel() {
       return this.language === 'en' ? 'English' : '简体中文';
     },
@@ -41,9 +46,10 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useCommonStore, ['setLanguage']),
     handleSetLanguage(lang) {
       this.$i18n.locale = lang;
-      this.$store.commit('SET_LANGUAGE', lang);
+      this.setLanguage(lang);
       this.$nextTick(() => {
         const tag = this.tag;
         const hasTagTitle = tag && (tag.label || (tag.query && tag.query.name));

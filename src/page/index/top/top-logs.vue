@@ -43,8 +43,9 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
 import { Delete, Upload } from '@element-plus/icons-vue';
+import { useLogsStore } from '@/store/logs';
 export default {
   name: "top-logs",
   components: { Delete, Upload },
@@ -56,10 +57,15 @@ export default {
   created () { },
   mounted () { },
   computed: {
-    ...mapGetters(['logsList', "logsFlag", "logsLen"])
+    ...mapState(useLogsStore, {
+      logsList: store => store.logsList,
+      logsFlag: store => store.isEmpty,
+      logsLen: store => store.logCount,
+    }),
   },
   props: [],
   methods: {
+    ...mapActions(useLogsStore, ['SendLogs', 'clearLogs']),
     handleOpen () {
       this.box = true;
     },
@@ -70,7 +76,7 @@ export default {
         type: "warning"
       })
         .then(() => {
-          this.$store.dispatch("SendLogs").then(() => {
+          this.SendLogs().then(() => {
             this.box = false;
             this.$message({
               type: "success",
@@ -87,7 +93,7 @@ export default {
         type: "warning"
       })
         .then(() => {
-          this.$store.commit("CLEAR_LOGS");
+          this.clearLogs();
           this.box = false;
           this.$message({
             type: "success",

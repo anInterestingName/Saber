@@ -6,7 +6,7 @@
 | --- | --- |
 | 需求名称 | Saber Element Plus 全量迁移与 Avue 完全移除 |
 | 需求编号 | REQ-2026-005 |
-| 文档版本 | 0.2 |
+| 文档版本 | 0.3 |
 | 所属模块 | 前端基础能力、主布局、动态路由、通知公告、工具示例 |
 | 目标版本/迭代 | Saber 5.x / Element Plus 全量迁移收尾 |
 | 文档状态 | 设计中 |
@@ -14,7 +14,7 @@
 | 技术负责人 | 待定 |
 | 创建日期 | 2026-09-03 |
 | 最后更新日期 | 2026-09-03 |
-| 关联事项 | [需求索引](../requirements-index.md)；前置需求 [REQ-2026-001](REQ-2026-001-element-plus-migration.md)、[REQ-2026-002](REQ-2026-002-element-plus-migration-phase-2.md)、[REQ-2026-003](REQ-2026-003-element-plus-migration-phase-3.md)、[REQ-2026-004](REQ-2026-004-element-plus-migration-phase-4.md)；前置设计 [DESIGN-REQ-2026-004](../design/DESIGN-REQ-2026-004-element-plus-migration-phase-4.md)；[详细设计 0.1（设计中，待评审）](../design/DESIGN-REQ-2026-005-element-plus-full-migration-and-avue-removal.md)；数据库设计不涉及；测试文档待实现完成后创建 |
+| 关联事项 | [需求索引](../requirements-index.md)；前置需求 [REQ-2026-001](REQ-2026-001-element-plus-migration.md)、[REQ-2026-002](REQ-2026-002-element-plus-migration-phase-2.md)、[REQ-2026-003](REQ-2026-003-element-plus-migration-phase-3.md)、[REQ-2026-004](REQ-2026-004-element-plus-migration-phase-4.md)；后续协同需求 [REQ-2026-006](REQ-2026-006-pinia-migration-and-vuex-removal.md)；前置设计 [DESIGN-REQ-2026-004](../design/DESIGN-REQ-2026-004-element-plus-migration-phase-4.md)；[详细设计 0.1（设计中，待评审）](../design/DESIGN-REQ-2026-005-element-plus-full-migration-and-avue-removal.md)；数据库设计不涉及；测试文档待实现完成后创建 |
 
 ## 2. 摘要与目标
 
@@ -513,3 +513,4 @@ stateDiagram-v2
 | --- | --- | --- | --- | --- | --- |
 | 2026-09-03 | 0.1 | 初稿 | 在第四阶段基础上提出 Element Plus 全量迁移与 Avue 完全移除 | 依赖、富文本、数据展示、主布局、动态路由、样式、验证和发布 | Codex |
 | 2026-09-03 | 0.2 | 建立详细设计并记录富文本选型 | 用户要求开始详细设计 | WangEditor/DOMPurify、上传、路由、布局、依赖、测试和发布方案 | Codex |
+| 2026-09-03 | 0.3 | 登记 Pinia 状态管理迁移协同需求 | 新增 REQ-2026-006，与本需求存在入口、路由、布局和依赖文件重叠 | 需求关联与实施顺序 | Codex |

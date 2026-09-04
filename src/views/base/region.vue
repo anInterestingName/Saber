@@ -308,12 +308,13 @@ import {
   type FormRules,
   type LoadFunction,
 } from 'element-plus';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import DictSelect from '@/components/dict-select/main.vue';
 import { useRemoteDetail } from '@/composables/useRemoteDetail';
 import { useRemoteOptions } from '@/composables/useRemoteOptions';
 import { getDetail, getLazyTree, getRegionOptions, remove, submit } from '@/api/base/region';
 import { validData } from '@/utils/util';
+import { useUserStore } from '@/store/user';
 import type { DictionaryValue } from '@/types/option';
 import type { TreeNode } from '@/types/tree';
 
@@ -378,10 +379,10 @@ const createInitialDebugForm = (): DebugForm => ({
   district: undefined,
 });
 
-const store = useStore();
-const canAdd = computed(() => validData(store.getters.permission?.region_add, false));
-const canDelete = computed(() => validData(store.getters.permission?.region_delete, false));
-const canDebug = computed(() => validData(store.getters.permission?.region_debug, false));
+const { permission } = storeToRefs(useUserStore());
+const canAdd = computed(() => validData(permission.value.region_add, false));
+const canDelete = computed(() => validData(permission.value.region_delete, false));
+const canDebug = computed(() => validData(permission.value.region_debug, false));
 const treeRef = ref<InstanceType<typeof ElTree>>();
 const formRef = ref<InstanceType<typeof ElForm>>();
 const treeVersion = ref(0);

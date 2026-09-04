@@ -456,12 +456,13 @@ import {
   type UploadRequestOptions,
   type UploadUserFile,
 } from 'element-plus';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import SearchPanel from '@/components/search-panel/main.vue';
 import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import { useUserStore } from '@/store/user';
 import TreeCheckPanel from '@/components/tree-check-panel/main.vue';
 import { useCrudPermission } from '@/composables/useCrudPermission';
 import { usePagedList } from '@/composables/usePagedList';
@@ -574,9 +575,8 @@ const collectTreeIds = (nodes: TreeNode[], ids = new Set<string>()) => {
   return ids;
 };
 
-const store = useStore();
-const isAdmin = computed(() => store.getters.userInfo?.authority?.includes('admin') ?? false);
-const canReset = computed(() => validData(store.getters.permission?.user_reset, false));
+const { isAdmin, permission } = storeToRefs(useUserStore());
+const canReset = computed(() => validData(permission.value.user_reset, false));
 const hasMoreActions = computed(() => isAdmin.value || canReset.value);
 const searchForm = ref<UserQuery>(createInitialQuery());
 const form = ref<UserForm>(createInitialForm());

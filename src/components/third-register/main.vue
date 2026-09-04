@@ -41,9 +41,10 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
 import { validateNull } from "@/utils/validate";
 import { registerGuest } from "@/api/user";
+import { useUserStore } from '@/store/user';
 
 export default {
   name: "thirdRegister",
@@ -61,13 +62,14 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["userInfo"]),
+    ...mapState(useUserStore, {
+      userInfo: store => store.userInfo || {},
+    }),
   },
   created () {
 
   },
   mounted () {
-    console.log(this.userInfo)
     // 若未登录则弹出框进行绑定
     if (validateNull(this.userInfo.userId) || this.userInfo.userId < 0) {
       this.form.name = this.userInfo.account;
@@ -76,6 +78,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(useUserStore, ['LogOut']),
     handleRegister () {
       if (this.form.tenantId === '') {
         this.$message.warning("请先输入租户编号");
@@ -100,7 +103,7 @@ export default {
         if (data.success) {
           this.accountBox = false;
           this.$alert("注册申请已提交,请耐心等待管理员通过!", '注册提示').then(() => {
-            this.$store.dispatch("LogOut").then(() => {
+            this.LogOut().then(() => {
               this.$router.push({ path: "/login" });
             });
           })

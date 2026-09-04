@@ -50,7 +50,7 @@
   </div>
 </template>
 <script>
-import { mapGetters } from 'vuex';
+import { mapActions, mapState } from 'pinia';
 import topLock from './top-lock.vue';
 import topMenu from './top-menu.vue';
 import topSearch from './top-search.vue';
@@ -58,6 +58,10 @@ import topLogs from './top-logs.vue';
 import topLang from './top-lang.vue';
 import topFull from './top-full.vue';
 import topSetting from '../setting.vue';
+import { useCommonStore } from '@/store/common';
+import { useLogsStore } from '@/store/logs';
+import { useTagsStore } from '@/store/tags';
+import { useUserStore } from '@/store/user';
 export default {
   components: {
     topLock,
@@ -75,21 +79,29 @@ export default {
   filters: {},
   created() {},
   computed: {
-    ...mapGetters([
+    ...mapState(useCommonStore, [
       'setting',
-      'userInfo',
-      'tagWel',
-      'tagList',
       'isCollapse',
-      'tag',
-      'logsLen',
-      'logsFlag',
       'isHorizontal',
     ]),
+    ...mapState(useUserStore, {
+      userInfo: store => store.userInfo || {},
+    }),
+    ...mapState(useTagsStore, {
+      tagWel: store => store.homeTag,
+      tagList: store => store.tagList,
+      tag: store => store.currentTag,
+    }),
+    ...mapState(useLogsStore, {
+      logsLen: store => store.logCount,
+      logsFlag: store => store.isEmpty,
+    }),
   },
   methods: {
+    ...mapActions(useCommonStore, ['toggleCollapse']),
+    ...mapActions(useUserStore, ['LogOut']),
     setCollapse() {
-      this.$store.commit('SET_COLLAPSE');
+      this.toggleCollapse();
     },
     logout() {
       this.$confirm(this.$t('logoutTip'), this.$t('tip'), {
@@ -97,7 +109,7 @@ export default {
         cancelButtonText: this.$t('cancelText'),
         type: 'warning',
       }).then(() => {
-        this.$store.dispatch('LogOut').then(() => {
+        this.LogOut().then(() => {
           this.$router.push({ path: '/login' });
         });
       });

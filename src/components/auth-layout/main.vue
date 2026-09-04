@@ -56,20 +56,21 @@
 import { computed, onMounted } from 'vue';
 import { Moon, Sunny } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import topLang from '@/page/index/top/top-lang.vue';
+import { useCommonStore } from '@/store/common';
 import { applyTheme } from '@/utils/theme';
-import type { AppSetting, ThemeMode } from '@/types/setting';
+import type { ThemeMode } from '@/types/setting';
 
-const store = useStore();
+const commonStore = useCommonStore();
+const { setting } = storeToRefs(commonStore);
 const { t } = useI18n();
 const currentYear = new Date().getFullYear();
-const setting = computed<AppSetting>(() => store.getters.setting);
 const isDark = computed(() => setting.value.theme === 'dark');
 
 const setThemeMode = (theme: ThemeMode) => {
-  store.commit('SET_SETTING', { theme });
-  applyTheme(store.getters.setting);
+  commonStore.setSetting({ theme });
+  applyTheme(setting.value);
 };
 
 const toggleTheme = () => {

@@ -1,20 +1,22 @@
 <template>
-  <i :class="isFullScren?'icon-tuichuquanping':'icon-quanping'"
+  <i :class="isFullscreen?'icon-tuichuquanping':'icon-quanping'"
      @click="handleScreen"></i>
 </template>
 <script>
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from 'pinia';
 import { fullscreenToggle, listenFullscreen } from "utils/util";
+import { useCommonStore } from '@/store/common';
 export default {
   computed: {
-    ...mapGetters(["isFullScren"])
+    ...mapState(useCommonStore, ['isFullscreen'])
   },
   mounted () {
     listenFullscreen(this.setScreen);
   },
   methods: {
+    ...mapActions(useCommonStore, ['toggleFullscreen']),
     setScreen () {
-      this.$store.commit("SET_FULLSCREN");
+      this.toggleFullscreen();
     },
     handleScreen () {
       fullscreenToggle();

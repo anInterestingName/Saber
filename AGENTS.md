@@ -6,7 +6,7 @@
 
 Saber 是 SpringBlade 的官方 Vue 3 管理端，与 SpringBlade Boot/Cloud 后端配套。当前仓库版本为 `5.0.1`，
 实际依赖以 `package.json` 和锁文件为准。项目已进入业务页面全面迁移 Element Plus 的阶段：新增页面和纳入迁移
-范围的页面以 Vue 3.5、TypeScript、Vite 5、Element Plus、Vue Router 4、Vuex 4、Axios、vue-i18n 和 Sass
+范围的页面以 Vue 3.5、TypeScript、Vite 5、Element Plus、Vue Router 4、Pinia 4、Axios、vue-i18n 和 Sass
 为目标技术栈。Avue 及其插件仅作为尚未迁移页面的临时兼容依赖，不再作为新开发或重构页面的实现方案。
 
 遇到文档、模板和现有代码不一致时，按以下优先级判断：
@@ -33,7 +33,7 @@ src/
 ├── option/              # 尚未迁移页面的历史 Avue 配置，不新增文件
 ├── page/                # 登录、锁屏、主布局，仍允许保留 Options API
 ├── router/              # 静态路由、动态菜单路由和组件装配
-├── store/               # Vuex store、getters 与业务模块
+├── store/               # Pinia 根实例与 user/common/tags/logs 状态域
 ├── styles/              # 全局样式、变量、mixin 和明暗主题
 ├── types/               # 项目自建的最小类型声明
 ├── utils/               # 鉴权、加密、校验、存储和通用工具
@@ -68,7 +68,7 @@ doc/                     # 需求、设计、测试、模板与迁移指南
 
 ### 4.2 导入和全局能力
 
-- Vue/Vuex API 必须显式导入且只导入实际使用项，如 `ref`、`reactive`、`computed`、`watch`、`useStore`。虽然工程配置了 auto-import，但没有生成声明文件。
+- Vue/Pinia API 必须显式导入且只导入实际使用项，如 `ref`、`reactive`、`computed`、`watch`、`storeToRefs`。虽然工程配置了 auto-import，但没有生成声明文件。
 - 消息与确认框使用 `ElMessage`、`ElMessageBox` 显式导入。
 - 脚本中使用 `import website from '@/config/website'`、`import dayjs from 'dayjs'`、`import request from '@/axios'`，不要依赖 `this.website`、`this.$dayjs` 或 `window.axios`。
 - 权限判断优先复用 `useCrudPermission`；其他现有能力使用 `validData` 时从 `@/utils/util` 导入。
@@ -93,7 +93,7 @@ doc/                     # 需求、设计、测试、模板与迁移指南
 - 公共组件：kebab-case 目录配 `main.vue`。
 - API、composable、类型和工具文件：camelCase。
 - 变量和函数：camelCase。
-- Vuex mutation：UPPER_SNAKE_CASE；action 沿用现有 PascalCase。
+- Pinia action 默认使用 camelCase；认证与菜单等已有业务 action 沿用现有 PascalCase。
 - 权限码：`{module}_{action}`，如 `dict_add`、`user_delete`。
 
 ## 5. API 层约定
@@ -131,7 +131,7 @@ doc/                     # 需求、设计、测试、模板与迁移指南
 ### 6.3 字典、权限与专项操作
 
 - 字典显示与选择优先使用 `useDictionary`、`DictSelect` 和 `DictTag`；远程字典必须显式映射 label/value，保留后端约定的字符串或数值类型，不做真假值隐式转换。
-- 标准按钮权限使用 `useCrudPermission` 或 `store.getters.permission`，权限码保持 `{module}_{action}`。自定义入口同时执行可见性和操作前校验；后端仍是最终安全边界。
+- 标准按钮权限使用 `useCrudPermission` 或 `useUserStore().permission`，权限码保持 `{module}_{action}`。自定义入口同时执行可见性和操作前校验；后端仍是最终安全边界。
 - 超级管理员专项入口沿用 `userInfo.authority.includes('admin')`，不得把管理员身份等同于普通按钮权限。
 - 授权树优先使用 `TreeCheckPanel`；树数据、已选 keys、联动、半选和提交状态必须相互隔离，任一加载失败时不得展示不完整授权为当前结果。
 - 上传使用 Element Plus Upload 和现有 Axios 请求；下载使用 Axios Blob 与标准认证头。不得把 Token 放入 URL，也不得把文件内容、密码或授权 keys 写入日志。
@@ -150,7 +150,7 @@ doc/                     # 需求、设计、测试、模板与迁移指南
 - 静态页面路由位于 `src/router/page/` 和 `src/router/views/`；业务菜单主要由后端 `/blade-system/menu/routes` 动态下发。
 - 动态组件遵循 `views/{path}.vue` 约定，由 `src/router/avue-router.ts` 的 `import.meta.glob` 装配。新增普通业务页面通常不需要手写前端路由。
 - 外链菜单由路由层转换为 iframe 或新窗口，并可能替换 `${token}`；修改此链路时同时检查鉴权和 URL 编码。
-- 按钮权限来自 `store.getters.permission`。不要仅隐藏按钮而遗漏接口侧/后端权限，前端显示控制不是安全边界。
+- 按钮权限来自 `useUserStore().permission`。不要仅隐藏按钮而遗漏接口侧/后端权限，前端显示控制不是安全边界。
 - 多租户开关来自 `website.tenantMode`；不要硬编码租户模式或管理租户编号。
 - 新增菜单 i18n key 时同步维护 `src/lang/zh.ts`、`en.ts`、`ja.ts` 的 `route.*` 条目。
 

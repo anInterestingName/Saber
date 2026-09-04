@@ -1,24 +1,24 @@
-import store from './store'
-export default {
-  install: (app) => {
-    app.config.errorHandler = (err, vm, info) => {
-      store.commit('ADD_LOGS', {
+import type { App } from 'vue';
+import type { Pinia } from 'pinia';
+import { useLogsStore } from '@/store/logs';
+
+export const createErrorPlugin = (pinia: Pinia) => ({
+  install: (app: App) => {
+    const logsStore = useLogsStore(pinia);
+    app.config.errorHandler = (err, _vm, info) => {
+      const error = err instanceof Error ? err : new Error(String(err));
+      logsStore.addLog({
         type: 'error',
-        message: err.message,
-        stack: err.stack,
-        info
-      })
+        message: error.message,
+        stack: error.stack,
+        info,
+      });
       if (import.meta.env.DEV) {
-        console.group('>>>>>> 错误信息 >>>>>>')
-        console.log(info)
-        console.groupEnd();
-        console.group('>>>>>> Vue 实例 >>>>>>')
-        console.log(vm)
-        console.groupEnd();
-        console.group('>>>>>> Error >>>>>>')
-        console.log(err)
+        console.group('>>>>>> 错误信息 >>>>>>');
+        console.log(info);
+        console.log(error);
         console.groupEnd();
       }
-    }
-  }
-}
+    };
+  },
+});

@@ -19,10 +19,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import website from '@/config/website';
+import { useCommonStore } from '@/store/common';
 import { getScreen } from '@/utils/util';
 
-const store = useStore();
-const isCompact = computed(() => getScreen(store.getters.isCollapse));
+const { isCollapse } = storeToRefs(useCommonStore());
+const isCompact = computed(() => getScreen(isCollapse.value));
 </script>

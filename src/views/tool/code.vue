@@ -259,12 +259,13 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { CopyDocument, Cpu, Delete, Plus, Refresh } from '@element-plus/icons-vue';
 import { ElForm, ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus';
-import { useStore } from 'vuex';
+import { storeToRefs } from 'pinia';
 import SearchPanel from '@/components/search-panel/main.vue';
 import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import { useUserStore } from '@/store/user';
 import DictSelect from '@/components/dict-select/main.vue';
 import DictTag from '@/components/dict-tag/main.vue';
 import { useCrudPermission } from '@/composables/useCrudPermission';
@@ -316,8 +317,7 @@ const createInitialForm = (): CodeForm => ({
   webPath: '',
 });
 
-const store = useStore();
-const isAdmin = computed(() => store.getters.userInfo?.authority?.includes('admin') ?? false);
+const { isAdmin } = storeToRefs(useUserStore());
 const searchForm = ref<CodeQuery>(createInitialQuery());
 const form = ref<CodeForm>(createInitialForm());
 const mode = ref<CrudMode>('add');

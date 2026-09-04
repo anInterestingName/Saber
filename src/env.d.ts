@@ -9,7 +9,6 @@ declare module '@vue/runtime-core' {
     $dayjs: typeof import('dayjs');
     website: typeof import('@/config/website').default;
     getScreen: typeof import('@/utils/util').getScreen;
-    $store: import('vuex').Store<object>;
     $route: import('vue-router').RouteLocationNormalizedLoaded;
     $router: import('vue-router').Router;
   }

@@ -5,7 +5,7 @@ export default function createAutoImport () {
     imports: [
       'vue',
       'vue-router',
-      'vuex'
+      'pinia'
     ],
     dts: false
   })
