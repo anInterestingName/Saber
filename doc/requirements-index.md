@@ -20,7 +20,7 @@
 
 | 年份 | 下一个编号 | 最后分配日期 | 维护人 |
 | --- | --- | --- | --- |
-| 2026 | `REQ-2026-007` | 2026-09-03 | 待维护 |
+| 2026 | `REQ-2026-009` | 2026-09-04 | Codex |
 
 > 分配需求编号后，立即将“下一个编号”加一。例如分配 `REQ-2026-002` 后，本表更新为 `REQ-2026-003`。
 
@@ -34,6 +34,8 @@
 | [REQ-2026-004](requirements/REQ-2026-004-element-plus-migration-phase-4.md) | Saber Element Plus 第四阶段权限范围、区域与示例页面收尾迁移 | 权限管理、基础管理、工具示例 | 0.3 | 开发中 | Saber 5.x / Element Plus 页面迁移第四阶段 | [需求文档 0.3（代码已实现，常规检查完成，待详细验收）](requirements/REQ-2026-004-element-plus-migration-phase-4.md) | 不涉及 | [详细设计 0.2（已实现，常规检查通过，待详细验收）](design/DESIGN-REQ-2026-004-element-plus-migration-phase-4.md) | 待指定 | 2026-09-03 |
 | [REQ-2026-005](requirements/REQ-2026-005-element-plus-full-migration-and-avue-removal.md) | Saber Element Plus 全量迁移与 Avue 完全移除 | 前端基础能力、主布局、动态路由、通知公告、工具示例 | 0.3 | 设计中 | Saber 5.x / Element Plus 全量迁移收尾 | [需求文档 0.3（设计中，已登记 Pinia 协同需求）](requirements/REQ-2026-005-element-plus-full-migration-and-avue-removal.md) | 不涉及 | [详细设计 0.1（设计中，待评审）](design/DESIGN-REQ-2026-005-element-plus-full-migration-and-avue-removal.md) | 待指定 | 2026-09-03 |
 | [REQ-2026-006](requirements/REQ-2026-006-pinia-migration-and-vuex-removal.md) | Saber Pinia 状态管理迁移与 Vuex 4 完全移除 | 前端基础能力、应用启动、认证会话、动态路由、主布局、权限与日志 | 0.3 | 开发中 | Saber 5.x / Vue 3 状态管理升级 | [需求文档 0.3（开发完成，待验收）](requirements/REQ-2026-006-pinia-migration-and-vuex-removal.md) | 不涉及 | [详细设计 0.2（已实现，待业务验收）](design/DESIGN-REQ-2026-006-pinia-migration-and-vuex-removal.md)；[测试文档 0.1（5 通过/11 阻塞）](test/TEST-REQ-2026-006-pinia-migration-and-vuex-removal.md) | 待指定 | 2026-09-04 |
+| [REQ-2026-007](requirements/REQ-2026-007-sidebar-collapse-navigation-theme.md) | 主导航折叠交互与导航背景统一 | 前端主布局、侧栏、顶部栏、响应式导航 | 0.2 | 开发中 | Saber 5.x / 主布局体验优化 | [需求文档 0.2（开发完成，待验收）](requirements/REQ-2026-007-sidebar-collapse-navigation-theme.md) | 不涉及 | [详细设计 0.2（已实现，部分验证）](design/DESIGN-REQ-2026-007-sidebar-collapse-navigation-theme.md)；[测试文档 0.1（4 通过/1 阻塞）](test/TEST-REQ-2026-007-sidebar-collapse-navigation-theme.md) | 待指定 | 2026-09-04 |
+| [REQ-2026-008](requirements/REQ-2026-008-ghcr-image-publishing.md) | GitHub Actions 构建并发布公开 GHCR 测试镜像 | CI/CD、Docker、Nginx、GHCR | 0.4 | 开发中 | Saber 5.x / 容器化发布 | [需求文档 0.4（公开测试模式，待远端验收）](requirements/REQ-2026-008-ghcr-image-publishing.md) | 不涉及 | [详细设计 0.4（公开拉取模式已实现）](design/DESIGN-REQ-2026-008-ghcr-image-publishing.md)；[测试文档 0.4（4 通过/1 阻塞）](test/TEST-REQ-2026-008-ghcr-image-publishing.md) | Codex | 2026-09-04 |
 
 ## 状态说明
 

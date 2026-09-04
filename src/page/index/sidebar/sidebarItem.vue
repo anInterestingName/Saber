@@ -34,9 +34,10 @@
   </template>
 </template>
 <script>
-import { mapState } from 'pinia';
+import { mapActions, mapState } from 'pinia';
 import { validateNull } from 'utils/validate'
 import website from '@/config/website'
+import { useCommonStore } from '@/store/common';
 import { useUserStore } from '@/store/user';
 export default {
   name: "sidebarItem",
@@ -67,6 +68,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(useCommonStore, ['closeMobileMenu']),
     validateNull,
     getPath (item) {
       return item[this.pathKey]
@@ -83,8 +85,8 @@ export default {
         path: item[this.pathKey],
         query: item[this.queryKey]
       });
+      this.closeMobileMenu();
     }
   }
 };
 </script>
-

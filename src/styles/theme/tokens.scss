@@ -19,7 +19,7 @@
   --saber-text-secondary: rgba(0, 0, 0, 0.65);
   --saber-text-tertiary: rgba(0, 0, 0, 0.45);
   --saber-header-bg: var(--saber-surface);
-  --saber-sidebar-bg: var(--saber-page-bg);
+  --saber-sidebar-bg: var(--saber-header-bg);
   --saber-sidebar-active: var(--el-color-primary-light-9);
   --saber-sidebar-text: var(--saber-text-secondary);
   --saber-sidebar-text-active: var(--el-color-primary);
@@ -40,7 +40,7 @@ html.dark {
   --saber-text-secondary: rgba(255, 255, 255, 0.65);
   --saber-text-tertiary: rgba(255, 255, 255, 0.45);
   --saber-header-bg: var(--saber-surface);
-  --saber-sidebar-bg: var(--saber-page-bg);
+  --saber-sidebar-bg: var(--saber-header-bg);
   --saber-sidebar-active: rgba(255, 255, 255, 0.12);
   --saber-sidebar-text-active: #ffffff;
   --saber-sidebar-tip-bg: rgba(255, 255, 255, 0.06);

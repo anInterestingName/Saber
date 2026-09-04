@@ -5,27 +5,29 @@
     <el-menu unique-opened
              :default-active="activeMenu"
              :mode="setting.sidebar"
-             :collapse="getScreen(isCollapse)">
+             :collapse="!isMobile&&isCollapse">
       <sidebar-item :menu="menu"></sidebar-item>
     </el-menu>
   </el-scrollbar>
+  <sidebar-toggle v-if="setting.collapse && !isHorizontal && !isMobile" variant="edge" />
 </template>
 
 <script>
 import { mapState } from 'pinia';
 import sidebarItem from "./sidebarItem.vue";
+import sidebarToggle from './toggle.vue';
 import { useCommonStore } from '@/store/common';
 import { useTagsStore } from '@/store/tags';
 import { useUserStore } from '@/store/user';
 export default {
   name: "sidebar",
-  components: { sidebarItem },
+  components: { sidebarItem, sidebarToggle },
   inject: ["index"],
   created () {
     this.index.openMenu()
   },
   computed: {
-    ...mapState(useCommonStore, ['isHorizontal', 'setting', 'isCollapse']),
+    ...mapState(useCommonStore, ['isHorizontal', 'setting', 'isCollapse', 'isMobile']),
     ...mapState(useUserStore, ['menu']),
     ...mapState(useTagsStore, {
       tag: store => store.currentTag,
@@ -43,4 +45,3 @@ export default {
 </script>
 <style lang="scss" scoped>
 </style>
-

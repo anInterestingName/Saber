@@ -1,13 +1,10 @@
 <template>
   <div class="saber-top">
     <div class="top-bar__left">
-      <div
-        class="saber-breadcrumb"
-        :class="[{ 'saber-breadcrumb--active': isCollapse }]"
-        v-if="setting.collapse && !isHorizontal"
-      >
-        <i class="icon-navicon" @click="setCollapse"></i>
-      </div>
+      <sidebar-toggle
+        v-if="setting.collapse && !isHorizontal && isMobile && sidebarVisible"
+        variant="header"
+      />
     </div>
     <div class="top-bar__title">
       <top-menu ref="topMenu" v-if="setting.menu"></top-menu>
@@ -58,6 +55,7 @@ import topLogs from './top-logs.vue';
 import topLang from './top-lang.vue';
 import topFull from './top-full.vue';
 import topSetting from '../setting.vue';
+import sidebarToggle from '../sidebar/toggle.vue';
 import { useCommonStore } from '@/store/common';
 import { useLogsStore } from '@/store/logs';
 import { useTagsStore } from '@/store/tags';
@@ -71,19 +69,22 @@ export default {
     topLang,
     topFull,
     topSetting,
+    sidebarToggle,
   },
   name: 'top',
+  props: {
+    sidebarVisible: {
+      type: Boolean,
+      default: true,
+    },
+  },
   data() {
     return {};
   },
   filters: {},
   created() {},
   computed: {
-    ...mapState(useCommonStore, [
-      'setting',
-      'isCollapse',
-      'isHorizontal',
-    ]),
+    ...mapState(useCommonStore, ['setting', 'isHorizontal', 'isMobile']),
     ...mapState(useUserStore, {
       userInfo: store => store.userInfo || {},
     }),
@@ -98,11 +99,7 @@ export default {
     }),
   },
   methods: {
-    ...mapActions(useCommonStore, ['toggleCollapse']),
     ...mapActions(useUserStore, ['LogOut']),
-    setCollapse() {
-      this.toggleCollapse();
-    },
     logout() {
       this.$confirm(this.$t('logoutTip'), this.$t('tip'), {
         confirmButtonText: this.$t('submitText'),

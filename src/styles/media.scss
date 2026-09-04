@@ -8,7 +8,7 @@
     z-index: 1024;
   }
 
-  .saber-shell--collapsed {
+  .saber-shell--mobile-open {
     .saber-sidebar {
       left: 0;
       width: vars.$sidebar_width;
@@ -30,5 +30,9 @@
 
   .top-bar__item {
     display: none;
+  }
+
+  .top-bar__title {
+    padding-left: 50px;
   }
 }

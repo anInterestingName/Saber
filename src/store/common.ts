@@ -3,6 +3,7 @@ import website from '@/config/website';
 import type { AppSetting, LayoutMode } from '@/types/setting';
 import { getStore, removeStore, setStore } from '@/utils/store';
 import { normalizePrimaryColor } from '@/utils/theme';
+import { SIDEBAR_MOBILE_BREAKPOINT } from '@/utils/util';
 
 const layoutSetting: Record<LayoutMode, Pick<AppSetting, 'sidebar' | 'menu'>> = {
   side: { sidebar: 'vertical', menu: false },
@@ -46,6 +47,10 @@ const getStoredString = (name: string, fallback = '') => {
 
 export type AppLanguage = 'zh-cn' | 'en' | 'ja';
 
+const getInitialViewportWidth = () => {
+  return typeof window === 'undefined' ? SIDEBAR_MOBILE_BREAKPOINT + 1 : window.innerWidth;
+};
+
 const getStoredLanguage = (): AppLanguage => {
   const language = getStoredString('language', 'zh-cn');
   return language === 'en' || language === 'ja' ? language : 'zh-cn';
@@ -56,6 +61,8 @@ export const useCommonStore = defineStore('common', {
     language: getStoredLanguage(),
     setting: createSetting(getStore({ name: 'setting' })),
     isCollapse: false,
+    isMobile: getInitialViewportWidth() <= SIDEBAR_MOBILE_BREAKPOINT,
+    isMobileMenuOpen: false,
     isFullscreen: false,
     isMenu: true,
     isSearch: false,
@@ -75,6 +82,18 @@ export const useCommonStore = defineStore('common', {
     toggleCollapse() {
       this.isCollapse = !this.isCollapse;
     },
+    toggleMobileMenu() {
+      this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    },
+    closeMobileMenu() {
+      this.isMobileMenuOpen = false;
+    },
+    setViewportWidth(width: number) {
+      const isMobile = width <= SIDEBAR_MOBILE_BREAKPOINT;
+      if (isMobile === this.isMobile) return;
+      this.isMobile = isMobile;
+      this.isMobileMenuOpen = false;
+    },
     toggleFullscreen() {
       this.isFullscreen = !this.isFullscreen;
     },
@@ -89,14 +108,20 @@ export const useCommonStore = defineStore('common', {
     },
     setSetting(setting: Partial<AppSetting>) {
       this.setting = createSetting({ ...this.setting, ...setting });
+      if (!this.setting.collapse) {
+        this.isCollapse = false;
+        this.isMobileMenuOpen = false;
+      }
       setStore({ name: 'setting', content: this.setting });
     },
     setLayout(layout: LayoutMode) {
       this.setting = createSetting({ ...this.setting, layout });
+      this.isMobileMenuOpen = false;
       setStore({ name: 'setting', content: this.setting });
     },
     resetSetting() {
       this.setting = createSetting();
+      this.isMobileMenuOpen = false;
       setStore({ name: 'setting', content: this.setting });
     },
     lock() {
