@@ -4,8 +4,9 @@
   "scripts": {
     "dev": "vite --host",
     "prod": "vite --mode production",
-    "build": "vite build",
-    "build:prod": "vite build --mode production",
+    "clean:dist": "node scripts/clean-dist.mjs",
+    "build": "pnpm run clean:dist && vite build",
+    "build:prod": "pnpm run clean:dist && vite build --mode production",
     "serve": "vite preview --host",
     "type-check": "vue-tsc --noEmit && tsc --noEmit -p tsconfig.node.json"
   },

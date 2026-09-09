@@ -19,6 +19,16 @@ import crypto from '@/utils/crypto';
 
 type UnauthorizedHandler = () => Promise<void>;
 
+export class BladeBusinessError extends Error {
+  constructor(
+    public readonly code: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'BladeBusinessError';
+  }
+}
+
 let unauthorizedHandler: UnauthorizedHandler | undefined;
 let unauthorizedTask: Promise<void> | null = null;
 
@@ -95,7 +105,7 @@ axios.interceptors.response.use(res => {
       message: message,
       type: 'error'
     })
-    return Promise.reject(new Error(message))
+    return Promise.reject(new BladeBusinessError(Number(status), message))
   }
   return res;
 }, error => {
