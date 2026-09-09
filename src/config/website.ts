@@ -51,7 +51,7 @@ export default {
   auth: {
     // 使用后端工程 @org.springblade.test.Sm2KeyGenerator 获取
     publicKey:
-      '04e296a8cb493f3e7b275bedbd4d8b7af47a35720d013e9d08b3dbb76eaca4dd253c957c1fd943b8b0e87167ac5c0aa326c562377f55d7d8b68ae598501bfdb4de',
+      '04d4c3073bfff5ebc0a25d9266e7b037a64143829f099151ab340689675a9bcb6124c61ddb7de78984129a003b35b2b92e972349d6836c955febf44a1e3c2439ff',
   },
   // 授权地址
   authUrl: 'http://localhost/blade-auth/oauth/render',

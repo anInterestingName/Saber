@@ -50,6 +50,8 @@ export default {
     }
   },
   route: {
+    asset: 'Asset Management',
+    prompt: 'Prompt Management',
     setting: 'setting',
     detail: 'detail',
     info: 'info',
