@@ -52,6 +52,7 @@ export default {
   route: {
     asset: '資産管理',
     prompt: 'プロンプト管理',
+    tag_manage: 'タグ管理',
     setting: '個人設定',
     detail: '詳細ページ',
     info: '個人情報',

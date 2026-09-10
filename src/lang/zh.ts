@@ -50,6 +50,7 @@ export default {
   route: {
     asset: '资产管理',
     prompt: '提示词管理',
+    tag_manage: '标签管理',
     info: '个人信息',
     website: 'bladex官网',
     dashboard: '首页',

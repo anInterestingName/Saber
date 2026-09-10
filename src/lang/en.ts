@@ -52,6 +52,7 @@ export default {
   route: {
     asset: 'Asset Management',
     prompt: 'Prompt Management',
+    tag_manage: 'Tag Management',
     setting: 'setting',
     detail: 'detail',
     info: 'info',
