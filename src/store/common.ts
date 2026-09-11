@@ -73,6 +73,8 @@ export const useCommonStore = defineStore('common', {
   getters: {
     layoutMode: state => state.setting.layout,
     isHorizontal: state => state.setting.layout === 'top',
+    isMixed: state => state.setting.layout === 'mix',
+    sidebarMode: state => layoutSetting[state.setting.layout].sidebar,
   },
   actions: {
     setLanguage(language: AppLanguage) {

@@ -1,5 +1,10 @@
 <template>
-  <div class="param-management-page">
+  <page-container
+    class="param-management-page"
+    title="参数管理"
+    description="维护系统运行参数，参数键名用于业务配置读取。"
+    :show-breadcrumb="false"
+  >
     <search-panel
       :model="searchForm"
       :loading="loading"
@@ -97,37 +102,43 @@
       v-model="dialogVisible"
       :mode="mode"
       entity-name="参数"
+      size="sm"
+      :subtitle="mode === 'view' ? '查看参数配置与当前值' : '编辑前请确认参数键名与用途'"
       :submitting="submitting"
+      :dirty="dirty"
+      :can-edit="canEdit"
       destroy-on-close
+      @edit="handleViewEdit"
       @confirm="handleSubmit"
       @cancel="handleDialogCancel"
     >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view'"
-        label-width="88px"
-      >
-        <el-form-item label="参数名称" prop="paramName">
-          <el-input v-model="form.paramName" maxlength="100" placeholder="请输入参数名称" />
-        </el-form-item>
-        <el-form-item label="参数键名" prop="paramKey">
-          <el-input v-model="form.paramKey" maxlength="100" placeholder="请输入参数键名" />
-        </el-form-item>
-        <el-form-item label="参数键值" prop="paramValue">
-          <el-input
-            v-model="form.paramValue"
-            type="textarea"
-            :rows="4"
-            maxlength="1000"
-            show-word-limit
-            placeholder="请输入参数键值"
-          />
-        </el-form-item>
+      <detail-section v-if="mode === 'view'" title="基本信息" :columns="1">
+        <field-value label="参数名称" :value="form.paramName" />
+        <field-value label="参数键名" :value="form.paramKey" copyable />
+        <field-value label="参数键值" :value="form.paramValue" multiline />
+      </detail-section>
+      <el-form v-else ref="formRef" :model="form" :rules="formRules" label-width="88px">
+        <form-section title="基本信息" :columns="1">
+          <el-form-item label="参数名称" prop="paramName">
+            <el-input v-model="form.paramName" maxlength="100" placeholder="请输入参数名称" />
+          </el-form-item>
+          <el-form-item label="参数键名" prop="paramKey">
+            <el-input v-model="form.paramKey" maxlength="100" placeholder="请输入参数键名" />
+          </el-form-item>
+          <el-form-item label="参数键值" prop="paramValue">
+            <el-input
+              v-model="form.paramValue"
+              type="textarea"
+              :rows="4"
+              maxlength="1000"
+              show-word-limit
+              placeholder="请输入参数键值"
+            />
+          </el-form-item>
+        </form-section>
       </el-form>
     </form-dialog>
-  </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -138,6 +149,10 @@ import SearchPanel from '@/components/search-panel/main.vue';
 import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import PageContainer from '@/components/page-container/main.vue';
+import FormSection from '@/components/form-section/main.vue';
+import DetailSection from '@/components/detail-section/main.vue';
+import FieldValue from '@/components/field-value/main.vue';
 import { useCrudPermission } from '@/composables/useCrudPermission';
 import { usePagedList } from '@/composables/usePagedList';
 import { useTableSelection } from '@/composables/useTableSelection';
@@ -172,6 +187,8 @@ const form = ref<ParamForm>(createInitialForm());
 const mode = ref<CrudMode>('add');
 const dialogVisible = ref(false);
 const submitting = ref(false);
+const dirty = ref(false);
+const initialFormSnapshot = ref('');
 const formRef = ref<InstanceType<typeof ElForm>>();
 const tableRef = ref<TableInstance>();
 
@@ -203,6 +220,16 @@ const clearTableSelection = () => {
 };
 
 watch(data, clearTableSelection, { flush: 'post' });
+watch(
+  form,
+  value => {
+    dirty.value =
+      dialogVisible.value &&
+      mode.value !== 'view' &&
+      JSON.stringify(value) !== initialFormSnapshot.value;
+  },
+  { deep: true }
+);
 
 const handleSearch = () => {
   void search({ ...searchForm.value });
@@ -221,6 +248,8 @@ const handlePageChange = (nextPage: PaginationChange) => {
 const prepareDialog = (dialogMode: CrudMode, row?: ParamEntity) => {
   mode.value = dialogMode;
   form.value = row ? { ...row } : createInitialForm();
+  initialFormSnapshot.value = JSON.stringify(form.value);
+  dirty.value = false;
   dialogVisible.value = true;
   nextTick(() => formRef.value?.clearValidate());
 };
@@ -229,7 +258,17 @@ const openAdd = () => prepareDialog('add');
 const openView = (row: ParamEntity) => prepareDialog('view', row);
 const openEdit = (row: ParamEntity) => prepareDialog('edit', row);
 
+const handleViewEdit = () => {
+  if (!canEdit.value) return;
+  mode.value = 'edit';
+  initialFormSnapshot.value = JSON.stringify(form.value);
+  dirty.value = false;
+  nextTick(() => formRef.value?.clearValidate());
+};
+
 const handleDialogCancel = () => {
+  dirty.value = false;
+  initialFormSnapshot.value = '';
   formRef.value?.clearValidate();
 };
 
@@ -242,6 +281,7 @@ const handleSubmit = async () => {
   try {
     const submit = mode.value === 'add' ? add : update;
     await submit({ ...form.value });
+    dirty.value = false;
     dialogVisible.value = false;
     ElMessage.success('操作成功!');
     clearTableSelection();

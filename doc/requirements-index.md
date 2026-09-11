@@ -20,7 +20,7 @@
 
 | 年份 | 下一个编号 | 最后分配日期 | 维护人 |
 | --- | --- | --- | --- |
-| 2026 | `REQ-2026-011` | 2026-09-10 | Codex |
+| 2026 | `REQ-2026-012` | 2026-09-10 | Codex |
 
 > 分配需求编号后，立即将“下一个编号”加一。例如分配 `REQ-2026-002` 后，本表更新为 `REQ-2026-003`。
 
@@ -38,6 +38,7 @@
 | [REQ-2026-008](requirements/REQ-2026-008-ghcr-image-publishing.md) | GitHub Actions 构建并发布公开 GHCR 测试镜像 | CI/CD、Docker、Nginx、GHCR | 0.4 | 开发中 | Saber 5.x / 容器化发布 | [需求文档 0.4（公开测试模式，待远端验收）](requirements/REQ-2026-008-ghcr-image-publishing.md) | 不涉及 | [详细设计 0.4（公开拉取模式已实现）](design/DESIGN-REQ-2026-008-ghcr-image-publishing.md)；[测试文档 0.4（4 通过/1 阻塞）](test/TEST-REQ-2026-008-ghcr-image-publishing.md) | Codex | 2026-09-04 |
 | [REQ-2026-009](requirements/REQ-2026-009-prompt-management.md) | Saber 提示词管理 | 资产管理、提示词草稿、预览与版本发布 | 0.3 | 开发中 | Saber 5.x / AI 能力第一阶段 | [需求文档 0.3（缺陷修复完成，待联调验收）](requirements/REQ-2026-009-prompt-management.md) | 不涉及 | [详细设计 0.3（变量默认值与保存交互已更新）](design/DESIGN-REQ-2026-009-prompt-management.md)；[测试文档 0.3（待执行，12 项未执行）](test/TEST-REQ-2026-009-prompt-management.md) | 待指定 | 2026-09-09 |
 | [REQ-2026-010](requirements/REQ-2026-010-tag-management-frontend.md) | Saber 标签分类与标签管理 | 系统管理、标签分类、层级标签 | 0.5 | 开发中 | Saber 5.x / 标签基础能力前端第一阶段 | [需求文档 0.5（分类查看样式已优化，待联调验收）](requirements/REQ-2026-010-tag-management-frontend.md) | 不涉及 | [详细设计 0.5（非表格详情网格已实现）](design/DESIGN-REQ-2026-010-tag-management-frontend.md)；[测试文档 0.5（待执行，10 项未执行）](test/TEST-REQ-2026-010-tag-management-frontend.md) | 待指定 | 2026-09-10 |
+| [REQ-2026-011](requirements/REQ-2026-011-pro-style-ui-record-panels.md) | Saber 中前台视觉体系与记录弹层统一 | 前端基础能力、主布局、工作台、业务页面、记录弹层 | 0.9 | 开发中 | Saber 5.x / 中前台体验升级第一阶段 | [需求文档 0.9（导航视觉与交互细节收敛）](requirements/REQ-2026-011-pro-style-ui-record-panels.md) | 不涉及 | [详细设计 0.9（顶级导航 Token、动效与箭头区域）](design/DESIGN-REQ-2026-011-pro-style-ui-record-panels.md)；[测试文档 0.9（待执行，15 项未执行）](test/TEST-REQ-2026-011-pro-style-ui-record-panels.md) | 待指定 | 2026-09-11 |
 
 ## 状态说明
 

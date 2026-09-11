@@ -1,18 +1,16 @@
 <template>
-  <el-tooltip :content="label" :placement="tooltipPlacement" :show-after="300">
-    <button
-      type="button"
-      class="saber-sidebar-toggle"
-      :class="`saber-sidebar-toggle--${variant}`"
-      :aria-label="label"
-      :aria-expanded="isExpanded"
-      @click="toggle"
-      @keydown.enter.prevent="toggle"
-      @keydown.space.prevent="toggle"
-    >
-      <el-icon><component :is="icon" /></el-icon>
-    </button>
-  </el-tooltip>
+  <button
+    type="button"
+    class="saber-sidebar-toggle"
+    :class="`saber-sidebar-toggle--${variant}`"
+    :aria-label="label"
+    :aria-expanded="isExpanded"
+    @click="toggle"
+    @keydown.enter.prevent="toggle"
+    @keydown.space.prevent="toggle"
+  >
+    <el-icon><component :is="icon" /></el-icon>
+  </button>
 </template>
 
 <script setup lang="ts">
@@ -34,7 +32,6 @@ const isExpanded = computed(() => {
   return props.variant === 'edge' ? !isCollapse.value : isMobileMenuOpen.value;
 });
 const label = computed(() => `${isExpanded.value ? '收起' : '展开'}菜单`);
-const tooltipPlacement = computed(() => (props.variant === 'edge' ? 'right' : 'bottom'));
 const icon = computed(() => {
   if (props.variant === 'header') {
     return isExpanded.value ? Fold : Expand;

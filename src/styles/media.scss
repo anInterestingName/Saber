@@ -1,6 +1,34 @@
 @use './variables' as vars;
 
 @media screen and (max-width: 992px) {
+  .saber-layout--mix {
+    grid-template-columns: 0 minmax(0, 1fr);
+
+    > .saber-main {
+      grid-column: 1 / -1;
+    }
+
+    > .saber-sidebar {
+      top: vars.$top_height;
+      height: calc(100% - #{vars.$top_height});
+    }
+
+    > .saber-top > .saber-logo {
+      flex-basis: vars.$top_height;
+      width: vars.$top_height;
+      padding: 0 9px;
+
+      .saber-logo_title {
+        display: none;
+      }
+    }
+
+    .top-menu,
+    .top-search--header {
+      display: none;
+    }
+  }
+
   .saber-sidebar {
     position: fixed;
     top: 0;
@@ -14,8 +42,9 @@
       width: vars.$sidebar_width;
     }
 
-    .saber-logo {
-      width: vars.$sidebar_width;
+    // 与侧栏内容盒等宽，避免多出的 1px 盖住侧栏右边界
+    .saber-sidebar > .saber-logo {
+      width: 100%;
     }
 
     .saber-main {
@@ -28,11 +57,22 @@
     width: 98%;
   }
 
-  .top-bar__item {
+  .nav-user-actions--header .nav-user-actions__tools,
+  .nav-user-actions--header .nav-user-actions__name,
+  .nav-user-actions--header .nav-user-actions__arrow {
     display: none;
   }
 
   .top-bar__title {
-    padding-left: 50px;
+    padding-left: 8px;
+  }
+
+  .nav-user-actions--header {
+    padding-right: 6px;
+
+    .nav-user-actions__account {
+      margin-left: 0;
+      padding: 0 4px;
+    }
   }
 }

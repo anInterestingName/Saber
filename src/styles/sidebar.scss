@@ -3,20 +3,24 @@
 .saber-sidebar {
   width: vars.$sidebar_width;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   user-select: none;
   position: relative;
-  height: 100%;
-  position: relative;
   background-color: var(--saber-sidebar-bg);
-  transition: width 0.2s;
+  transition: width var(--saber-nav-duration) var(--saber-nav-ease);
   box-sizing: border-box;
   .el-scrollbar__wrap {
     overflow-x: hidden;
   }
   .saber-menu {
-    height: calc(100% - #{vars.$top_height});
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
     background-color: var(--saber-sidebar-bg);
-    border-right: 1px solid var(--saber-border);
+    border-right: 0;
     box-sizing: border-box;
   }
   &--tip {
@@ -45,7 +49,7 @@
       color: var(--saber-sidebar-text);
     }
     &:hover {
-      background: transparent;
+      background-color: var(--saber-sidebar-hover);
       i,
       span {
         color: var(--saber-sidebar-text-active);
@@ -68,6 +72,192 @@
       }
     }
   }
+  // 展开时文案紧跟容器淡入（曲线起步快，无需等待），不再出现"文字慢半拍"的观感
+  .el-menu-item span,
+  .el-sub-menu__title span {
+    transition: opacity 90ms linear;
+  }
+}
+
+.saber-layout--side > .saber-sidebar {
+  border-right: 1px solid var(--saber-border);
+}
+
+.saber-layout--mix > .saber-sidebar {
+  border-right: 1px solid var(--saber-border);
+}
+
+// 菜单区域：纵向布局时为可滚动的菜单容器，顶部模式时是限定宽度的可横向滚动区域
+.saber-menu-shell {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+// 顶部模式区域装不下时的左右移动箭头，位于菜单区域外侧、不覆盖菜单项，
+// 样式与导航标签的箭头一致
+.saber-menu-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 100%;
+  padding: 0;
+  color: var(--saber-text-tertiary);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--el-color-primary);
+  }
+
+  // 到端点时保留占位、只隐藏箭头，避免滚动过程中菜单区域宽度跳动
+  &.is-hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .el-icon {
+    font-size: 20px;
+  }
+}
+
+// 顶部模式的展开子菜单：面板宽度贴合内容（EP 默认 min-width: 200px 过宽），
+// 文字整体内缩，业务图标隐藏并保留展开箭头
+.el-menu--horizontal {
+  .el-menu--popup {
+    min-width: 160px;
+  }
+
+  .el-menu {
+    .el-menu-item,
+    .el-sub-menu__title {
+      padding-left: 20px;
+    }
+
+    .el-menu-item > i:not(.el-sub-menu__icon-arrow),
+    .el-sub-menu__title > i:not(.el-sub-menu__icon-arrow) {
+      display: none;
+    }
+  }
+}
+
+.saber-shell--collapsed .saber-sidebar {
+  // 文案随容器一起退场，避免残留被裁切的文字
+  .el-menu-item span,
+  .el-sub-menu__title span {
+    opacity: 0;
+    transition: opacity 80ms linear;
+  }
+
+  // 折叠态的内联二级菜单由 Element Plus 浮层接管；不隐藏会被 EP 撑到 200px 留在栏内被裁切
+  .el-menu--inline {
+    display: none;
+  }
+}
+
+.nav-user-actions--sidebar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: var(--saber-sidebar-bg);
+  border-top: 1px solid var(--saber-border);
+
+  // 账户入口排在最左，工具紧随其后，四个项在同一行内等距分布
+  .nav-user-actions__identity {
+    order: -1;
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+
+    > .el-dropdown {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
+  }
+
+  // 工具组只做逻辑分组，展平后与账户入口同属一行，保证项与项之间间距一致
+  .nav-user-actions__tools {
+    display: contents;
+  }
+
+  .nav-user-actions__tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    color: var(--saber-text-secondary);
+    border-radius: var(--el-border-radius-small);
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+
+    &:hover {
+      color: var(--el-color-primary);
+      background-color: var(--saber-sidebar-hover);
+    }
+
+    i {
+      font-size: 16px;
+    }
+  }
+
+  // 账户入口只包裹头像与名称，不铺满整栏；内边距为 0 以保证与工具等距
+  .nav-user-actions__account {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    height: 30px;
+    gap: 6px;
+    padding: 0;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--saber-sidebar-hover);
+    }
+  }
+
+  .top-bar__img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .nav-user-actions__name {
+    flex: 0 1 auto;
+    max-width: 64px;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.saber-shell--collapsed .nav-user-actions--sidebar {
+  justify-content: center;
+  padding: 8px;
+
+  .nav-user-actions__tools,
+  .nav-user-actions__name,
+  .nav-user-actions__arrow {
+    display: none;
+  }
+
+  .nav-user-actions__identity {
+    flex: 0 0 auto;
+  }
+
+  .nav-user-actions__account {
+    justify-content: center;
+    padding: 0;
+  }
 }
 
 .saber-sidebar-toggle {
@@ -85,7 +275,7 @@
 
   &:hover {
     color: var(--el-color-primary);
-    background-color: var(--saber-surface-muted);
+    background-color: var(--saber-sidebar-hover);
   }
 
   &:focus-visible {
@@ -99,12 +289,12 @@
 
   &--edge {
     position: absolute;
-    top: 64px;
+    top: 20px;
     right: -14px;
     z-index: 12;
     width: 28px;
     height: 28px;
-    background-color: var(--saber-surface-elevated);
+    background-color: var(--saber-sidebar-bg);
     border: 1px solid var(--saber-border);
     border-radius: 50%;
     box-shadow: var(--saber-shadow);

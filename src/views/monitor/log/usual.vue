@@ -1,5 +1,10 @@
 <template>
-  <div class="log-page">
+  <page-container
+    class="log-page"
+    title="监控日志"
+    description="查询服务运行日志并查看请求上下文。"
+    :show-breadcrumb="false"
+  >
     <search-panel
       :model="searchForm"
       :loading="loading"
@@ -65,48 +70,27 @@
     <detail-drawer
       v-model="drawerVisible"
       title="通用日志详情"
+      subtitle="只读展示当前日志记录，不影响列表查询条件与分页"
+      size="lg"
       :loading="detailLoading"
+      :failed="detailFailed"
+      @retry="retryDetail"
       @close="handleDrawerClose"
     >
-      <el-result v-if="detailFailed" status="error" title="日志详情加载失败">
-        <template #extra>
-          <el-button type="primary" :icon="Refresh" @click="retryDetail">重新加载</el-button>
-        </template>
-      </el-result>
-      <el-descriptions v-else-if="detailData" :column="2" border>
-        <el-descriptions-item label="服务 ID">{{
-          displayValue(detailData.serviceId)
-        }}</el-descriptions-item>
-        <el-descriptions-item label="服务 Host">
-          {{ displayValue(detailData.serverHost) }}
-        </el-descriptions-item>
-        <el-descriptions-item label="服务 IP">{{
-          displayValue(detailData.serverIp)
-        }}</el-descriptions-item>
-        <el-descriptions-item label="软件环境">{{
-          displayValue(detailData.env)
-        }}</el-descriptions-item>
-        <el-descriptions-item label="日志级别">{{
-          displayValue(detailData.logLevel)
-        }}</el-descriptions-item>
-        <el-descriptions-item label="日志 ID">{{
-          displayValue(detailData.logId)
-        }}</el-descriptions-item>
-        <el-descriptions-item label="请求接口">{{
-          displayValue(detailData.requestUri)
-        }}</el-descriptions-item>
-        <el-descriptions-item label="日志时间">{{
-          displayValue(detailData.logData)
-        }}</el-descriptions-item>
-        <el-descriptions-item label="用户代理" :span="2">
-          <pre class="log-detail__pre">{{ displayValue(detailData.userAgent) }}</pre>
-        </el-descriptions-item>
-        <el-descriptions-item label="请求数据" :span="2">
-          <pre class="log-detail__pre">{{ displayValue(detailData.params) }}</pre>
-        </el-descriptions-item>
-      </el-descriptions>
+      <detail-section v-if="detailData" title="日志信息">
+        <field-value label="服务 ID" :value="detailData.serviceId" />
+        <field-value label="服务 Host" :value="detailData.serverHost" />
+        <field-value label="服务 IP" :value="detailData.serverIp" />
+        <field-value label="软件环境" :value="detailData.env" />
+        <field-value label="日志级别" :value="detailData.logLevel" />
+        <field-value label="日志 ID" :value="detailData.logId" copyable />
+        <field-value label="请求接口" :value="detailData.requestUri" span="full" />
+        <field-value label="日志时间" :value="detailData.logData" span="full" />
+        <field-value label="用户代理" :value="detailData.userAgent" multiline span="full" />
+        <field-value label="请求数据" :value="detailData.params" multiline span="full" />
+      </detail-section>
     </detail-drawer>
-  </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -117,6 +101,9 @@ import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import DetailDrawer from '@/components/detail-drawer/main.vue';
+import PageContainer from '@/components/page-container/main.vue';
+import DetailSection from '@/components/detail-section/main.vue';
+import FieldValue from '@/components/field-value/main.vue';
 import { useCrudPermission } from '@/composables/useCrudPermission';
 import { usePagedList } from '@/composables/usePagedList';
 import { useRemoteDetail } from '@/composables/useRemoteDetail';
@@ -188,8 +175,6 @@ const {
   return response.data.data;
 });
 
-const displayValue = (value?: string) => value || '-';
-
 const handleSearch = () => {
   void search({ ...searchForm.value });
 };
@@ -228,23 +213,5 @@ onMounted(() => {
 <style scoped lang="scss">
 .log-page {
   min-width: 0;
-}
-
-.log-detail__pre {
-  max-height: 320px;
-  margin: 0;
-  padding: 12px;
-  overflow: auto;
-  border-radius: 4px;
-  background: var(--saber-surface-muted);
-  color: var(--saber-text-secondary);
-  font-family: inherit;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-:deep(.el-descriptions__label) {
-  width: 112px;
 }
 </style>

@@ -14,40 +14,154 @@ a {
 .saber-sidebar,
 .saber-top,
 .saber-logo,
-.saber-layout,
-.login-logo,
 .saber-main {
+  transition: width var(--saber-nav-duration) var(--saber-nav-ease);
+}
+.login-logo {
   transition: all 0.3s;
 }
 .saber-layout {
   display: flex;
   height: 100%;
   overflow: hidden;
+  // 混合模式靠栅格列切换，需要与侧栏宽度同一节奏
+  transition: grid-template-columns var(--saber-nav-duration) var(--saber-nav-ease);
+
+  &--side {
+    > .saber-sidebar {
+      z-index: 20;
+      flex: 0 0 vars.$sidebar_width;
+
+      // 侧边模式无顶栏，Logo 区跟随侧栏底色；分割线两侧留出间距，不通铺整栏
+      > .saber-logo {
+        position: relative;
+        background-color: var(--saber-sidebar-bg);
+        border-bottom: 0;
+
+        &::after {
+          content: '';
+          position: absolute;
+          right: 12px;
+          bottom: 0;
+          left: 12px;
+          height: 1px;
+          background-color: var(--saber-border);
+        }
+      }
+    }
+
+    > .saber-main {
+      min-width: 0;
+      z-index: 0;
+
+      // 标签栏与 Logo 区等高，两条分隔线保持在同一水平线上（侧栏内缩 12px，不与内容区相连）
+      > .saber-tags {
+        display: flex;
+        align-items: center;
+        height: vars.$top_height;
+      }
+    }
+  }
+
+  &--mix {
+    display: grid;
+    grid-template-columns: vars.$sidebar_width minmax(0, 1fr);
+    grid-template-rows: vars.$top_height minmax(0, 1fr);
+
+    > .saber-top {
+      grid-row: 1;
+      grid-column: 1 / -1;
+    }
+
+    > .saber-sidebar {
+      z-index: 20;
+      grid-row: 2;
+      grid-column: 1;
+      width: vars.$sidebar_width;
+      min-height: 0;
+    }
+
+    > .saber-main {
+      z-index: 0;
+      grid-row: 2;
+      grid-column: 2;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    &.saber-layout--sidebar-hidden {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
+  }
+
   &--horizontal {
     flex-direction: column;
     .saber-sidebar {
+      flex: 0 0 vars.$top_height;
+      flex-direction: row;
+      align-items: stretch;
       width: 100%;
       height: vars.$top_height;
       display: flex;
       border-right: 0;
       border-bottom: 1px solid var(--saber-border);
       background-color: var(--saber-header-bg);
+      // 高度取内容盒，避免子元素多出 1px 盖住顶栏下边界
       .saber-menu,
       .el-menu-item,
       .el-sub-menu__title {
-        height: vars.$top_height;
+        height: 100%;
         line-height: vars.$top_height;
       }
+      .el-menu-item,
+      .el-sub-menu__title {
+        box-sizing: border-box;
+        // 不压缩菜单项，超出部分交给左右箭头滚动
+        flex: 0 0 auto;
+      }
+      // 顶栏自身已有下边界，菜单不再重复画线；EP 横向菜单默认 60px 会在栏内产生纵向溢出，
+      // 改为跟随顶栏内容盒高度，保证菜单固定一行、不被裁剪
+      .el-menu {
+        --el-menu-horizontal-height: #{vars.$top_height - 1px};
+        width: max-content;
+        border-bottom: 0;
+      }
+      // 菜单固定，不允许在栏内上下滚动
+      .el-scrollbar__wrap {
+        overflow-y: hidden;
+      }
       .saber-menu {
+        // 菜单占满 Logo 与右侧工具之间的剩余空间，EP 才能按可用宽度折叠多余项
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
         background-color: transparent;
         border-right: 0;
       }
       .is-active:before {
         display: none;
       }
+      // 悬停反馈：鼠标移到菜单项（含带下拉的一级项）上时给出底色
+      .el-menu-item:hover,
+      .el-sub-menu__title:hover {
+        background-color: var(--saber-sidebar-hover);
+      }
+      // 顶部导航模式：搜索与账户工具按自身宽度占位，不参与放大，避免把菜单挤成 0 宽
+      > .saber-top {
+        flex: 0 1 auto;
+        width: auto;
+        min-width: 0;
+        height: 100%;
+        background-color: transparent;
+        border-bottom: 0;
+      }
     }
+    // Logo 只占自身宽度，Logo 与菜单之间不再留出大段空白
     .saber-logo {
-      width: vars.$sidebar_width;
+      flex: 0 0 auto;
+      width: auto;
+      height: 100%;
+      padding: 0 20px 0 16px;
       border-bottom: 0;
     }
   }
@@ -61,9 +175,30 @@ a {
 }
 
 .saber-shell--collapsed {
-  .saber-sidebar,
-  .saber-logo {
+  .saber-layout--side > .saber-sidebar,
+  .saber-layout--mix > .saber-sidebar {
     width: vars.$sidebar_collapse;
+  }
+
+  // Logo 必须与侧栏内容盒等宽：侧栏按 border-box 计算，多出的 1px 会盖住右边界，
+  // 导致右侧贯穿分割线在 Logo 区断开
+  .saber-layout--side > .saber-sidebar > .saber-logo {
+    width: 100%;
+  }
+
+  .saber-layout--side > .saber-sidebar {
+    flex-basis: vars.$sidebar_collapse;
+
+    // 收起时先让文案退场，再收宽度，避免文字在收缩过程中被裁切
+    transition: width 200ms var(--saber-nav-ease) 50ms;
+  }
+
+  .saber-layout--mix {
+    grid-template-columns: vars.$sidebar_collapse minmax(0, 1fr);
+
+    &.saber-layout--sidebar-hidden {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
   }
 }
 

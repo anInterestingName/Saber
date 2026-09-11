@@ -1,14 +1,27 @@
 <template>
-  <el-tooltip content="界面设置" placement="left">
-    <el-button
-      class="app-setting-trigger"
-      :style="show ? { right: drawerSize } : undefined"
-      type="primary"
-      :icon="Setting"
-      aria-label="打开界面设置"
-      @click="show = true"
-    />
-  </el-tooltip>
+  <el-button
+    ref="triggerRef"
+    class="app-setting-trigger"
+    :class="[
+      `app-setting-trigger--${triggerMode}`,
+      {
+        'is-dragging': isDragging,
+        'is-snapping': isSnapping,
+        'is-snapped-left': snappedSide === 'left',
+      },
+    ]"
+    :style="floatingStyle"
+    :type="isFloating ? 'primary' : undefined"
+    :text="!isFloating"
+    :circle="!isFloating"
+    :icon="Setting"
+    aria-label="打开界面设置"
+    @pointerdown="handlePointerDown"
+    @pointermove="handlePointerMove"
+    @pointerup="handlePointerUp"
+    @pointercancel="handlePointerUp"
+    @click="handleTriggerClick"
+  />
 
   <el-drawer
     v-model="show"
@@ -161,11 +174,22 @@ interface SettingOption {
   key: BooleanSettingKey;
 }
 
+const props = withDefaults(
+  defineProps<{
+    triggerMode?: 'floating' | 'inline';
+  }>(),
+  {
+    triggerMode: 'floating',
+  }
+);
+
 const commonStore = useCommonStore();
 const { setting } = storeToRefs(commonStore);
 const show = ref(false);
 const viewportWidth = ref(window.innerWidth);
 
+const triggerMode = computed(() => props.triggerMode);
+const isFloating = computed(() => triggerMode.value === 'floating');
 const themeMode = computed<ThemeMode>(() => setting.value.theme);
 const drawerSize = computed(() => `${Math.min(viewportWidth.value, 320)}px`);
 
@@ -187,7 +211,6 @@ const displayOptions: SettingOption[] = [
 ];
 
 const toolOptions: SettingOption[] = [
-  { label: '屏幕全屏', key: 'fullscreen' },
   { label: '屏幕锁定', key: 'lock' },
   { label: '日志调试', key: 'debug' },
 ];
@@ -220,21 +243,179 @@ const updateViewportWidth = () => {
   viewportWidth.value = window.innerWidth;
 };
 
-onMounted(() => window.addEventListener('resize', updateViewportWidth));
-onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth));
+// 悬浮触发器支持拖拽并自动吸附到最近的左右边缘，吸附后保持完整可见、不做隐藏
+const DRAG_THRESHOLD = 4;
+const SNAP_DURATION = 220;
+const triggerRef = ref<{ $el?: HTMLElement } | null>(null);
+const customPosition = ref(false);
+const isDragging = ref(false);
+const isSnapping = ref(false);
+const snappedSide = ref<'left' | 'right'>('right');
+const position = ref({ x: 0, y: 0 });
+let snapTimer = 0;
+let dragOrigin = { x: 0, y: 0, pointerX: 0, pointerY: 0 };
+let dragMoved = false;
+let dragEndedAt = 0;
+
+const triggerElement = () => triggerRef.value?.$el;
+const triggerSize = () => {
+  const el = triggerElement();
+  return { width: el?.offsetWidth || 44, height: el?.offsetHeight || 44 };
+};
+
+const floatingStyle = computed(() => {
+  if (!isFloating.value || !customPosition.value) return undefined;
+  return {
+    left: `${position.value.x}px`,
+    top: `${position.value.y}px`,
+    right: 'auto',
+    transform: 'none',
+  };
+});
+
+const clampToViewport = (x: number, y: number) => {
+  const { width, height } = triggerSize();
+  return {
+    x: Math.min(Math.max(x, 0), Math.max(window.innerWidth - width, 0)),
+    y: Math.min(Math.max(y, 0), Math.max(window.innerHeight - height, 0)),
+  };
+};
+
+// 吸附到最近的左右边缘；水平方向保持完整可见，纵向限制在视口内
+const snapToNearestEdge = () => {
+  const { width, height } = triggerSize();
+  const centerX = position.value.x + width / 2;
+  snappedSide.value = centerX < window.innerWidth / 2 ? 'left' : 'right';
+  const target = snappedSide.value === 'left' ? 0 : Math.max(window.innerWidth - width, 0);
+  const targetY = Math.min(Math.max(position.value.y, 0), Math.max(window.innerHeight - height, 0));
+
+  isSnapping.value = true;
+  position.value = { x: target, y: targetY };
+  window.clearTimeout(snapTimer);
+  snapTimer = window.setTimeout(() => {
+    isSnapping.value = false;
+  }, SNAP_DURATION);
+};
+
+const handlePointerDown = (event: PointerEvent) => {
+  if (!isFloating.value) return;
+  const el = triggerElement();
+  if (el && !customPosition.value) {
+    // 首次拖拽时把当前的 CSS 定位换算成绝对坐标，避免起手跳动
+    const rect = el.getBoundingClientRect();
+    position.value = { x: rect.left, y: rect.top };
+    snappedSide.value = rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
+    customPosition.value = true;
+  }
+  el?.setPointerCapture?.(event.pointerId);
+  dragMoved = false;
+  isSnapping.value = false;
+  isDragging.value = true;
+  dragOrigin = {
+    x: position.value.x,
+    y: position.value.y,
+    pointerX: event.clientX,
+    pointerY: event.clientY,
+  };
+};
+
+const handlePointerMove = (event: PointerEvent) => {
+  if (!isDragging.value) return;
+  const dx = event.clientX - dragOrigin.pointerX;
+  const dy = event.clientY - dragOrigin.pointerY;
+  if (!dragMoved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
+  dragMoved = true;
+  position.value = clampToViewport(dragOrigin.x + dx, dragOrigin.y + dy);
+};
+
+const handlePointerUp = (event: PointerEvent) => {
+  if (!isDragging.value) return;
+  isDragging.value = false;
+  triggerElement()?.releasePointerCapture?.(event.pointerId);
+  if (dragMoved) {
+    dragEndedAt = Date.now();
+    snapToNearestEdge();
+  }
+};
+
+// 拖拽结束紧接着触发的 click 不打开抽屉（用时间窗判断，避免重复派发导致误开）
+const handleTriggerClick = () => {
+  if (Date.now() - dragEndedAt < 300) return;
+  show.value = true;
+};
+
+const handleViewportResize = () => {
+  updateViewportWidth();
+  if (!isFloating.value || !customPosition.value) return;
+  const { width, height } = triggerSize();
+  position.value = {
+    x: snappedSide.value === 'left' ? 0 : Math.max(window.innerWidth - width, 0),
+    y: Math.min(Math.max(position.value.y, 0), Math.max(window.innerHeight - height, 0)),
+  };
+};
+
+onMounted(() => window.addEventListener('resize', handleViewportResize));
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleViewportResize);
+  window.clearTimeout(snapTimer);
+});
 </script>
 
 <style lang="scss">
 .app-setting-trigger {
-  position: fixed;
-  top: 42%;
-  right: 0;
-  z-index: 2048;
-  width: 44px;
-  height: 44px;
-  border-radius: 4px 0 0 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
-  transition: right 0.3s;
+  flex: 0 0 auto;
+  transition: color 0.2s, background-color 0.2s;
+
+  &--floating {
+    position: fixed;
+    // 中心点落在视口高度 40% 处（略高于正中），比原来上移一档；拖拽后改为内联 left/top 定位
+    top: 40%;
+    right: 0;
+    z-index: 2048;
+    transform: translateY(-50%);
+    // 边长取视口高度的 4.8%，限制在 44px（点击可达性下限）到 56px（不与主操作抢视觉）
+    width: clamp(44px, 4.8vh, 56px);
+    height: clamp(44px, 4.8vh, 56px);
+    font-size: clamp(17px, 1.9vh, 21px);
+    border-radius: 6px 0 0 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+
+    .el-icon {
+      font-size: inherit;
+    }
+
+    &.is-dragging {
+      cursor: grabbing;
+    }
+
+    // 吸附动作本身带过渡，拖拽过程中不加过渡以免跟手延迟
+    &.is-snapping {
+      transition: left 220ms var(--saber-nav-ease), top 220ms var(--saber-nav-ease);
+    }
+
+    // 吸附到左侧时圆角镜像
+    &.is-snapped-left {
+      border-radius: 0 6px 6px 0;
+    }
+  }
+
+  &--inline {
+    width: 36px;
+    height: 36px;
+    margin-left: 4px;
+    color: var(--saber-text-secondary);
+    background: transparent;
+    border: 0;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--el-color-primary);
+      background-color: var(--saber-surface-muted);
+    }
+  }
 }
 
 .app-setting-drawer {
@@ -433,7 +614,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     right: 0;
     left: 0;
     height: 14px;
-    background: var(--saber-sidebar-bg);
+    background: var(--saber-header-bg);
     border-bottom: 1px solid var(--saber-border);
   }
 
@@ -455,11 +636,25 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     border-radius: 2px;
   }
 
+  &__layout-preview--side {
+    .app-setting__layout-header {
+      display: none;
+    }
+
+    .app-setting__layout-sidebar {
+      top: 0;
+    }
+
+    .app-setting__layout-content {
+      top: 8px;
+    }
+  }
+
   &__layout-preview--top {
     .app-setting__layout-header {
       z-index: 1;
       height: 18px;
-      background: var(--saber-sidebar-bg);
+      background: var(--saber-header-bg);
       border-bottom: 1px solid var(--saber-border);
     }
 
@@ -477,7 +672,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     .app-setting__layout-header {
       z-index: 2;
       height: 16px;
-      background: var(--saber-sidebar-bg);
+      background: var(--saber-header-bg);
       border-bottom: 1px solid var(--saber-border);
     }
 

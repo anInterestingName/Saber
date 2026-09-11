@@ -3,29 +3,46 @@
 .saber-top {
   position: relative;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  flex: 0 0 vars.$top_height;
+  width: 100%;
+  min-width: 0;
+  height: vars.$top_height;
   background-color: var(--saber-header-bg);
   border-bottom: 1px solid var(--saber-border);
   box-shadow: none;
   color: var(--saber-text-secondary);
   font-size: 28px;
-  height: vars.$top_height;
   line-height: vars.$top_height;
   box-sizing: border-box;
   white-space: nowrap;
+
   .el-menu-item {
     i,
     span {
       font-size: 13px;
     }
   }
+
+  > .saber-logo {
+    flex: 0 0 vars.$sidebar_width;
+    width: vars.$sidebar_width;
+    // 高度取顶栏内容盒，避免多出 1px 盖住顶栏下边界
+    height: 100%;
+    box-sizing: border-box;
+    border-bottom: 0;
+  }
 }
-.top-user {
-  margin-left: 12px;
-  display: flex;
-  align-items: center;
-}
+
 .top-menu {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent;
   border-bottom: 0 !important;
+
   .el-menu-item {
     padding: 0 10px;
     border: none;
@@ -40,42 +57,55 @@
 
 .top-search {
   line-height: vars.$top_height;
-  position: absolute !important;
-  right: 200px;
-  top: 0;
-  width: 300px;
+
   .el-input__wrapper {
     font-size: 13px;
     border: none;
     box-shadow: none;
     background-color: transparent;
   }
+
+  &--header {
+    flex: 0 1 300px;
+    width: min(300px, 30vw);
+    margin-left: auto;
+  }
+
+  &--sidebar {
+    flex: 0 0 auto;
+    width: calc(100% - 24px);
+    margin: 8px 12px 4px;
+    line-height: 32px;
+
+    .el-input__wrapper {
+      min-height: 32px;
+      background-color: var(--saber-surface-muted);
+      box-shadow: 0 0 0 1px var(--saber-border) inset;
+    }
+  }
 }
 
 .top-bar__img {
-  margin: 0 5px;
+  flex: 0 0 auto;
   padding: 2px;
   width: 30px;
   height: 30px;
   border-radius: 100%;
   box-sizing: border-box;
   border: 1px solid var(--saber-border);
+  object-fit: cover;
   vertical-align: middle;
 }
 
-.top-bar__left,
-.top-bar__right {
+.top-bar__left {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
   height: vars.$top_height;
-  position: absolute;
-  margin-top: 2px;
-  top: 0;
+
   i {
     line-height: vars.$top_height;
   }
-}
-
-.top-bar__left {
-  left: 10px;
 }
 
 .saber-sidebar-toggle--header {
@@ -87,25 +117,11 @@
   }
 }
 
-.top-bar__right {
-  right: 10px;
+.top-bar__title {
   display: flex;
   align-items: center;
-}
-
-.top-bar__item {
-  position: relative;
-  display: inline-block;
-  height: vars.$top_height;
-  margin: 0 7px;
-  font-size: 16px;
-  .el-badge__content.is-fixed {
-    top: 12px;
-    right: 5px;
-  }
-}
-
-.top-bar__title {
+  flex: 1 1 auto;
+  min-width: 0;
   height: 100%;
   padding-left: 16px;
   box-sizing: border-box;
@@ -114,6 +130,111 @@
   white-space: nowrap;
   font-size: inherit;
   font-weight: 400;
+}
+
+.nav-user-actions__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  min-width: 0;
+  padding: 0 8px;
+  color: var(--saber-text-secondary);
+  font-size: 14px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--el-border-radius-small);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--el-color-primary);
+    background-color: var(--saber-surface-muted);
+  }
+}
+
+.nav-user-actions__arrow {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+// 账户下拉菜单至少与账户入口同宽，避免选项被挤压
+.nav-user-actions__dropdown {
+  min-width: 132px;
+}
+
+.nav-user-actions__name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nav-user-actions__tool {
+  > i,
+  > span,
+  > .language-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    cursor: pointer;
+  }
+}
+
+.nav-user-actions--header {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  height: 100%;
+  padding: 0 10px 0 8px;
+
+  .nav-user-actions__tools,
+  .nav-user-actions__identity {
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-user-actions__tool {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    color: var(--saber-text-secondary);
+    font-size: 16px;
+    border-radius: var(--el-border-radius-small);
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+
+    &:hover {
+      color: var(--el-color-primary);
+      background-color: var(--saber-surface-muted);
+    }
+
+    i {
+      line-height: 38px;
+    }
+
+    .el-badge__content.is-fixed {
+      top: 3px;
+      right: 3px;
+    }
+  }
+
+  .nav-user-actions__account {
+    max-width: 180px;
+    margin-left: 4px;
+  }
+
+  .nav-user-actions__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .saber-logo {
@@ -136,10 +257,19 @@
     gap: 8px;
     width: 100%;
     min-width: 0;
+  }
 
-    &--compact {
+  // 收起态：品牌文字宽度归零，标记居中，文字随容器一起过渡而不是直接换 DOM
+  &--compact {
+    .saber-logo_brand {
       justify-content: center;
       gap: 0;
+    }
+
+    .saber-logo_title {
+      max-width: 0;
+      opacity: 0;
+      transition: opacity 60ms linear, max-width 200ms var(--saber-nav-ease) 50ms;
     }
   }
 
@@ -153,6 +283,7 @@
 
   &_title {
     min-width: 0;
+    max-width: 176px;
     overflow: hidden;
     color: var(--saber-sidebar-text-active);
     font-size: 16px;
@@ -161,6 +292,7 @@
     letter-spacing: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: opacity 90ms linear, max-width var(--saber-nav-duration) var(--saber-nav-ease);
   }
 }
 
