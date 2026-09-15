@@ -16,7 +16,7 @@
     > .saber-top > .saber-logo {
       flex-basis: vars.$top_height;
       width: vars.$top_height;
-      padding: 0 9px;
+      padding: 0 var(--saber-space-2);
 
       .saber-logo_title {
         display: none;
@@ -64,15 +64,15 @@
   }
 
   .top-bar__title {
-    padding-left: 8px;
+    padding-left: var(--saber-space-2);
   }
 
   .nav-user-actions--header {
-    padding-right: 6px;
+    padding-right: var(--saber-space-2);
 
     .nav-user-actions__account {
       margin-left: 0;
-      padding: 0 4px;
+      padding: 0 var(--saber-space-1);
     }
   }
 }

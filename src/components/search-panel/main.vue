@@ -1,5 +1,5 @@
 <template>
-  <basic-container class="search-panel">
+  <section class="search-panel">
     <el-form
       class="search-panel__form"
       :model="model"
@@ -9,11 +9,7 @@
       <div ref="contentRef" class="search-panel__content">
         <el-row :gutter="gutter">
           <slot :expanded="expanded" />
-          <el-col
-            v-bind="actionCol"
-            class="search-panel__actions"
-            data-search-panel-actions
-          >
+          <el-col v-bind="actionCol" class="search-panel__actions" data-search-panel-actions>
             <slot name="extra-actions" :expanded="expanded" />
             <el-button :icon="RefreshLeft" :disabled="loading" @click="emit('reset')">
               重置
@@ -39,7 +35,7 @@
         </el-row>
       </div>
     </el-form>
-  </basic-container>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -91,7 +87,7 @@ const getLayoutElements = () => {
   const fields = row
     ? Array.from(row.children).filter(
         (element): element is HTMLElement =>
-          element instanceof HTMLElement && !element.hasAttribute('data-search-panel-actions'),
+          element instanceof HTMLElement && !element.hasAttribute('data-search-panel-actions')
       )
     : [];
 
@@ -175,7 +171,7 @@ onMounted(() => {
 watch(
   () => [props.gutter, props.actionCol],
   () => void nextTick(scheduleMeasure),
-  { deep: true },
+  { deep: true }
 );
 
 onBeforeUnmount(() => {
@@ -188,21 +184,15 @@ onBeforeUnmount(() => {
 
 <style scoped lang="scss">
 .search-panel {
-  :deep(.basic-container__card) {
-    border: 0;
-    border-radius: 6px;
-    box-shadow: none;
-    background: var(--saber-surface);
-  }
-
-  :deep(.el-card__body) {
-    padding: 20px 24px;
-  }
+  padding: var(--saber-space-5) var(--saber-space-6);
+  margin-bottom: var(--saber-space-4);
+  border-radius: var(--saber-radius-surface, var(--el-border-radius-base));
+  background: var(--saber-surface-muted);
 }
 
 .search-panel__form {
   :deep(.el-row) {
-    row-gap: 20px;
+    row-gap: var(--saber-space-5);
   }
 
   :deep(.el-form-item) {
@@ -225,7 +215,7 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   align-items: center;
   white-space: nowrap;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   :deep(.el-button + .el-button) {
     margin-left: 0;
@@ -236,20 +226,18 @@ onBeforeUnmount(() => {
   padding-right: 0;
 
   .el-icon {
-    margin-left: 4px;
+    margin-left: var(--saber-space-1);
   }
 }
 
 @media (max-width: 767px) {
   .search-panel {
-    :deep(.el-card__body) {
-      padding: 16px;
-    }
+    padding: var(--saber-space-4);
   }
 
   .search-panel__actions {
     justify-content: flex-start;
-    gap: 6px;
+    gap: var(--saber-space-2);
   }
 }
 </style>

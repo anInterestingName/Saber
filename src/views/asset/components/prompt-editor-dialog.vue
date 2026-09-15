@@ -1,34 +1,19 @@
 <template>
-  <el-dialog
+  <app-dialog
     v-model="visible"
     class="prompt-editor-dialog"
-    append-to-body
-    align-center
-    width="min(1120px, calc(100vw - 32px))"
+    size="lg"
     destroy-on-close
-    :close-on-click-modal="!saving"
-    :close-on-press-escape="!saving"
-    :show-close="!saving"
-    :before-close="handleBeforeClose"
     :title="dialogTitle"
-    @closed="resetDialog"
+    :loading="loading"
+    :failed="loadFailed"
+    :submitting="saving"
+    :dirty="formDirty"
+    @retry="loadDetail"
+    @close="resetDialog"
   >
-    <div v-loading="loading" class="prompt-editor-dialog__body">
-      <el-result
-        v-if="loadFailed"
-        icon="error"
-        title="提示词详情加载失败"
-        sub-title="旧详情已清空，请重新加载后继续"
-      >
-        <template #extra>
-          <el-button type="primary" :disabled="!localPromptId" @click="loadDetail">
-            重新加载
-          </el-button>
-        </template>
-      </el-result>
-
+    <div class="prompt-editor-dialog__body">
       <el-form
-        v-else
         ref="formRef"
         :model="form"
         :rules="formRules"
@@ -148,9 +133,9 @@
       </el-form>
     </div>
 
-    <template #footer>
+    <template #footer="{ cancel }">
       <div class="prompt-editor-dialog__footer">
-        <el-button :disabled="saving" @click="closeDialog">
+        <el-button :disabled="saving" @click="cancel">
           {{ readonly ? '关闭' : '取消' }}
         </el-button>
         <el-button
@@ -173,7 +158,7 @@
         </el-button>
       </div>
     </template>
-  </el-dialog>
+  </app-dialog>
 
   <prompt-preview-drawer v-model="previewVisible" :snapshot="previewSnapshot" />
 </template>
@@ -184,6 +169,7 @@ import { DocumentChecked, View } from '@element-plus/icons-vue';
 import { ElForm, ElMessage, type FormRules } from 'element-plus';
 import PromptVariableEditor from './prompt-variable-editor.vue';
 import PromptPreviewDrawer from './prompt-preview-drawer.vue';
+import AppDialog from '@/components/app-dialog/main.vue';
 import { BladeBusinessError } from '@/axios';
 import {
   createPrompt,
@@ -227,6 +213,7 @@ const createInitialForm = (): PromptDraftPayload => ({
 });
 
 const form = ref<PromptDraftPayload>(createInitialForm());
+const initialFormSnapshot = ref(JSON.stringify(form.value));
 const internalMode = ref<CrudMode>('add');
 const localPromptId = ref('');
 const lockVersion = ref('');
@@ -250,6 +237,9 @@ const visible = computed({
   set: value => emit('update:modelValue', value),
 });
 const readonly = computed(() => internalMode.value === 'view');
+const formDirty = computed(
+  () => !readonly.value && JSON.stringify(form.value) !== initialFormSnapshot.value
+);
 const canSaveCurrentMode = computed(() =>
   internalMode.value === 'add' ? props.canCreate : props.canEdit
 );
@@ -364,6 +354,7 @@ const applyDetail = (detail: PromptDetail) => {
     userTemplate: detail.userTemplate ?? '',
     variables: (detail.variables ?? []).map(normalizePromptVariable),
   };
+  initialFormSnapshot.value = JSON.stringify(form.value);
   applyDetailMetadata(detail);
 };
 
@@ -475,18 +466,11 @@ const formatIssue = (issue: PromptValidationIssue) => {
   return target ? `${target}：${issue.message}` : issue.message;
 };
 
-const closeDialog = () => {
-  if (!saving.value) visible.value = false;
-};
-
-const handleBeforeClose = (done: () => void) => {
-  if (!saving.value) done();
-};
-
 function resetDialog() {
   latestDetailRequest += 1;
   latestConflictRequest += 1;
   form.value = createInitialForm();
+  initialFormSnapshot.value = JSON.stringify(form.value);
   internalMode.value = 'add';
   localPromptId.value = '';
   lockVersion.value = '';
@@ -507,38 +491,11 @@ function resetDialog() {
 
 <style lang="scss">
 .prompt-editor-dialog {
-  display: flex;
-  max-height: calc(100vh - 32px);
-  max-width: calc(100vw - 32px);
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: 6px;
   background: var(--saber-surface-elevated);
-}
-
-.prompt-editor-dialog .el-dialog__header {
-  flex: 0 0 auto;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--saber-border);
-  margin-right: 0;
-}
-
-.prompt-editor-dialog .el-dialog__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 0;
-  overflow: auto;
-}
-
-.prompt-editor-dialog .el-dialog__footer {
-  flex: 0 0 auto;
-  padding: 14px 24px;
-  border-top: 1px solid var(--saber-border);
 }
 
 .prompt-editor-dialog__body {
   min-height: 260px;
-  padding: 24px;
 }
 
 .prompt-editor-dialog__footer {
@@ -546,7 +503,7 @@ function resetDialog() {
   min-height: 32px;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-editor-dialog__footer .el-button + .el-button {
@@ -554,13 +511,13 @@ function resetDialog() {
 }
 
 .prompt-editor-section + .prompt-editor-section {
-  padding-top: 24px;
+  padding-top: var(--saber-space-6);
   border-top: 1px solid var(--saber-border);
-  margin-top: 24px;
+  margin-top: var(--saber-space-6);
 }
 
 .prompt-editor-section__heading {
-  margin-bottom: 16px;
+  margin-bottom: var(--saber-space-4);
 }
 
 .prompt-editor-section__heading h3,
@@ -592,21 +549,14 @@ function resetDialog() {
 
 .prompt-editor-warnings {
   display: grid;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-editor-conflict {
-  margin-top: 20px;
+  margin-top: var(--saber-space-5);
 }
 
 @media (max-width: 767px) {
-  .prompt-editor-dialog .el-dialog__header,
-  .prompt-editor-dialog__body,
-  .prompt-editor-dialog .el-dialog__footer {
-    padding-right: 16px;
-    padding-left: 16px;
-  }
-
   .prompt-editor-dialog__footer {
     align-items: stretch;
     flex-direction: column-reverse;

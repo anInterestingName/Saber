@@ -1,16 +1,11 @@
 <template>
-  <el-drawer
+  <detail-drawer
     v-model="visible"
     class="prompt-preview-drawer"
-    append-to-body
-    direction="rtl"
     title="提示词预览"
-    size="min(760px, 100vw)"
-    :close-on-click-modal="!previewing"
-    :close-on-press-escape="!previewing"
-    :show-close="!previewing"
-    :before-close="handleBeforeClose"
-    @closed="resetState"
+    size="md"
+    :submitting="previewing"
+    @close="resetState"
   >
     <div class="prompt-preview-drawer__body">
       <section class="prompt-preview-section">
@@ -164,12 +159,13 @@
         <el-empty v-else description="后端未返回消息" :image-size="64" />
       </section>
     </div>
-  </el-drawer>
+  </detail-drawer>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { VideoPlay } from '@element-plus/icons-vue';
+import DetailDrawer from '@/components/detail-drawer/main.vue';
 import type {
   PromptDraftPayload,
   PromptRenderResult,
@@ -302,48 +298,35 @@ const runPreview = async () => {
 
 const formatIssueTarget = (issue: PromptValidationIssue) =>
   issue.variableName || issue.field || '模板';
-
-const handleBeforeClose = (done: () => void) => {
-  if (!previewing.value) done();
-};
 </script>
 
 <style lang="scss">
-.prompt-preview-drawer.el-drawer {
-  max-width: 100vw;
+.prompt-preview-drawer {
   background: var(--saber-surface-elevated);
-}
 
-.prompt-preview-drawer .el-drawer__header {
-  min-height: 60px;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--saber-border);
-  margin-bottom: 0;
-}
-
-.prompt-preview-drawer .el-drawer__body {
-  padding: 0;
-  overflow: auto;
+  .detail-drawer__body {
+    padding: 0;
+  }
 }
 
 .prompt-preview-drawer__body {
   min-width: 0;
-  padding: 24px;
+  padding: var(--saber-space-6);
 }
 
 .prompt-preview-section + .prompt-preview-section {
-  padding-top: 24px;
+  padding-top: var(--saber-space-6);
   border-top: 1px solid var(--saber-border);
-  margin-top: 24px;
+  margin-top: var(--saber-space-6);
 }
 
 .prompt-preview-section__heading {
   display: flex;
   min-height: 40px;
-  margin-bottom: 16px;
+  margin-bottom: var(--saber-space-4);
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--saber-space-4);
 }
 
 .prompt-preview-section__heading h3,
@@ -369,7 +352,7 @@ const handleBeforeClose = (done: () => void) => {
 .prompt-preview-section__commands {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-preview-section__commands .el-button + .el-button {
@@ -379,13 +362,13 @@ const handleBeforeClose = (done: () => void) => {
 .prompt-preview-fields,
 .prompt-preview-messages {
   display: grid;
-  gap: 12px;
+  gap: var(--saber-space-3);
 }
 
 .prompt-preview-field {
-  padding: 14px 16px;
+  padding: var(--saber-space-3) var(--saber-space-4);
   border: 1px solid var(--saber-border);
-  border-radius: 6px;
+  border-radius: var(--saber-radius-control);
   background: var(--saber-surface);
 }
 
@@ -394,7 +377,7 @@ const handleBeforeClose = (done: () => void) => {
   min-height: 32px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--saber-space-4);
 }
 
 .prompt-preview-field__meta strong,
@@ -409,7 +392,7 @@ const handleBeforeClose = (done: () => void) => {
 }
 
 .prompt-preview-field__input {
-  margin-top: 12px;
+  margin-top: var(--saber-space-3);
 }
 
 .prompt-preview-field__input .el-input-number,
@@ -418,20 +401,20 @@ const handleBeforeClose = (done: () => void) => {
 }
 
 .prompt-preview-issues {
-  margin-top: 16px;
+  margin-top: var(--saber-space-4);
 }
 
 .prompt-preview-issues h4 {
-  margin-bottom: 8px;
+  margin-bottom: var(--saber-space-2);
 }
 
 .issue {
   display: flex;
-  padding: 8px 10px;
-  border-radius: 4px;
-  margin-top: 6px;
+  padding: var(--saber-space-2) var(--saber-space-2);
+  border-radius: var(--saber-radius-xs);
+  margin-top: var(--saber-space-2);
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--saber-space-2);
   font-size: 13px;
   line-height: 20px;
 }
@@ -447,14 +430,14 @@ const handleBeforeClose = (done: () => void) => {
 }
 
 .prompt-message {
-  padding: 14px 16px;
+  padding: var(--saber-space-3) var(--saber-space-4);
   border: 1px solid var(--saber-border);
-  border-radius: 6px;
+  border-radius: var(--saber-radius-control);
   background: var(--saber-surface);
 }
 
 .prompt-message pre {
-  margin: 12px 0 0;
+  margin: var(--saber-space-3) 0 0;
   color: var(--saber-text-primary);
   font-family: inherit;
   line-height: 1.7;
@@ -463,10 +446,9 @@ const handleBeforeClose = (done: () => void) => {
 }
 
 @media (max-width: 767px) {
-  .prompt-preview-drawer__body,
-  .prompt-preview-drawer .el-drawer__header {
-    padding-right: 16px;
-    padding-left: 16px;
+  .prompt-preview-drawer__body {
+    padding-right: var(--saber-space-4);
+    padding-left: var(--saber-space-4);
   }
 
   .prompt-preview-section__heading,

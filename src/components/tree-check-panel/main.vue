@@ -145,25 +145,25 @@ const handleInvert = async () => {
 .tree-check-panel {
   min-height: 220px;
   border: 1px solid var(--saber-border);
-  border-radius: 6px;
+  border-radius: var(--saber-radius-control);
   background: var(--saber-surface);
 }
 
 .tree-check-panel__toolbar {
   display: flex;
   min-height: 48px;
-  padding: 8px 12px;
+  padding: var(--saber-space-2) var(--saber-space-3);
   border-bottom: 1px solid var(--saber-border);
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--saber-space-3);
 }
 
 .tree-check-panel__linkage,
 .tree-check-panel__actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .tree-check-panel__linkage {
@@ -172,7 +172,7 @@ const handleInvert = async () => {
 
 .tree-check-panel__content {
   min-height: 170px;
-  padding: 12px;
+  padding: var(--saber-space-3);
   overflow: auto;
 }
 

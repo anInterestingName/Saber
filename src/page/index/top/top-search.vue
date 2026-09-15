@@ -98,9 +98,9 @@ export default {
 .my-autocomplete {
   li {
     line-height: normal !important;
-    padding: 7px !important;
+    padding: var(--saber-space-2) !important;
     .icon {
-      margin-right: 5px;
+      margin-right: var(--saber-space-2);
       display: inline-block;
       vertical-align: middle;
     }
@@ -111,14 +111,14 @@ export default {
       vertical-align: middle;
     }
     .addr {
-      padding-top: 5px;
+      padding-top: var(--saber-space-2);
       width: 100%;
       font-size: 12px;
-      color: #b4b4b4;
+      color: var(--saber-text-tertiary);
     }
 
     .highlighted .addr {
-      color: #ddd;
+      color: var(--saber-border-strong);
     }
   }
 }

@@ -1,12 +1,10 @@
 <template>
-  <el-drawer
+  <detail-drawer
     v-model="visible"
     class="prompt-version-drawer"
-    append-to-body
-    direction="rtl"
     title="提示词版本历史"
-    size="min(1040px, 100vw)"
-    @closed="resetState"
+    size="xl"
+    @close="resetState"
   >
     <div class="prompt-version-drawer__body">
       <el-alert
@@ -202,7 +200,10 @@
                   :label="`变量快照 (${selectedVersion.variables.length})`"
                   name="variables"
                 >
-                  <div v-if="selectedVersion.variables.length" class="prompt-version-variable-forms">
+                  <div
+                    v-if="selectedVersion.variables.length"
+                    class="prompt-version-variable-forms"
+                  >
                     <section
                       v-for="(variable, index) in selectedVersion.variables"
                       :key="variable.name"
@@ -238,12 +239,18 @@
                           </el-col>
                           <el-col :xs="24" :sm="12">
                             <el-form-item label="变量类型">
-                              <el-input :model-value="getVariableTypeLabel(variable.type)" readonly />
+                              <el-input
+                                :model-value="getVariableTypeLabel(variable.type)"
+                                readonly
+                              />
                             </el-form-item>
                           </el-col>
                           <el-col :xs="24" :sm="12">
                             <el-form-item label="最大长度">
-                              <el-input :model-value="variable.maxLength?.toString() || '-'" readonly />
+                              <el-input
+                                :model-value="variable.maxLength?.toString() || '-'"
+                                readonly
+                              />
                             </el-form-item>
                           </el-col>
                           <el-col :xs="24" :sm="12">
@@ -299,7 +306,10 @@
                       </el-col>
                       <el-col :xs="24" :sm="12">
                         <el-form-item label="来源版本">
-                          <el-input :model-value="selectedVersion.sourceVersionId || '-'" readonly />
+                          <el-input
+                            :model-value="selectedVersion.sourceVersionId || '-'"
+                            readonly
+                          />
                         </el-form-item>
                       </el-col>
                       <el-col :xs="24" :sm="12">
@@ -317,7 +327,10 @@
                       </el-col>
                       <el-col :span="24">
                         <el-form-item label="发布时间">
-                          <el-input :model-value="formatTime(selectedVersion.publishTime)" readonly />
+                          <el-input
+                            :model-value="formatTime(selectedVersion.publishTime)"
+                            readonly
+                          />
                         </el-form-item>
                       </el-col>
                       <el-col :span="24">
@@ -358,7 +371,7 @@
         </section>
       </div>
     </div>
-  </el-drawer>
+  </detail-drawer>
 </template>
 
 <script setup lang="ts">
@@ -366,6 +379,7 @@ import { computed, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { CopyDocument, Refresh, RefreshLeft } from '@element-plus/icons-vue';
 import dayjs from 'dayjs';
+import DetailDrawer from '@/components/detail-drawer/main.vue';
 import {
   getPromptDetail,
   getPromptVersionDetail,
@@ -597,30 +611,14 @@ const resetState = () => {
 </script>
 
 <style lang="scss">
-.prompt-version-drawer.el-drawer {
-  max-width: 100vw;
+.prompt-version-drawer {
   background: var(--saber-surface-elevated);
-}
 
-.prompt-version-drawer .el-drawer__header {
-  min-height: 60px;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--saber-border);
-  margin-bottom: 0;
-}
-
-.prompt-version-drawer .el-drawer__title {
-  color: var(--saber-text-primary);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0;
-}
-
-.prompt-version-drawer .el-drawer__body {
-  display: flex;
-  min-height: 0;
-  padding: 0;
-  overflow: hidden;
+  .detail-drawer__body {
+    display: flex;
+    padding: 0;
+    overflow: hidden;
+  }
 }
 
 .prompt-version-drawer__body {
@@ -629,7 +627,7 @@ const resetState = () => {
   width: 100%;
   min-width: 0;
   min-height: 0;
-  padding: 24px;
+  padding: var(--saber-space-6);
   box-sizing: border-box;
   flex-direction: column;
   overflow: hidden;
@@ -641,18 +639,18 @@ const resetState = () => {
   min-width: 0;
   min-height: 0;
   grid-template-columns: 270px minmax(0, 1fr);
-  gap: 16px;
+  gap: var(--saber-space-4);
 }
 
 .prompt-version-drawer__body > .el-alert + .prompt-version-layout {
-  margin-top: 16px;
+  margin-top: var(--saber-space-4);
 }
 
 .prompt-version-list {
   display: flex;
   min-width: 0;
   min-height: 0;
-  padding-right: 16px;
+  padding-right: var(--saber-space-4);
   border-right: 1px solid var(--saber-border);
   box-sizing: border-box;
   flex-direction: column;
@@ -668,10 +666,10 @@ const resetState = () => {
 .prompt-version-heading {
   display: flex;
   min-height: 40px;
-  margin-bottom: 12px;
+  margin-bottom: var(--saber-space-3);
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--saber-space-3);
 }
 
 .prompt-version-heading h3,
@@ -705,7 +703,7 @@ const resetState = () => {
   flex: 1;
   min-height: 0;
   align-content: start;
-  gap: 6px;
+  gap: var(--saber-space-2);
   overflow-y: auto;
 }
 
@@ -720,9 +718,9 @@ const resetState = () => {
 .prompt-version-item {
   display: block;
   width: 100%;
-  padding: 8px 10px;
+  padding: var(--saber-space-2) var(--saber-space-2);
   border: 1px solid var(--saber-border);
-  border-radius: 6px;
+  border-radius: var(--saber-radius-control);
   color: var(--saber-text-primary);
   background: var(--saber-surface);
   box-sizing: border-box;
@@ -752,7 +750,7 @@ html.dark .prompt-version-item--active {
   min-height: 24px;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-version-item__topline > strong,
@@ -764,7 +762,7 @@ html.dark .prompt-version-item--active {
 
 .prompt-version-item__note {
   display: block;
-  margin-top: 3px;
+  margin-top: var(--saber-space-1);
   overflow: hidden;
   color: var(--saber-text-secondary);
   font-size: 12px;
@@ -776,10 +774,10 @@ html.dark .prompt-version-item--active {
 .prompt-version-item__meta {
   display: flex;
   min-width: 0;
-  margin-top: 2px;
+  margin-top: var(--saber-space-1);
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: var(--saber-space-2);
   color: var(--saber-text-tertiary);
   font-size: 11px;
   line-height: 16px;
@@ -798,19 +796,19 @@ html.dark .prompt-version-item--active {
 }
 
 .prompt-version-pagination {
-  margin-top: 16px;
+  margin-top: var(--saber-space-4);
   justify-content: center;
 }
 
 .prompt-version-summary {
   display: flex;
   min-width: 0;
-  padding: 14px 16px;
+  padding: var(--saber-space-3) var(--saber-space-4);
   border-left: 3px solid var(--el-color-primary);
-  border-radius: 4px;
+  border-radius: var(--saber-radius-xs);
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: var(--saber-space-5);
   background: var(--saber-surface-muted);
 }
 
@@ -829,7 +827,7 @@ html.dark .prompt-version-item--active {
 .prompt-version-summary__title {
   min-height: 26px;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-version-summary__title strong {
@@ -839,9 +837,9 @@ html.dark .prompt-version-item--active {
 
 .prompt-version-summary__identity {
   min-width: 0;
-  margin-top: 4px;
+  margin-top: var(--saber-space-1);
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--saber-space-2);
   color: var(--saber-text-primary);
   font-size: 14px;
   line-height: 22px;
@@ -852,7 +850,7 @@ html.dark .prompt-version-item--active {
 }
 
 .prompt-version-summary p {
-  margin-top: 4px;
+  margin-top: var(--saber-space-1);
   color: var(--saber-text-secondary);
   font-size: 13px;
   line-height: 20px;
@@ -872,7 +870,7 @@ html.dark .prompt-version-item--active {
   display: flex;
   flex: 1;
   min-height: 0;
-  margin-top: 16px;
+  margin-top: var(--saber-space-4);
   flex-direction: column;
 }
 
@@ -894,11 +892,11 @@ html.dark .prompt-version-item--active {
   display: grid;
   min-height: 100%;
   grid-template-rows: repeat(2, minmax(160px, 1fr));
-  gap: 20px;
+  gap: var(--saber-space-5);
 }
 
 .prompt-version-content + .prompt-version-content {
-  padding-top: 20px;
+  padding-top: var(--saber-space-5);
   border-top: 1px solid var(--saber-border);
 }
 
@@ -910,21 +908,21 @@ html.dark .prompt-version-item--active {
 
 .prompt-version-content__heading {
   min-height: 32px;
-  margin-bottom: 8px;
+  margin-bottom: var(--saber-space-2);
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--saber-space-3);
 }
 
 .prompt-version-content__scrollbar {
   flex: 1;
   min-height: 72px;
-  border-radius: 4px;
+  border-radius: var(--saber-radius-xs);
   background: var(--saber-surface-muted);
 }
 
 .prompt-version-content pre {
   min-height: 72px;
-  padding: 12px 14px;
+  padding: var(--saber-space-3) var(--saber-space-3);
   margin: 0;
   color: var(--saber-text-primary);
   font-family: inherit;
@@ -935,21 +933,21 @@ html.dark .prompt-version-item--active {
 
 .prompt-version-variable-forms {
   display: grid;
-  gap: 20px;
+  gap: var(--saber-space-5);
 }
 
 .prompt-version-variable-form + .prompt-version-variable-form {
-  padding-top: 20px;
+  padding-top: var(--saber-space-5);
   border-top: 1px solid var(--saber-border);
 }
 
 .prompt-version-variable-form__heading {
   display: flex;
   min-height: 32px;
-  margin-bottom: 12px;
+  margin-bottom: var(--saber-space-3);
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--saber-space-3);
 }
 
 .prompt-version-variable-form__heading strong {
@@ -962,7 +960,7 @@ html.dark .prompt-version-item--active {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-version-readonly-form {
@@ -970,12 +968,12 @@ html.dark .prompt-version-item--active {
 }
 
 .prompt-version-readonly-form .el-form-item {
-  margin-bottom: 14px;
+  margin-bottom: var(--saber-space-3);
 }
 
 .prompt-version-readonly-form .el-form-item__label {
   padding: 0;
-  margin-bottom: 4px;
+  margin-bottom: var(--saber-space-1);
   color: var(--saber-text-secondary);
   font-size: 12px;
   line-height: 20px;
@@ -998,7 +996,7 @@ html.dark .prompt-version-item--active {
 
 @media (max-width: 1024px) {
   .prompt-version-drawer__body {
-    padding: 20px;
+    padding: var(--saber-space-5);
   }
 
   .prompt-version-layout {
@@ -1007,10 +1005,9 @@ html.dark .prompt-version-item--active {
 }
 
 @media (max-width: 767px) {
-  .prompt-version-drawer__body,
-  .prompt-version-drawer .el-drawer__header {
-    padding-right: 16px;
-    padding-left: 16px;
+  .prompt-version-drawer__body {
+    padding-right: var(--saber-space-4);
+    padding-left: var(--saber-space-4);
   }
 
   .prompt-version-heading {
@@ -1024,7 +1021,7 @@ html.dark .prompt-version-item--active {
 
   .prompt-version-list {
     padding-right: 0;
-    padding-bottom: 16px;
+    padding-bottom: var(--saber-space-4);
     border-right: 0;
     border-bottom: 1px solid var(--saber-border);
   }

@@ -1,105 +1,123 @@
 <template>
-  <div class="report-list-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="8">
-        <el-form-item label="文件名">
-          <el-input v-model="searchForm.name" clearable placeholder="请输入文件名" />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="报表列表">
-      <template #actions>
-        <el-button
-          type="danger"
-          plain
-          :icon="Delete"
-          :disabled="loading"
-          @click="handleBatchDelete"
-        >
-          删除
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="report-list-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column prop="name" label="文件名" min-width="240" show-overflow-tooltip>
-          <template #default="{ row }">
+        <el-col :xs="24" :sm="12" :md="8">
+          <el-form-item label="文件名">
+            <el-input v-model="searchForm.name" clearable placeholder="请输入文件名" />
+          </el-form-item>
+        </el-col>
+      </search-panel>
+
+      <list-panel title="报表列表">
+        <template #actions>
+          <el-button
+            type="danger"
+            plain
+            :icon="Delete"
+            :disabled="loading"
+            @click="handleBatchDelete"
+          >
+            删除
+          </el-button>
+        </template>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
             <el-button
-              type="primary"
-              link
-              :disabled="!row.name || loading"
-              @click="handlePreview(row.name)"
-            >
-              {{ row.name || '-' }}
-            </el-button>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="updateTime" label="更新时间" min-width="180" show-overflow-tooltip />
-        <el-table-column label="操作" fixed="right" width="200" align="center">
-          <template #default="{ row }">
-            <div class="report-actions">
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
+
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column prop="name" label="文件名" min-width="240" show-overflow-tooltip>
+            <template #default="{ row }">
               <el-button
                 type="primary"
                 link
-                :icon="Edit"
-                :disabled="!row.name || loading"
-                @click="handleDesign(row.name)"
-              >
-                设计
-              </el-button>
-              <el-button
-                type="primary"
-                link
-                :icon="View"
                 :disabled="!row.name || loading"
                 @click="handlePreview(row.name)"
               >
-                预览
+                {{ row.name || '-' }}
               </el-button>
-              <el-button
-                type="danger"
-                link
-                :icon="Delete"
-                :disabled="loading"
-                @click="handleRowDelete(row as ReportEntity)"
-              >
-                删除
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="createTime"
+            label="创建时间"
+            min-width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="updateTime"
+            label="更新时间"
+            min-width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column label="操作" fixed="right" width="200" align="center">
+            <template #default="{ row }">
+              <div class="report-actions">
+                <el-button
+                  type="primary"
+                  link
+                  :icon="Edit"
+                  :disabled="!row.name || loading"
+                  @click="handleDesign(row.name)"
+                >
+                  设计
+                </el-button>
+                <el-button
+                  type="primary"
+                  link
+                  :icon="View"
+                  :disabled="!row.name || loading"
+                  @click="handlePreview(row.name)"
+                >
+                  预览
+                </el-button>
+                <el-button
+                  type="danger"
+                  link
+                  :icon="Delete"
+                  :disabled="loading"
+                  @click="handleRowDelete(row as ReportEntity)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
-  </div>
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -230,13 +248,13 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  gap: 4px;
+  gap: var(--saber-space-1);
 
   :deep(.el-button) {
     min-width: 52px;
     height: 32px;
     margin-left: 0;
-    padding: 4px 6px;
+    padding: var(--saber-space-1) var(--saber-space-2);
   }
 }
 </style>

@@ -36,8 +36,8 @@ withDefaults(defineProps<FormSectionProps>(), {
 
 .form-section + .form-section,
 .form-section--divided {
-  margin-top: var(--saber-space-6);
-  padding-top: var(--saber-space-6);
+  margin-top: var(--saber-section-gap, var(--saber-space-6));
+  padding-top: var(--saber-section-gap, var(--saber-space-6));
   border-top: 1px solid var(--saber-border);
 }
 
@@ -48,7 +48,7 @@ withDefaults(defineProps<FormSectionProps>(), {
 }
 
 .form-section__header {
-  margin-bottom: var(--saber-space-4);
+  margin-bottom: var(--saber-space-5);
 }
 
 .form-section__title {
@@ -71,10 +71,12 @@ withDefaults(defineProps<FormSectionProps>(), {
   display: grid;
   min-width: 0;
   column-gap: var(--saber-space-6);
+  row-gap: var(--saber-form-row-gap, var(--saber-space-5));
   grid-template-columns: minmax(0, 1fr);
 
   :deep(.el-form-item) {
     min-width: 0;
+    margin-bottom: 0;
   }
 }
 

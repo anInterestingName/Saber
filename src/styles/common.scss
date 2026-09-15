@@ -118,6 +118,8 @@ a {
         box-sizing: border-box;
         // 不压缩菜单项，超出部分交给左右箭头滚动
         flex: 0 0 auto;
+        margin: var(--saber-space-2) var(--saber-space-1);
+        border-radius: var(--saber-radius-surface);
       }
       // 顶栏自身已有下边界，菜单不再重复画线；EP 横向菜单默认 60px 会在栏内产生纵向溢出，
       // 改为跟随顶栏内容盒高度，保证菜单固定一行、不被裁剪
@@ -144,7 +146,12 @@ a {
       // 悬停反馈：鼠标移到菜单项（含带下拉的一级项）上时给出底色
       .el-menu-item:hover,
       .el-sub-menu__title:hover {
-        background-color: var(--saber-sidebar-hover);
+        background-color: var(--saber-accent-hover);
+      }
+
+      .el-menu-item.is-active,
+      .el-sub-menu__title.is-active {
+        background-color: var(--saber-accent-soft);
       }
       // 顶部导航模式：搜索与账户工具按自身宽度占位，不参与放大，避免把菜单挤成 0 宽
       > .saber-top {
@@ -161,7 +168,7 @@ a {
       flex: 0 0 auto;
       width: auto;
       height: 100%;
-      padding: 0 20px 0 16px;
+      padding: 0 var(--saber-space-5) 0 var(--saber-space-4);
       border-bottom: 0;
     }
   }
@@ -216,9 +223,21 @@ a {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px;
+  padding: var(--saber-page-gutter-x);
   box-sizing: border-box;
-  background: var(--saber-page-bg);
+  background: var(--saber-canvas);
+}
+
+@media (min-width: 1440px) {
+  #saber-view {
+    padding: var(--saber-page-gutter-x-wide);
+  }
+}
+
+@media (max-width: 767px) {
+  #saber-view {
+    padding: var(--saber-page-gutter-x-mobile);
+  }
 }
 .saber-view {
   width: 100%;
@@ -231,13 +250,13 @@ a {
   bottom: 0;
   text-align: center;
   .copyright {
-    color: #666;
+    color: var(--saber-text-secondary);
     font-size: 12px;
   }
 }
 .mac_bg {
   background-image: url('/img/bg.jpg');
-  background-color: #000;
+  background-color: var(--el-color-black);
   position: fixed;
   left: 0;
   right: 0;

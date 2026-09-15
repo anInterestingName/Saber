@@ -1,7 +1,7 @@
 <template>
   <el-drawer
     v-model="visible"
-    class="detail-drawer"
+    :class="['detail-drawer', `detail-drawer--${direction}`]"
     append-to-body
     :direction="direction"
     :size="drawerSize"
@@ -44,8 +44,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { ElMessageBox } from 'element-plus';
+import { computed } from 'vue';
+import { useOverlayCloseGuard } from '@/composables/useOverlayCloseGuard';
 
 type DrawerDirection = 'rtl' | 'ltr' | 'ttb' | 'btt';
 type DrawerSize = 'md' | 'lg' | 'xl';
@@ -81,7 +81,6 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-const confirmingClose = ref(false);
 const semanticSizes: DrawerSize[] = ['md', 'lg', 'xl'];
 const drawerSize = computed(() =>
   typeof props.size === 'string' && semanticSizes.includes(props.size as DrawerSize)
@@ -96,33 +95,19 @@ const visible = computed({
   },
 });
 
-const confirmClose = async () => {
-  if (props.submitting || confirmingClose.value) return false;
-  if (!props.dirty) return true;
-
-  confirmingClose.value = true;
-  try {
-    await ElMessageBox.confirm('当前修改尚未保存，确定放弃吗？', '放弃未保存修改', {
-      type: 'warning',
-      confirmButtonText: '放弃修改',
-      cancelButtonText: '继续编辑',
-    });
-    return true;
-  } catch {
-    return false;
-  } finally {
-    confirmingClose.value = false;
-  }
-};
+const { canClose } = useOverlayCloseGuard({
+  submitting: () => props.submitting,
+  dirty: () => props.dirty,
+});
 
 const handleCancel = async () => {
-  if (!(await confirmClose())) return;
+  if (!(await canClose())) return;
   emit('cancel');
   visible.value = false;
 };
 
 const handleBeforeClose = async (done: () => void) => {
-  if (!(await confirmClose())) return;
+  if (!(await canClose())) return;
   emit('cancel');
   done();
 };
@@ -135,8 +120,29 @@ const handleRetry = () => {
 <style scoped lang="scss">
 :global(.detail-drawer.el-drawer) {
   max-width: 100vw;
+  overflow: hidden;
   background: var(--saber-surface-overlay);
   box-shadow: var(--saber-shadow-drawer);
+}
+
+:global(.detail-drawer--rtl.el-drawer) {
+  border-radius: var(--saber-radius-overlay, var(--el-border-radius-base)) 0 0
+    var(--saber-radius-overlay, var(--el-border-radius-base));
+}
+
+:global(.detail-drawer--ltr.el-drawer) {
+  border-radius: 0 var(--saber-radius-overlay, var(--el-border-radius-base))
+    var(--saber-radius-overlay, var(--el-border-radius-base)) 0;
+}
+
+:global(.detail-drawer--ttb.el-drawer) {
+  border-radius: 0 0 var(--saber-radius-overlay, var(--el-border-radius-base))
+    var(--saber-radius-overlay, var(--el-border-radius-base));
+}
+
+:global(.detail-drawer--btt.el-drawer) {
+  border-radius: var(--saber-radius-overlay, var(--el-border-radius-base))
+    var(--saber-radius-overlay, var(--el-border-radius-base)) 0 0;
 }
 
 :global(.detail-drawer .el-drawer__header) {
@@ -144,7 +150,7 @@ const handleRetry = () => {
   min-height: var(--saber-overlay-header-height);
   flex: 0 0 auto;
   align-items: center;
-  padding: 12px var(--saber-overlay-body-padding);
+  padding: var(--saber-space-3) var(--saber-overlay-body-padding);
   border-bottom: 1px solid var(--saber-border);
   margin-bottom: 0;
   color: var(--saber-text-primary);
@@ -152,7 +158,7 @@ const handleRetry = () => {
 
 .detail-drawer__header {
   min-width: 0;
-  padding-right: 32px;
+  padding-right: var(--saber-space-7);
 }
 
 .detail-drawer__title-row,
@@ -176,7 +182,7 @@ const handleRetry = () => {
 }
 
 .detail-drawer__subtitle {
-  margin-top: 2px;
+  margin-top: var(--saber-space-1);
   color: var(--saber-text-secondary);
   font-size: 13px;
   line-height: 1.5;
@@ -196,7 +202,7 @@ const handleRetry = () => {
 :global(.detail-drawer .el-drawer__footer) {
   min-height: var(--saber-overlay-footer-height);
   flex: 0 0 auto;
-  padding: 14px var(--saber-overlay-body-padding);
+  padding: var(--saber-space-3) var(--saber-overlay-body-padding);
   border-top: 1px solid var(--saber-border);
 }
 
@@ -215,6 +221,7 @@ const handleRetry = () => {
 @media (max-width: 767px) {
   :global(.detail-drawer.el-drawer) {
     width: 100% !important;
+    border-radius: 0;
   }
 
   :global(.detail-drawer .el-drawer__header),

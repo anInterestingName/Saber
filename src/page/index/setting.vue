@@ -23,13 +23,7 @@
     @click="handleTriggerClick"
   />
 
-  <el-drawer
-    v-model="show"
-    append-to-body
-    class="app-setting-drawer"
-    title="界面设置"
-    :size="drawerSize"
-  >
+  <detail-drawer v-model="show" class="app-setting-drawer" title="界面设置" size="320px">
     <div class="app-setting">
       <section class="app-setting__section">
         <h3 class="app-setting__title">整体风格设置</h3>
@@ -155,7 +149,7 @@
         <el-button :icon="RefreshLeft" @click="resetSetting">恢复默认设置</el-button>
       </div>
     </div>
-  </el-drawer>
+  </detail-drawer>
 </template>
 
 <script setup lang="ts">
@@ -163,6 +157,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Check, RefreshLeft, Setting } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import DetailDrawer from '@/components/detail-drawer/main.vue';
 import { useCommonStore } from '@/store/common';
 import { applyTheme, primaryColorOptions } from '@/utils/theme';
 import type { LayoutMode, ThemeMode } from '@/types/setting';
@@ -186,12 +181,10 @@ const props = withDefaults(
 const commonStore = useCommonStore();
 const { setting } = storeToRefs(commonStore);
 const show = ref(false);
-const viewportWidth = ref(window.innerWidth);
 
 const triggerMode = computed(() => props.triggerMode);
 const isFloating = computed(() => triggerMode.value === 'floating');
 const themeMode = computed<ThemeMode>(() => setting.value.theme);
-const drawerSize = computed(() => `${Math.min(viewportWidth.value, 320)}px`);
 
 const themeOptions: Array<{ label: string; value: ThemeMode }> = [
   { label: '明亮', value: 'light' },
@@ -237,10 +230,6 @@ const resetSetting = () => {
   commonStore.resetSetting();
   applyTheme(setting.value);
   ElMessage.success('已恢复默认设置');
-};
-
-const updateViewportWidth = () => {
-  viewportWidth.value = window.innerWidth;
 };
 
 // 悬浮触发器支持拖拽并自动吸附到最近的左右边缘，吸附后保持完整可见、不做隐藏
@@ -345,7 +334,6 @@ const handleTriggerClick = () => {
 };
 
 const handleViewportResize = () => {
-  updateViewportWidth();
   if (!isFloating.value || !customPosition.value) return;
   const { width, height } = triggerSize();
   position.value = {
@@ -377,8 +365,8 @@ onBeforeUnmount(() => {
     width: clamp(44px, 4.8vh, 56px);
     height: clamp(44px, 4.8vh, 56px);
     font-size: clamp(17px, 1.9vh, 21px);
-    border-radius: 6px 0 0 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    border-radius: var(--saber-radius-control) 0 0 var(--saber-radius-control);
+    box-shadow: var(--saber-shadow-popover);
     cursor: grab;
     touch-action: none;
     user-select: none;
@@ -398,14 +386,14 @@ onBeforeUnmount(() => {
 
     // 吸附到左侧时圆角镜像
     &.is-snapped-left {
-      border-radius: 0 6px 6px 0;
+      border-radius: 0 var(--saber-radius-control) var(--saber-radius-control) 0;
     }
   }
 
   &--inline {
     width: 36px;
     height: 36px;
-    margin-left: 4px;
+    margin-left: var(--saber-space-1);
     color: var(--saber-text-secondary);
     background: transparent;
     border: 0;
@@ -419,55 +407,38 @@ onBeforeUnmount(() => {
 }
 
 .app-setting-drawer {
-  background: var(--saber-surface);
-  box-shadow: var(--saber-shadow-drawer);
-
-  .el-drawer__header {
-    height: 56px;
-    padding: 0 20px;
-    margin: 0;
-    color: var(--saber-text-primary);
-    border-bottom: 1px solid var(--saber-border);
-  }
-
-  .el-drawer__title {
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0;
-  }
-
-  .el-drawer__body {
+  .detail-drawer__body {
     padding: 0;
   }
 }
 
 .app-setting {
   min-height: 100%;
-  padding: 20px;
+  padding: var(--saber-space-5);
   box-sizing: border-box;
   color: var(--saber-text-primary);
 
   .el-divider {
-    margin: 24px 0;
+    margin: var(--saber-space-6) 0;
     border-color: var(--saber-border);
   }
 
   &__title {
-    margin: 0 0 16px;
+    margin: 0 0 var(--saber-space-4);
     font-size: 14px;
     font-weight: 600;
     line-height: 22px;
     letter-spacing: 0;
 
     &--spaced {
-      margin-top: 22px;
+      margin-top: var(--saber-space-5);
     }
   }
 
   &__choices {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: var(--saber-space-3);
   }
 
   &__choice {
@@ -476,7 +447,7 @@ onBeforeUnmount(() => {
     padding: 0;
     background: transparent;
     border: 0;
-    border-radius: 4px;
+    border-radius: var(--saber-radius-xs);
     cursor: pointer;
     transition: transform 0.2s;
 
@@ -501,8 +472,8 @@ onBeforeUnmount(() => {
     height: 44px;
     overflow: hidden;
     background: #f5f5f5;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border-radius: var(--saber-radius-xs);
+    box-shadow: var(--saber-shadow-popover);
   }
 
   &__theme-preview {
@@ -573,7 +544,7 @@ onBeforeUnmount(() => {
     right: 8%;
     bottom: 10%;
     left: 32%;
-    border-radius: 2px;
+    border-radius: var(--saber-radius-xs);
   }
 
   &__layout-preview {
@@ -583,7 +554,7 @@ onBeforeUnmount(() => {
   &__swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--saber-space-2);
   }
 
   &__swatch {
@@ -593,10 +564,10 @@ onBeforeUnmount(() => {
     width: 24px;
     height: 24px;
     padding: 0;
-    color: #ffffff;
+    color: var(--saber-text-on-accent);
     background: var(--swatch-color);
     border: 0;
-    border-radius: 3px;
+    border-radius: var(--saber-radius-xs);
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
 
@@ -633,7 +604,7 @@ onBeforeUnmount(() => {
     bottom: 8px;
     left: 29px;
     background: var(--saber-surface);
-    border-radius: 2px;
+    border-radius: var(--saber-radius-xs);
   }
 
   &__layout-preview--side {
@@ -680,7 +651,7 @@ onBeforeUnmount(() => {
       top: 16px;
       width: 18px;
       background: var(--saber-sidebar-bg);
-      border-right: 1px solid #dcdfe6;
+      border-right: 1px solid var(--saber-border);
     }
 
     .app-setting__layout-content {
@@ -691,7 +662,7 @@ onBeforeUnmount(() => {
 
   &__switches {
     display: grid;
-    gap: 16px;
+    gap: var(--saber-space-4);
   }
 
   &__switch-row {
@@ -703,7 +674,7 @@ onBeforeUnmount(() => {
   }
 
   &__footer {
-    padding-top: 28px;
+    padding-top: var(--saber-space-6);
 
     .el-button {
       width: 100%;

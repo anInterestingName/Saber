@@ -8,6 +8,7 @@
     "build": "pnpm run clean:dist && vite build",
     "build:prod": "pnpm run clean:dist && vite build --mode production",
     "serve": "vite preview --host",
+    "style-audit": "node scripts/style-audit.mjs",
     "type-check": "vue-tsc --noEmit && tsc --noEmit -p tsconfig.node.json"
   },
   "dependencies": {

@@ -1,9 +1,9 @@
 <template>
-  <el-menu class="top-menu" mode="horizontal" text-color="#333">
+  <el-menu class="top-menu" mode="horizontal">
     <template v-for="(item, index) in items" :key="index">
       <el-menu-item :index="item.id + ''" @click="openMenu(item)">
         <template #title>
-          <i :class="item.source" style="padding-right: 5px"></i>
+          <i :class="item.source" style="padding-right: var(--saber-space-2)"></i>
           <span>{{ item.name }}</span>
         </template>
       </el-menu-item>

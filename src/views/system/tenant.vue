@@ -1,137 +1,155 @@
 <template>
-  <div class="tenant-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="租户 ID">
-          <el-input v-model="searchForm.tenantId" clearable placeholder="请输入租户 ID" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="租户名称">
-          <el-input v-model="searchForm.tenantName" clearable placeholder="请输入租户名称" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="联系人">
-          <el-input v-model="searchForm.linkman" clearable placeholder="请输入联系人" />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="租户列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button
-          v-if="canDelete"
-          type="danger"
-          plain
-          :icon="Delete"
-          :disabled="loading"
-          @click="handleBatchDelete"
-        >
-          删除
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="tenant-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column prop="tenantId" label="租户 ID" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="tenantName" label="租户名称" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="linkman" label="联系人" min-width="130" show-overflow-tooltip />
-        <el-table-column
-          prop="contactNumber"
-          label="联系电话"
-          min-width="150"
-          show-overflow-tooltip
-        />
-        <el-table-column prop="address" label="联系地址" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="domain" label="域名地址" min-width="200" show-overflow-tooltip />
-        <el-table-column
-          v-if="canView || canEdit || canDelete"
-          label="操作"
-          fixed="right"
-          width="200"
-          align="center"
-        >
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              :disabled="loading || submitting"
-              @view="openView(row as TenantEntity)"
-              @edit="openEdit(row as TenantEntity)"
-              @delete="handleRowDelete(row as TenantEntity)"
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="租户 ID">
+            <el-input v-model="searchForm.tenantId" clearable placeholder="请输入租户 ID" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="租户名称">
+            <el-input v-model="searchForm.tenantName" clearable placeholder="请输入租户名称" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="联系人">
+            <el-input v-model="searchForm.linkman" clearable placeholder="请输入联系人" />
+          </el-form-item>
+        </el-col>
+      </search-panel>
+
+      <list-panel title="租户列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button
+            v-if="canDelete"
+            type="danger"
+            plain
+            :icon="Delete"
+            :disabled="loading"
+            @click="handleBatchDelete"
+          >
+            删除
+          </el-button>
+        </template>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
             />
-          </template>
-        </el-table-column>
-      </el-table>
+          </el-tooltip>
+        </template>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column prop="tenantId" label="租户 ID" min-width="150" show-overflow-tooltip />
+          <el-table-column
+            prop="tenantName"
+            label="租户名称"
+            min-width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column prop="linkman" label="联系人" min-width="130" show-overflow-tooltip />
+          <el-table-column
+            prop="contactNumber"
+            label="联系电话"
+            min-width="150"
+            show-overflow-tooltip
+          />
+          <el-table-column prop="address" label="联系地址" min-width="220" show-overflow-tooltip />
+          <el-table-column prop="domain" label="域名地址" min-width="200" show-overflow-tooltip />
+          <el-table-column
+            v-if="canView || canEdit || canDelete"
+            label="操作"
+            fixed="right"
+            width="200"
+            align="center"
+          >
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :disabled="loading || submitting"
+                @view="openView(row as TenantEntity)"
+                @edit="openEdit(row as TenantEntity)"
+                @delete="handleRowDelete(row as TenantEntity)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
 
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="租户"
-      :submitting="submitting"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view'"
-        label-width="88px"
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="租户"
+        :submitting="submitting"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
       >
-        <el-form-item v-if="mode === 'view'" label="租户 ID">
-          <el-input v-model="form.tenantId" />
-        </el-form-item>
-        <el-form-item label="租户名称" prop="tenantName">
-          <el-input v-model="form.tenantName" placeholder="请输入租户名称" />
-        </el-form-item>
-        <el-form-item label="联系人" prop="linkman">
-          <el-input v-model="form.linkman" placeholder="请输入联系人" />
-        </el-form-item>
-        <el-form-item label="联系电话" prop="contactNumber">
-          <el-input v-model="form.contactNumber" placeholder="请输入联系电话" />
-        </el-form-item>
-        <el-form-item label="域名地址" prop="domain">
-          <el-input v-model="form.domain" placeholder="请输入域名地址" />
-        </el-form-item>
-        <el-form-item label="联系地址" prop="address">
-          <el-input v-model="form.address" type="textarea" :rows="4" placeholder="请输入联系地址" />
-        </el-form-item>
-      </el-form>
-    </form-dialog>
-  </div>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view'"
+          label-width="88px"
+        >
+          <el-form-item v-if="mode === 'view'" label="租户 ID">
+            <el-input v-model="form.tenantId" />
+          </el-form-item>
+          <el-form-item label="租户名称" prop="tenantName">
+            <el-input v-model="form.tenantName" placeholder="请输入租户名称" />
+          </el-form-item>
+          <el-form-item label="联系人" prop="linkman">
+            <el-input v-model="form.linkman" placeholder="请输入联系人" />
+          </el-form-item>
+          <el-form-item label="联系电话" prop="contactNumber">
+            <el-input v-model="form.contactNumber" placeholder="请输入联系电话" />
+          </el-form-item>
+          <el-form-item label="域名地址" prop="domain">
+            <el-input v-model="form.domain" placeholder="请输入域名地址" />
+          </el-form-item>
+          <el-form-item label="联系地址" prop="address">
+            <el-input
+              v-model="form.address"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入联系地址"
+            />
+          </el-form-item>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">

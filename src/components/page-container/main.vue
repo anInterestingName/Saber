@@ -1,5 +1,5 @@
 <template>
-  <section class="page-container">
+  <section class="page-container" :class="`page-container--${layout}`">
     <header v-if="hasHeader" class="page-container__header">
       <div v-if="showBreadcrumb && hasBreadcrumb" class="page-container__breadcrumb">
         <slot name="breadcrumb">
@@ -50,8 +50,10 @@ import { computed, useSlots } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import type { RouteRecordNameGeneric } from 'vue-router';
+import type { PageLayout } from '@/types/page';
 
 interface PageContainerProps {
+  layout?: PageLayout;
   title?: string;
   description?: string;
   showBreadcrumb?: boolean;
@@ -64,6 +66,7 @@ interface BreadcrumbItem {
 }
 
 const props = withDefaults(defineProps<PageContainerProps>(), {
+  layout: 'workspace',
   title: undefined,
   description: undefined,
   showBreadcrumb: true,
@@ -118,13 +121,22 @@ const hasHeader = computed(
 
 <style scoped lang="scss">
 .page-container {
+  width: 100%;
   min-width: 0;
 }
 
+.page-container--content {
+  max-width: var(--saber-content-max-width, 1280px);
+  margin-inline: auto;
+}
+
+.page-container--immersive {
+  min-height: 100%;
+}
+
 .page-container__header {
-  padding: var(--saber-space-5) var(--saber-space-6) 0;
-  border-bottom: 1px solid var(--saber-border);
-  background: var(--saber-surface);
+  padding-bottom: var(--saber-space-6);
+  background: transparent;
 }
 
 .page-container__breadcrumb {
@@ -141,7 +153,6 @@ const hasHeader = computed(
 }
 
 .page-container__heading {
-  padding-bottom: var(--saber-space-5);
   justify-content: space-between;
   gap: var(--saber-space-6);
 }
@@ -164,6 +175,10 @@ const hasHeader = computed(
   letter-spacing: 0;
 }
 
+.page-container--content .page-container__title {
+  font-size: 24px;
+}
+
 .page-container__description {
   max-width: 960px;
   margin: var(--saber-space-2) 0 0;
@@ -184,6 +199,7 @@ const hasHeader = computed(
 }
 
 .page-container__tabs {
+  margin-top: var(--saber-space-5);
   min-width: 0;
 
   :deep(.el-tabs__header) {
@@ -196,7 +212,7 @@ const hasHeader = computed(
 }
 
 .page-container__header + .page-container__content {
-  padding-top: var(--saber-space-4);
+  padding-top: 0;
 }
 
 .page-container__content--padded {
@@ -205,8 +221,7 @@ const hasHeader = computed(
 
 @media (max-width: 767px) {
   .page-container__header {
-    padding-right: var(--saber-space-4);
-    padding-left: var(--saber-space-4);
+    padding-bottom: var(--saber-space-5);
   }
 
   .page-container__heading {

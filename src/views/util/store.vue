@@ -1,54 +1,50 @@
 <template>
-  <basic-container>
-    <h3>存储</h3>
-    <el-tag class="title">基本读写删(持久化存储)
-    </el-tag>
-    <div class="box">
-      <el-button type="primary"
-                 @click="setItem({name:'username', value:'saber'});">set('username', 'saber')
-      </el-button>
+  <page-container layout="content">
+    <basic-container>
+      <h3>存储</h3>
+      <el-tag class="title">基本读写删(持久化存储) </el-tag>
+      <div class="box">
+        <el-button type="primary" @click="setItem({ name: 'username', value: 'saber' })"
+          >set('username', 'saber')
+        </el-button>
 
-      <el-button type="success"
-                 @click="getItem({name:'username'});">get('username')
-      </el-button>
+        <el-button type="success" @click="getItem({ name: 'username' })"
+          >get('username')
+        </el-button>
 
-      <el-button type="danger"
-                 @click="delItem({name:'username'});">remove('username')
-      </el-button>
-    </div>
-    <el-tag class="title">设置session(session存储)
-    </el-tag>
-    <div class="box">
-      <el-button type="primary"
-                 @click="setItem({name:'username', value:'saber',type:'session'});">set('username', 'saber')
-      </el-button>
+        <el-button type="danger" @click="delItem({ name: 'username' })"
+          >remove('username')
+        </el-button>
+      </div>
+      <el-tag class="title">设置session(session存储) </el-tag>
+      <div class="box">
+        <el-button
+          type="primary"
+          @click="setItem({ name: 'username', value: 'saber', type: 'session' })"
+          >set('username', 'saber')
+        </el-button>
 
-      <el-button type="success"
-                 @click="getItem({name:'username',type:'session'});">get('username')
-      </el-button>
+        <el-button type="success" @click="getItem({ name: 'username', type: 'session' })"
+          >get('username')
+        </el-button>
 
-      <el-button type="danger"
-                 @click="delItem({name:'username',type:'session'});">remove('username')
-      </el-button>
-    </div>
-    <el-tag class="title">获取所有可以获得的数据
-    </el-tag>
-    <div class="box">
-      <el-button type="success"
-                 @click="getAll()">getAll(持久化存储)
-      </el-button>
-      <el-button type="success"
-                 @click="getAll({type:'session'})">getAll(session存储)
-      </el-button>
-      <el-button type="danger"
-                 @click="clearAll()">delAll(持久化存储)
-      </el-button>
-      <el-button type="danger"
-                 @click="clearAll({type:'session'})">delAll(session存储)
-      </el-button>
-    </div>
-  </basic-container>
-
+        <el-button type="danger" @click="delItem({ name: 'username', type: 'session' })"
+          >remove('username')
+        </el-button>
+      </div>
+      <el-tag class="title">获取所有可以获得的数据 </el-tag>
+      <div class="box">
+        <el-button type="success" @click="getAll()">getAll(持久化存储) </el-button>
+        <el-button type="success" @click="getAll({ type: 'session' })"
+          >getAll(session存储)
+        </el-button>
+        <el-button type="danger" @click="clearAll()">delAll(持久化存储) </el-button>
+        <el-button type="danger" @click="clearAll({ type: 'session' })"
+          >delAll(session存储)
+        </el-button>
+      </div>
+    </basic-container>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -108,10 +104,10 @@ const clearAll = (params: StoreParams = {}) => {
 
 <style lang="scss">
 .title {
-  margin-bottom: 10px;
+  margin-bottom: var(--saber-space-2);
 }
 
 .box {
-  margin-bottom: 20px;
+  margin-bottom: var(--saber-space-5);
 }
 </style>

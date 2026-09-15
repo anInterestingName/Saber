@@ -1,198 +1,203 @@
 <template>
-  <div class="topmenu-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="菜单名">
-          <el-input v-model="searchForm.name" clearable placeholder="请输入菜单名" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="菜单编号">
-          <el-input v-model="searchForm.code" clearable placeholder="请输入菜单编号" />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="顶部菜单列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
-          删除
-        </el-button>
-        <el-button v-if="canSetting" :icon="Setting" @click="openGrantFromSelection">
-          菜单配置
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="topmenu-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column prop="name" label="菜单名" min-width="200" show-overflow-tooltip>
-          <template #default="{ row }">
-            <i :class="row.source" class="topmenu-icon" />{{ row.name }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="source" label="图标" width="80" align="center">
-          <template #default="{ row }"><i :class="row.source" /></template>
-        </el-table-column>
-        <el-table-column prop="code" label="菜单编号" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="sort" label="菜单排序" width="150" align="center">
-          <template #default="{ row }">
-            <el-input-number
-              :model-value="row.sort"
-              :min="1"
-              :max="100"
-              size="small"
-              controls-position="right"
-              :disabled="!canEdit || sortingId !== ''"
-              @change="value => handleSortChange(row as TopMenuEntity, value)"
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="菜单名">
+            <el-input v-model="searchForm.name" clearable placeholder="请输入菜单名" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="菜单编号">
+            <el-input v-model="searchForm.code" clearable placeholder="请输入菜单编号" />
+          </el-form-item>
+        </el-col>
+      </search-panel>
+
+      <list-panel title="顶部菜单列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
+            删除
+          </el-button>
+          <el-button v-if="canSetting" :icon="Setting" @click="openGrantFromSelection">
+            菜单配置
+          </el-button>
+        </template>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
             />
-          </template>
-        </el-table-column>
-        <el-table-column prop="path" label="菜单路由" min-width="220" show-overflow-tooltip />
-        <el-table-column label="操作" fixed="right" width="260" align="center">
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              :disabled="sortingId !== ''"
-              @view="openDetail(row as TopMenuEntity, 'view')"
-              @edit="openDetail(row as TopMenuEntity, 'edit')"
-              @delete="handleRowDelete(row as TopMenuEntity)"
-            >
-              <template v-if="canSetting" #extra>
-                <el-button
-                  type="primary"
-                  link
-                  :icon="Setting"
-                  :disabled="sortingId !== ''"
-                  @click="openGrant(row as TopMenuEntity)"
-                >
-                  配置
-                </el-button>
-              </template>
-            </row-actions>
-          </template>
-        </el-table-column>
-      </el-table>
+          </el-tooltip>
+        </template>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading || sortingId !== ''"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
-
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="顶部菜单"
-      :submitting="submitting"
-      :loading="detailLoading"
-      width="720px"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-alert v-if="detailFailed" type="error" :closable="false" show-icon>
-        <template #title>详情加载失败，请关闭后重试</template>
-      </el-alert>
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || detailLoading || detailFailed"
-        label-width="88px"
-      >
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="菜单名" prop="name">
-              <el-input v-model="form.name" maxlength="100" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="菜单编号" prop="code">
-              <el-input v-model="form.code" maxlength="100" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="菜单图标" prop="source">
-              <icon-select v-model="form.source" :disabled="mode === 'view'" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="菜单排序" prop="sort">
-              <el-input-number v-model="form.sort" :min="1" :max="100" controls-position="right" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="菜单路由" prop="path">
-              <el-input v-model="form.path" maxlength="255" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </form-dialog>
-
-    <el-dialog
-      v-model="grantVisible"
-      title="下级菜单配置"
-      width="640px"
-      append-to-body
-      :close-on-click-modal="!grantSubmitting"
-      :close-on-press-escape="!grantSubmitting"
-      :show-close="!grantSubmitting"
-      :before-close="handleGrantBeforeClose"
-    >
-      <div v-loading="grantLoading" class="topmenu-grant-dialog">
-        <el-result v-if="grantFailed" icon="error" title="菜单配置加载失败">
-          <template #extra>
-            <el-button type="primary" @click="retryGrant">重试</el-button>
-          </template>
-        </el-result>
-        <tree-check-panel
-          v-else
-          v-model="grantKeys"
-          v-model:linked="grantLinked"
-          :data="grantTreeData"
-          :loading="grantLoading"
-          :disabled="grantSubmitting"
-        />
-      </div>
-      <template #footer>
-        <el-button :disabled="grantSubmitting" @click="closeGrant">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="grantSubmitting"
-          :disabled="grantLoading || grantFailed"
-          @click="submitGrant"
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
         >
-          确定
-        </el-button>
-      </template>
-    </el-dialog>
-  </div>
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column prop="name" label="菜单名" min-width="200" show-overflow-tooltip>
+            <template #default="{ row }">
+              <i :class="row.source" class="topmenu-icon" />{{ row.name }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="source" label="图标" width="80" align="center">
+            <template #default="{ row }"><i :class="row.source" /></template>
+          </el-table-column>
+          <el-table-column prop="code" label="菜单编号" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="sort" label="菜单排序" width="150" align="center">
+            <template #default="{ row }">
+              <el-input-number
+                :model-value="row.sort"
+                :min="1"
+                :max="100"
+                size="small"
+                controls-position="right"
+                :disabled="!canEdit || sortingId !== ''"
+                @change="value => handleSortChange(row as TopMenuEntity, value)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="path" label="菜单路由" min-width="220" show-overflow-tooltip />
+          <el-table-column label="操作" fixed="right" width="260" align="center">
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :disabled="sortingId !== ''"
+                @view="openDetail(row as TopMenuEntity, 'view')"
+                @edit="openDetail(row as TopMenuEntity, 'edit')"
+                @delete="handleRowDelete(row as TopMenuEntity)"
+              >
+                <template v-if="canSetting" #more>
+                  <el-dropdown-item
+                    :icon="Setting"
+                    :disabled="sortingId !== ''"
+                    @click="openGrant(row as TopMenuEntity)"
+                  >
+                    配置
+                  </el-dropdown-item>
+                </template>
+              </row-actions>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading || sortingId !== ''"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="顶部菜单"
+        :submitting="submitting"
+        :loading="detailLoading"
+        size="md"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
+      >
+        <el-alert v-if="detailFailed" type="error" :closable="false" show-icon>
+          <template #title>详情加载失败，请关闭后重试</template>
+        </el-alert>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || detailLoading || detailFailed"
+          label-width="88px"
+        >
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="菜单名" prop="name">
+                <el-input v-model="form.name" maxlength="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="菜单编号" prop="code">
+                <el-input v-model="form.code" maxlength="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="菜单图标" prop="source">
+                <icon-select v-model="form.source" :disabled="mode === 'view'" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="菜单排序" prop="sort">
+                <el-input-number
+                  v-model="form.sort"
+                  :min="1"
+                  :max="100"
+                  controls-position="right"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="菜单路由" prop="path">
+                <el-input v-model="form.path" maxlength="255" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </form-dialog>
+
+      <app-dialog
+        v-model="grantVisible"
+        title="下级菜单配置"
+        size="sm"
+        :loading="grantLoading"
+        :failed="grantFailed"
+        :submitting="grantSubmitting"
+        @retry="retryGrant"
+        @cancel="closeGrant"
+      >
+        <div class="topmenu-grant-dialog">
+          <tree-check-panel
+            v-model="grantKeys"
+            v-model:linked="grantLinked"
+            :data="grantTreeData"
+            :loading="grantLoading"
+            :disabled="grantSubmitting"
+          />
+        </div>
+        <template #footer="{ cancel }">
+          <el-button :disabled="grantSubmitting" @click="cancel">取消</el-button>
+          <el-button
+            type="primary"
+            :loading="grantSubmitting"
+            :disabled="grantLoading || grantFailed"
+            @click="submitGrant"
+          >
+            确定
+          </el-button>
+        </template>
+      </app-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -205,6 +210,7 @@ import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import AppDialog from '@/components/app-dialog/main.vue';
 import { useUserStore } from '@/store/user';
 import IconSelect from '@/components/icon-select/main.vue';
 import TreeCheckPanel from '@/components/tree-check-panel/main.vue';
@@ -290,8 +296,12 @@ const { data, page, loading, load, search, reset, refresh } = usePagedList<
 });
 const selection = useTableSelection<TopMenuEntity>();
 const { selectedRows, selectedIds, ids, handleSelectionChange, clearSelection } = selection;
-const { add: canAdd, view: canView, edit: canEdit, delete: canDelete } =
-  useCrudPermission('topmenu');
+const {
+  add: canAdd,
+  view: canView,
+  edit: canEdit,
+  delete: canDelete,
+} = useCrudPermission('topmenu');
 const detail = useRemoteDetail<TopMenuEntity, string>(async id => {
   const response = await getDetail<TopMenuEntity>(id);
   return response.data.data;
@@ -446,11 +456,6 @@ const closeGrant = () => {
   grantVisible.value = false;
   clearGrant();
 };
-const handleGrantBeforeClose = (done: () => void) => {
-  if (grantSubmitting.value) return;
-  clearGrant();
-  done();
-};
 const submitGrant = async () => {
   if (grantSubmitting.value || grantLoading.value || grantFailed.value) return;
   grantSubmitting.value = true;
@@ -476,7 +481,7 @@ onMounted(() => void load());
 }
 
 .topmenu-icon {
-  margin-right: 6px;
+  margin-right: var(--saber-space-2);
 }
 
 .topmenu-grant-dialog {

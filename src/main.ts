@@ -18,6 +18,7 @@ import { getScreen } from './utils/util';
 import { applyTheme } from './utils/theme';
 import basicBlock from 'components/basic-block/main.vue';
 import basicContainer from 'components/basic-container/main.vue';
+import pageContainer from 'components/page-container/main.vue';
 import App from './App.vue';
 import 'styles/common.scss';
 
@@ -41,6 +42,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 app.component('basicContainer', basicContainer);
 app.component('basicBlock', basicBlock);
+app.component('pageContainer', pageContainer);
 app.config.globalProperties.$dayjs = dayjs;
 app.config.globalProperties.website = website;
 app.config.globalProperties.getScreen = getScreen;

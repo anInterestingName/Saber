@@ -1,6 +1,7 @@
 <template>
   <page-container
     class="param-management-page"
+    layout="workspace"
     title="参数管理"
     description="维护系统运行参数，参数键名用于业务配置读取。"
     :show-breadcrumb="false"
@@ -332,6 +333,6 @@ onMounted(() => {
 }
 
 :deep(.el-table .el-button + .el-button) {
-  margin-left: 4px;
+  margin-left: var(--saber-space-1);
 }
 </style>

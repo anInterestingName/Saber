@@ -1,195 +1,207 @@
 <template>
-  <div class="tree-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="角色名称">
-          <el-input v-model="searchForm.roleName" clearable placeholder="请输入角色名称" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="角色别名">
-          <el-input v-model="searchForm.roleAlias" clearable placeholder="请输入角色别名" />
-        </el-form-item>
-      </el-col>
-      <el-col v-if="website.tenantMode" :xs="24" :sm="12" :md="6">
-        <el-form-item label="所属租户">
-          <el-select v-model="searchForm.tenantId" clearable filterable :loading="tenantLoading">
-            <el-option
-              v-for="tenant in tenantOptions"
-              :key="tenant.tenantId"
-              :label="tenant.tenantName"
-              :value="tenant.tenantId"
-            />
-          </el-select>
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="角色列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
-          删除
-        </el-button>
-        <el-button v-if="isAdmin" :icon="Key" @click="openGrantFromSelection">权限设置</el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        :expand-row-keys="tableExpandedRowKeys"
-        :tree-props="{ children: 'children' }"
-        @expand-change="handleTableExpandChange"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="tree-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" width="48" />
-        <el-table-column type="index" label="#" width="60" align="center" />
-        <el-table-column prop="roleName" label="角色名称" min-width="220" show-overflow-tooltip />
-        <el-table-column
-          v-if="website.tenantMode"
-          prop="tenantId"
-          label="所属租户"
-          min-width="180"
-          show-overflow-tooltip
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="角色名称">
+            <el-input v-model="searchForm.roleName" clearable placeholder="请输入角色名称" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="角色别名">
+            <el-input v-model="searchForm.roleAlias" clearable placeholder="请输入角色别名" />
+          </el-form-item>
+        </el-col>
+        <el-col v-if="website.tenantMode" :xs="24" :sm="12" :md="6">
+          <el-form-item label="所属租户">
+            <el-select v-model="searchForm.tenantId" clearable filterable :loading="tenantLoading">
+              <el-option
+                v-for="tenant in tenantOptions"
+                :key="tenant.tenantId"
+                :label="tenant.tenantName"
+                :value="tenant.tenantId"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </search-panel>
+
+      <list-panel title="角色列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
+            删除
+          </el-button>
+          <el-button v-if="isAdmin" :icon="Key" @click="openGrantFromSelection">权限设置</el-button>
+        </template>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
+
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          :expand-row-keys="tableExpandedRowKeys"
+          :tree-props="{ children: 'children' }"
+          @expand-change="handleTableExpandChange"
+          @selection-change="handleSelectionChange"
         >
-          <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
-        </el-table-column>
-        <el-table-column prop="roleAlias" label="角色别名" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="sort" label="角色排序" width="110" align="center" />
-        <el-table-column label="操作" fixed="right" width="200" align="center">
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              @view="openDetail(row as RoleEntity, 'view')"
-              @edit="openDetail(row as RoleEntity, 'edit')"
-              @delete="handleRowDelete(row as RoleEntity)"
-            />
-          </template>
-        </el-table-column>
-      </el-table>
-    </list-panel>
-
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="角色"
-      :submitting="submitting"
-      :loading="formLoading"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-alert v-if="detailFailed || parentOptionsFailed" type="error" :closable="false" show-icon>
-        <template #title>数据加载失败，请关闭后重试</template>
-      </el-alert>
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || formLoading || detailFailed || parentOptionsFailed"
-        label-width="88px"
-      >
-        <el-form-item label="角色名称" prop="roleName">
-          <el-input v-model="form.roleName" maxlength="100" />
-        </el-form-item>
-        <el-form-item v-if="website.tenantMode && mode === 'view'" label="所属租户">
-          <el-input :model-value="getTenantName(form.tenantId)" />
-        </el-form-item>
-        <el-form-item label="角色别名" prop="roleAlias">
-          <el-input v-model="form.roleAlias" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="上级角色" prop="parentId">
-          <el-tree-select
-            v-model="form.parentId"
-            :data="parentOptions"
-            :props="parentTreeProps"
-            node-key="id"
-            check-strictly
-            clearable
-            filterable
+          <el-table-column type="selection" width="48" />
+          <el-table-column type="index" label="#" width="60" align="center" />
+          <el-table-column prop="roleName" label="角色名称" min-width="220" show-overflow-tooltip />
+          <el-table-column
+            v-if="website.tenantMode"
+            prop="tenantId"
+            label="所属租户"
+            min-width="180"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
+          </el-table-column>
+          <el-table-column
+            prop="roleAlias"
+            label="角色别名"
+            min-width="180"
+            show-overflow-tooltip
           />
-        </el-form-item>
-        <el-form-item label="角色排序" prop="sort">
-          <el-input-number v-model="form.sort" :min="0" controls-position="right" />
-        </el-form-item>
-      </el-form>
-    </form-dialog>
+          <el-table-column prop="sort" label="角色排序" width="110" align="center" />
+          <el-table-column label="操作" fixed="right" width="200" align="center">
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                @view="openDetail(row as RoleEntity, 'view')"
+                @edit="openDetail(row as RoleEntity, 'edit')"
+                @delete="handleRowDelete(row as RoleEntity)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+      </list-panel>
 
-    <el-dialog
-      v-model="grantVisible"
-      class="role-grant-modal"
-      title="角色权限配置"
-      width="720px"
-      append-to-body
-      align-center
-      :close-on-click-modal="!grantSubmitting"
-      :close-on-press-escape="!grantSubmitting"
-      :show-close="!grantSubmitting"
-      :before-close="handleGrantBeforeClose"
-    >
-      <div v-loading="grantLoading" class="role-grant-dialog">
-        <el-result v-if="grantFailed" icon="error" title="授权数据加载失败">
-          <template #extra>
-            <el-button type="primary" @click="retryGrant">重试</el-button>
-          </template>
-        </el-result>
-        <el-tabs v-else v-model="activeGrantTab">
-          <el-tab-pane label="菜单权限" name="menu">
-            <tree-check-panel
-              v-model="menuKeys"
-              v-model:linked="menuLinked"
-              :data="menuTree"
-              :loading="grantLoading"
-              :disabled="grantSubmitting"
-            />
-          </el-tab-pane>
-          <el-tab-pane label="数据权限" name="dataScope">
-            <tree-check-panel
-              v-model="dataScopeKeys"
-              v-model:linked="dataScopeLinked"
-              :data="dataScopeTree"
-              :loading="grantLoading"
-              :disabled="grantSubmitting"
-            />
-          </el-tab-pane>
-          <el-tab-pane label="接口权限" name="apiScope">
-            <tree-check-panel
-              v-model="apiScopeKeys"
-              v-model:linked="apiScopeLinked"
-              :data="apiScopeTree"
-              :loading="grantLoading"
-              :disabled="grantSubmitting"
-            />
-          </el-tab-pane>
-        </el-tabs>
-      </div>
-      <template #footer>
-        <el-button :disabled="grantSubmitting" @click="closeGrant">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="grantSubmitting"
-          :disabled="grantLoading || grantFailed"
-          @click="submitGrant"
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="角色"
+        :submitting="submitting"
+        :loading="formLoading"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
+      >
+        <el-alert
+          v-if="detailFailed || parentOptionsFailed"
+          type="error"
+          :closable="false"
+          show-icon
         >
-          确定
-        </el-button>
-      </template>
-    </el-dialog>
-  </div>
+          <template #title>数据加载失败，请关闭后重试</template>
+        </el-alert>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || formLoading || detailFailed || parentOptionsFailed"
+          label-width="88px"
+        >
+          <el-form-item label="角色名称" prop="roleName">
+            <el-input v-model="form.roleName" maxlength="100" />
+          </el-form-item>
+          <el-form-item v-if="website.tenantMode && mode === 'view'" label="所属租户">
+            <el-input :model-value="getTenantName(form.tenantId)" />
+          </el-form-item>
+          <el-form-item label="角色别名" prop="roleAlias">
+            <el-input v-model="form.roleAlias" maxlength="100" />
+          </el-form-item>
+          <el-form-item label="上级角色" prop="parentId">
+            <el-tree-select
+              v-model="form.parentId"
+              :data="parentOptions"
+              :props="parentTreeProps"
+              node-key="id"
+              check-strictly
+              clearable
+              filterable
+            />
+          </el-form-item>
+          <el-form-item label="角色排序" prop="sort">
+            <el-input-number v-model="form.sort" :min="0" controls-position="right" />
+          </el-form-item>
+        </el-form>
+      </form-dialog>
+
+      <app-dialog
+        v-model="grantVisible"
+        class="role-grant-modal"
+        title="角色权限配置"
+        size="md"
+        :loading="grantLoading"
+        :failed="grantFailed"
+        :submitting="grantSubmitting"
+        @retry="retryGrant"
+        @cancel="closeGrant"
+      >
+        <div class="role-grant-dialog">
+          <el-tabs v-model="activeGrantTab">
+            <el-tab-pane label="菜单权限" name="menu">
+              <tree-check-panel
+                v-model="menuKeys"
+                v-model:linked="menuLinked"
+                :data="menuTree"
+                :loading="grantLoading"
+                :disabled="grantSubmitting"
+              />
+            </el-tab-pane>
+            <el-tab-pane label="数据权限" name="dataScope">
+              <tree-check-panel
+                v-model="dataScopeKeys"
+                v-model:linked="dataScopeLinked"
+                :data="dataScopeTree"
+                :loading="grantLoading"
+                :disabled="grantSubmitting"
+              />
+            </el-tab-pane>
+            <el-tab-pane label="接口权限" name="apiScope">
+              <tree-check-panel
+                v-model="apiScopeKeys"
+                v-model:linked="apiScopeLinked"
+                :data="apiScopeTree"
+                :loading="grantLoading"
+                :disabled="grantSubmitting"
+              />
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+        <template #footer="{ cancel }">
+          <el-button :disabled="grantSubmitting" @click="cancel">取消</el-button>
+          <el-button
+            type="primary"
+            :loading="grantSubmitting"
+            :disabled="grantLoading || grantFailed"
+            @click="submitGrant"
+          >
+            确定
+          </el-button>
+        </template>
+      </app-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -201,6 +213,7 @@ import SearchPanel from '@/components/search-panel/main.vue';
 import ListPanel from '@/components/list-panel/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import AppDialog from '@/components/app-dialog/main.vue';
 import TreeCheckPanel from '@/components/tree-check-panel/main.vue';
 import { useUserStore } from '@/store/user';
 import { useCrudPermission } from '@/composables/useCrudPermission';
@@ -488,11 +501,6 @@ const closeGrant = () => {
   grantVisible.value = false;
   clearGrant();
 };
-const handleGrantBeforeClose = (done: () => void) => {
-  if (grantSubmitting.value) return;
-  clearGrant();
-  done();
-};
 const submitGrant = async () => {
   if (grantSubmitting.value || grantLoading.value || grantFailed.value) return;
   grantSubmitting.value = true;
@@ -528,26 +536,5 @@ onMounted(() => {
 :deep(.el-input-number),
 :deep(.el-tree-select) {
   width: 100%;
-}
-</style>
-
-<style lang="scss">
-.role-grant-modal {
-  display: flex;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.role-grant-modal .el-dialog__header,
-.role-grant-modal .el-dialog__footer {
-  flex: 0 0 auto;
-}
-
-.role-grant-modal .el-dialog__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
 }
 </style>

@@ -409,10 +409,10 @@ const handleTypeChange = async (index: number, type: PromptVariableType) => {
 .prompt-variable-editor__header {
   display: flex;
   min-height: 40px;
-  margin-bottom: 12px;
+  margin-bottom: var(--saber-space-3);
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--saber-space-4);
 
   h3,
   p {
@@ -452,7 +452,7 @@ const handleTypeChange = async (index: number, type: PromptVariableType) => {
   min-width: 0;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   strong {
     max-width: 240px;
@@ -468,24 +468,24 @@ const handleTypeChange = async (index: number, type: PromptVariableType) => {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--saber-border);
-  border-radius: 4px;
+  border-radius: var(--saber-radius-xs);
   color: var(--saber-text-secondary);
   font-size: 12px;
 }
 
 .prompt-variable-editor__body {
-  padding: 16px 0 4px;
+  padding: var(--saber-space-4) 0 var(--saber-space-1);
 
   :deep(.el-form-item) {
-    margin-bottom: 24px;
+    margin-bottom: var(--saber-space-6);
   }
 }
 
 .prompt-variable-editor__issues {
-  padding: 10px 12px;
+  padding: var(--saber-space-2) var(--saber-space-3);
   border: 1px solid var(--el-color-danger-light-7);
-  border-radius: 4px;
-  margin-bottom: 16px;
+  border-radius: var(--saber-radius-xs);
+  margin-bottom: var(--saber-space-4);
   color: var(--el-color-danger);
   background: var(--el-color-danger-light-9);
   font-size: 13px;
@@ -497,7 +497,7 @@ const handleTypeChange = async (index: number, type: PromptVariableType) => {
   min-height: 32px;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   :deep(.el-button + .el-button) {
     margin-left: 0;

@@ -1,136 +1,154 @@
 <template>
-  <div class="datasource-management-page">
-    <list-panel title="数据源列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button
-          v-if="canDelete"
-          type="danger"
-          plain
-          :icon="Delete"
-          :disabled="loading"
-          @click="handleBatchDelete"
-        >
-          删除
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
-      >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column prop="name" label="名称" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="driverClass" label="驱动类" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="username" label="用户名" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="url" label="连接地址" min-width="320" show-overflow-tooltip />
-        <el-table-column
-          v-if="canView || canEdit || canDelete"
-          label="操作"
-          fixed="right"
-          width="200"
-          align="center"
-        >
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              :disabled="loading || submitting"
-              @view="openDetail(row as DatasourceListItem, 'view')"
-              @edit="openDetail(row as DatasourceListItem, 'edit')"
-              @delete="handleRowDelete(row as DatasourceListItem)"
-            />
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
-
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="数据源"
-      :submitting="submitting"
-      :loading="detailLoading"
-      width="720px"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-result v-if="detailFailed" status="error" title="数据源详情加载失败">
-        <template #extra>
-          <el-button type="primary" :icon="Refresh" @click="retryDetail">重新加载</el-button>
+  <page-container layout="workspace">
+    <div class="datasource-management-page">
+      <list-panel title="数据源列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button
+            v-if="canDelete"
+            type="danger"
+            plain
+            :icon="Delete"
+            :disabled="loading"
+            @click="handleBatchDelete"
+          >
+            删除
+          </el-button>
         </template>
-      </el-result>
-      <el-form
-        v-else
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || detailLoading"
-        label-width="88px"
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
+
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column prop="name" label="名称" min-width="160" show-overflow-tooltip />
+          <el-table-column
+            prop="driverClass"
+            label="驱动类"
+            min-width="220"
+            show-overflow-tooltip
+          />
+          <el-table-column prop="username" label="用户名" min-width="150" show-overflow-tooltip />
+          <el-table-column prop="url" label="连接地址" min-width="320" show-overflow-tooltip />
+          <el-table-column
+            v-if="canView || canEdit || canDelete"
+            label="操作"
+            fixed="right"
+            width="200"
+            align="center"
+          >
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :disabled="loading || submitting"
+                @view="openDetail(row as DatasourceListItem, 'view')"
+                @edit="openDetail(row as DatasourceListItem, 'edit')"
+                @delete="handleRowDelete(row as DatasourceListItem)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="数据源"
+        :submitting="submitting"
+        :loading="detailLoading"
+        size="md"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
       >
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="名称" prop="name">
-              <el-input v-model="form.name" placeholder="请输入数据源名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="驱动类" prop="driverClass">
-              <el-select v-model="form.driverClass" placeholder="请选择驱动类">
-                <el-option
-                  v-for="driver in driverOptions"
-                  :key="driver"
-                  :label="driver"
-                  :value="driver"
+        <el-result v-if="detailFailed" status="error" title="数据源详情加载失败">
+          <template #extra>
+            <el-button type="primary" :icon="Refresh" @click="retryDetail">重新加载</el-button>
+          </template>
+        </el-result>
+        <el-form
+          v-else
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || detailLoading"
+          label-width="88px"
+        >
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="名称" prop="name">
+                <el-input v-model="form.name" placeholder="请输入数据源名称" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="驱动类" prop="driverClass">
+                <el-select v-model="form.driverClass" placeholder="请选择驱动类">
+                  <el-option
+                    v-for="driver in driverOptions"
+                    :key="driver"
+                    :label="driver"
+                    :value="driver"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="用户名" prop="username">
+                <el-input v-model="form.username" placeholder="请输入用户名" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="密码" prop="password">
+                <el-input v-model="form.password" type="password" placeholder="请输入密码" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="连接地址" prop="url">
+                <el-input v-model="form.url" placeholder="请输入连接地址" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="备注" prop="remark">
+                <el-input
+                  v-model="form.remark"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入备注"
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="form.username" placeholder="请输入用户名" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="密码" prop="password">
-              <el-input v-model="form.password" type="password" placeholder="请输入密码" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="连接地址" prop="url">
-              <el-input v-model="form.url" placeholder="请输入连接地址" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="请输入备注" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </form-dialog>
-  </div>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">

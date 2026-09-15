@@ -44,13 +44,25 @@
   border-bottom: 0 !important;
 
   .el-menu-item {
-    padding: 0 10px;
+    padding: 0 var(--saber-space-2);
     border: none;
+    border-radius: var(--saber-radius-surface);
     color: var(--saber-text-secondary) !important;
+    transition: color var(--saber-motion-fast), background-color var(--saber-motion-fast);
 
-    &.is-active,
     &:hover {
       color: var(--el-color-primary) !important;
+      background: var(--saber-accent-hover);
+    }
+
+    &.is-active {
+      color: var(--el-color-primary) !important;
+      background: var(--saber-accent-soft);
+      font-weight: 500;
+    }
+
+    &:focus-visible {
+      box-shadow: inset 0 0 0 2px var(--saber-focus-ring-color);
     }
   }
 }
@@ -74,7 +86,7 @@
   &--sidebar {
     flex: 0 0 auto;
     width: calc(100% - 24px);
-    margin: 8px 12px 4px;
+    margin: var(--saber-space-2) var(--saber-space-3) var(--saber-space-1);
     line-height: 32px;
 
     .el-input__wrapper {
@@ -87,10 +99,10 @@
 
 .top-bar__img {
   flex: 0 0 auto;
-  padding: 2px;
+  padding: var(--saber-space-1);
   width: 30px;
   height: 30px;
-  border-radius: 100%;
+  border-radius: var(--saber-radius-round);
   box-sizing: border-box;
   border: 1px solid var(--saber-border);
   object-fit: cover;
@@ -123,7 +135,7 @@
   flex: 1 1 auto;
   min-width: 0;
   height: 100%;
-  padding-left: 16px;
+  padding-left: var(--saber-space-4);
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -135,10 +147,10 @@
 .nav-user-actions__account {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--saber-space-2);
   height: 38px;
   min-width: 0;
-  padding: 0 8px;
+  padding: 0 var(--saber-space-2);
   color: var(--saber-text-secondary);
   font-size: 14px;
   background: transparent;
@@ -189,7 +201,7 @@
   align-items: center;
   flex: 0 0 auto;
   height: 100%;
-  padding: 0 10px 0 8px;
+  padding: 0 var(--saber-space-2) 0 var(--saber-space-2);
 
   .nav-user-actions__tools,
   .nav-user-actions__identity {
@@ -227,7 +239,7 @@
 
   .nav-user-actions__account {
     max-width: 180px;
-    margin-left: 4px;
+    margin-left: var(--saber-space-1);
   }
 
   .nav-user-actions__name {
@@ -242,7 +254,7 @@
   align-items: center;
   justify-content: center;
   height: vars.$top_height;
-  padding: 0 12px;
+  padding: 0 var(--saber-space-3);
   line-height: vars.$top_height;
   background-color: var(--saber-header-bg);
   border-bottom: 1px solid var(--saber-border);
@@ -254,7 +266,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: var(--saber-space-2);
     width: 100%;
     min-width: 0;
   }

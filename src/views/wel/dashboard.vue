@@ -1,20 +1,22 @@
 <template>
-  <basic-container>
-    <div class="dashboard-tiles">
-      <basic-block
-        v-for="(tile, index) in tiles"
-        :key="tile.text"
-        :width="tile.width ?? defaultWidth"
-        :height="defaultHeight"
-        :icon="tile.icon"
-        :text="tile.text"
-        :time="index + 1"
-        :background="tile.background"
-        :dept="tile.dept"
-        :color="tile.color"
-      />
-    </div>
-  </basic-container>
+  <page-container layout="content">
+    <basic-container>
+      <div class="dashboard-tiles">
+        <basic-block
+          v-for="(tile, index) in tiles"
+          :key="tile.text"
+          :width="tile.width ?? defaultWidth"
+          :height="defaultHeight"
+          :icon="tile.icon"
+          :text="tile.text"
+          :time="index + 1"
+          :background="tile.background"
+          :dept="tile.dept"
+          :color="tile.color"
+        />
+      </div>
+    </basic-container>
+  </page-container>
 </template>
 
 <script setup lang="ts">

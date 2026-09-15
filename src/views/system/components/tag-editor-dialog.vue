@@ -6,7 +6,7 @@
     :loading="detailLoading"
     :submitting="submitting"
     :confirm-disabled="loadFailed || !treeReady || !canSaveCurrentMode"
-    width="640px"
+    size="sm"
     destroy-on-close
     @confirm="handleSubmit"
     @cancel="resetDialog"
@@ -105,12 +105,7 @@
         />
       </el-form-item>
       <el-form-item label="排序" prop="sort">
-        <el-input-number
-          v-model="form.sort"
-          :min="0"
-          :precision="0"
-          controls-position="right"
-        />
+        <el-input-number v-model="form.sort" :min="0" :precision="0" controls-position="right" />
       </el-form-item>
       <el-form-item label="说明" prop="remark">
         <el-input
@@ -337,7 +332,7 @@ function resetDialog() {
 
 <style scoped lang="scss">
 .tag-editor-dialog__alert {
-  margin-bottom: 20px;
+  margin-bottom: var(--saber-space-5);
 }
 
 :deep(.el-input-number),

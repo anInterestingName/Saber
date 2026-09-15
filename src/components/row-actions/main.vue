@@ -31,11 +31,19 @@
       删除
     </el-button>
     <slot name="extra" />
+    <el-dropdown v-if="$slots.more" trigger="click" :disabled="disabled">
+      <el-button type="primary" link :icon="MoreFilled" :disabled="disabled">更多</el-button>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <slot name="more" />
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Delete, Edit, View } from '@element-plus/icons-vue';
+import { Delete, Edit, MoreFilled, View } from '@element-plus/icons-vue';
 
 interface RowActionsProps {
   showView?: boolean;
@@ -61,17 +69,18 @@ const emit = defineEmits<{
 <style scoped lang="scss">
 .row-actions {
   display: inline-flex;
+  max-width: 100%;
   min-height: 32px;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  gap: 4px;
+  gap: var(--saber-space-1);
 
   :deep(.el-button) {
     min-width: 52px;
     height: 32px;
     margin-left: 0;
-    padding: 4px 6px;
+    padding: var(--saber-space-1) var(--saber-space-2);
   }
 }
 </style>

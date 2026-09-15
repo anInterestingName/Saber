@@ -177,11 +177,11 @@ const handleClear = () => {
   display: flex;
   width: 100%;
   min-height: 32px;
-  padding: 0 10px;
+  padding: 0 var(--saber-space-2);
   border: 1px solid var(--saber-border);
-  border-radius: var(--el-input-border-radius, 4px);
+  border-radius: var(--el-input-border-radius, var(--saber-radius-xs));
   align-items: center;
-  gap: 8px;
+  gap: var(--saber-space-2);
   cursor: pointer;
   font: inherit;
   text-align: left;
@@ -205,7 +205,7 @@ const handleClear = () => {
 }
 
 .icon-select.has-clear .icon-select__trigger {
-  padding-right: 36px;
+  padding-right: var(--saber-space-7);
 }
 
 .icon-select__clear {
@@ -229,12 +229,12 @@ const handleClear = () => {
 
 .icon-select__content {
   max-height: min(50vh, 420px);
-  margin-top: 12px;
+  margin-top: var(--saber-space-3);
   overflow: auto;
 }
 
 .icon-select__group-title {
-  margin: 12px 0 8px;
+  margin: var(--saber-space-3) 0 var(--saber-space-2);
   color: var(--saber-text-primary);
   font-size: 13px;
   font-weight: 600;
@@ -243,7 +243,7 @@ const handleClear = () => {
 .icon-select__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, 36px);
-  gap: 6px;
+  gap: var(--saber-space-2);
 }
 
 .icon-select__option {
@@ -252,7 +252,7 @@ const handleClear = () => {
   height: 36px;
   padding: 0;
   border: 1px solid var(--saber-border);
-  border-radius: 4px;
+  border-radius: var(--saber-radius-xs);
   align-items: center;
   justify-content: center;
   cursor: pointer;

@@ -1,299 +1,302 @@
 <template>
-  <basic-container class="region-page">
-    <div class="region-toolbar">
-      <el-button
-        v-if="canAdd"
-        type="primary"
-        :icon="Plus"
-        :disabled="operationLocked"
-        @click="openAddChild"
-      >
-        新增下级
-      </el-button>
-      <el-button
-        v-if="canDelete"
-        type="danger"
-        plain
-        :icon="Delete"
-        :loading="deleting"
-        :disabled="submitting"
-        @click="handleDelete"
-      >
-        删除
-      </el-button>
-      <el-button v-if="canDebug" :icon="VideoPlay" :disabled="operationLocked" @click="openDebug">
-        调试
-      </el-button>
-      <el-tooltip content="重新加载区划树" placement="top">
+  <page-container layout="workspace">
+    <basic-container class="region-page">
+      <div class="region-toolbar">
         <el-button
-          circle
-          :icon="Refresh"
-          :loading="rootLoading"
+          v-if="canAdd"
+          type="primary"
+          :icon="Plus"
           :disabled="operationLocked"
-          aria-label="重新加载区划树"
-          @click="rebuildTree"
-        />
-      </el-tooltip>
-    </div>
-
-    <div class="region-layout">
-      <section class="region-tree-panel" aria-label="行政区划树">
-        <h2 class="region-section-title">行政区划</h2>
-        <el-alert
-          v-if="rootFailed"
-          class="region-tree-alert"
-          title="区划树加载失败"
-          type="error"
-          :closable="false"
-          show-icon
+          @click="openAddChild"
         >
-          <template #default>
-            <el-button type="primary" link :icon="Refresh" @click="rebuildTree">
-              重新加载
-            </el-button>
-          </template>
-        </el-alert>
-        <div v-loading="rootLoading" class="region-tree-scroll">
-          <el-tree
-            v-if="!rootFailed"
-            :key="treeVersion"
-            ref="treeRef"
-            node-key="id"
-            lazy
-            highlight-current
-            :load="loadTreeNode"
-            :props="treeProps"
-            @node-click="handleNodeClick"
+          新增下级
+        </el-button>
+        <el-button
+          v-if="canDelete"
+          type="danger"
+          plain
+          :icon="Delete"
+          :loading="deleting"
+          :disabled="submitting"
+          @click="handleDelete"
+        >
+          删除
+        </el-button>
+        <el-button v-if="canDebug" :icon="VideoPlay" :disabled="operationLocked" @click="openDebug">
+          调试
+        </el-button>
+        <el-tooltip content="重新加载区划树" placement="top">
+          <el-button
+            circle
+            :icon="Refresh"
+            :loading="rootLoading"
+            :disabled="operationLocked"
+            aria-label="重新加载区划树"
+            @click="rebuildTree"
+          />
+        </el-tooltip>
+      </div>
+
+      <div class="region-layout">
+        <section class="region-tree-panel" aria-label="行政区划树">
+          <h2 class="region-section-title">行政区划</h2>
+          <el-alert
+            v-if="rootFailed"
+            class="region-tree-alert"
+            title="区划树加载失败"
+            type="error"
+            :closable="false"
+            show-icon
           >
-            <template #default="{ data }">
-              <span class="region-tree-node">
-                <span class="region-tree-node__label">{{ data.title || data.name }}</span>
-                <el-tooltip v-if="failedNodeCodes.has(String(data.id))" content="重新加载下级区划">
-                  <el-button
-                    class="region-tree-node__retry"
-                    type="danger"
-                    link
-                    :icon="Refresh"
-                    :loading="retryingNodeCodes.has(String(data.id))"
-                    aria-label="重新加载下级区划"
-                    @click.stop="retryChildren(data as RegionTreeNode)"
-                  />
-                </el-tooltip>
-              </span>
+            <template #default>
+              <el-button type="primary" link :icon="Refresh" @click="rebuildTree">
+                重新加载
+              </el-button>
             </template>
-          </el-tree>
-        </div>
-      </section>
+          </el-alert>
+          <div v-loading="rootLoading" class="region-tree-scroll">
+            <el-tree
+              v-if="!rootFailed"
+              :key="treeVersion"
+              ref="treeRef"
+              node-key="id"
+              lazy
+              highlight-current
+              :load="loadTreeNode"
+              :props="treeProps"
+              @node-click="handleNodeClick"
+            >
+              <template #default="{ data }">
+                <span class="region-tree-node">
+                  <span class="region-tree-node__label">{{ data.title || data.name }}</span>
+                  <el-tooltip
+                    v-if="failedNodeCodes.has(String(data.id))"
+                    content="重新加载下级区划"
+                  >
+                    <el-button
+                      class="region-tree-node__retry"
+                      type="danger"
+                      link
+                      :icon="Refresh"
+                      :loading="retryingNodeCodes.has(String(data.id))"
+                      aria-label="重新加载下级区划"
+                      @click.stop="retryChildren(data as RegionTreeNode)"
+                    />
+                  </el-tooltip>
+                </span>
+              </template>
+            </el-tree>
+          </div>
+        </section>
 
-      <section class="region-form-panel" aria-label="行政区划表单">
-        <div class="region-form-header">
-          <h2 class="region-section-title">区划信息</h2>
-          <el-tag :type="modeTagType" effect="plain">{{ modeLabel }}</el-tag>
-        </div>
+        <section class="region-form-panel" aria-label="行政区划表单">
+          <div class="region-form-header">
+            <h2 class="region-section-title">区划信息</h2>
+            <el-tag :type="modeTagType" effect="plain">{{ modeLabel }}</el-tag>
+          </div>
 
-        <el-alert
-          v-if="mode === 'idle'"
-          class="region-form-alert"
-          title="请从左侧选择一项区划"
-          type="info"
-          :closable="false"
-          show-icon
-        />
-        <el-alert
-          v-else-if="mode === 'error'"
-          class="region-form-alert"
-          title="区划详情加载失败"
-          type="error"
-          :closable="false"
-          show-icon
-        >
-          <template #default>
-            <el-button type="primary" link :icon="Refresh" @click="retryDetail">
-              重新加载
+          <el-alert
+            v-if="mode === 'idle'"
+            class="region-form-alert"
+            title="请从左侧选择一项区划"
+            type="info"
+            :closable="false"
+            show-icon
+          />
+          <el-alert
+            v-else-if="mode === 'error'"
+            class="region-form-alert"
+            title="区划详情加载失败"
+            type="error"
+            :closable="false"
+            show-icon
+          >
+            <template #default>
+              <el-button type="primary" link :icon="Refresh" @click="retryDetail">
+                重新加载
+              </el-button>
+            </template>
+          </el-alert>
+          <el-alert
+            v-if="dictionaryFailed"
+            class="region-form-alert"
+            title="区划等级加载失败，请在等级字段重试"
+            type="error"
+            :closable="false"
+            show-icon
+          />
+
+          <el-form
+            ref="formRef"
+            v-loading="formLoading"
+            :model="form"
+            :rules="formRules"
+            :disabled="formDisabled"
+            label-width="100px"
+          >
+            <el-form-item label="父区划编号">
+              <el-input :model-value="form.parentCode" readonly />
+            </el-form-item>
+            <el-form-item label="父区划名称">
+              <el-input :model-value="form.parentName" readonly />
+            </el-form-item>
+            <el-form-item v-if="mode === 'add-child'" label="区划子编号" prop="subCode">
+              <el-input v-model="form.subCode" maxlength="12">
+                <template v-if="codePrefix" #prepend>{{ codePrefix }}</template>
+              </el-input>
+            </el-form-item>
+            <el-form-item label="完整区划编号">
+              <el-input :model-value="mode === 'add-child' ? codePreview : form.code" readonly />
+            </el-form-item>
+            <el-form-item v-if="mode === 'edit'" label="区划子编号">
+              <el-input :model-value="form.subCode" readonly />
+            </el-form-item>
+            <el-form-item label="区划名称" prop="name">
+              <el-input v-model="form.name" maxlength="32" show-word-limit />
+            </el-form-item>
+            <el-form-item label="区划等级" prop="level">
+              <dict-select
+                :model-value="form.level"
+                code="region"
+                value-type="number"
+                placeholder="请选择区划等级"
+                @update:model-value="handleLevelChange"
+                @load-error="dictionaryFailed = true"
+                @load-success="dictionaryFailed = false"
+              />
+            </el-form-item>
+            <el-form-item label="区划排序" prop="sort">
+              <el-input-number v-model="form.sort" :min="0" controls-position="right" />
+            </el-form-item>
+            <el-form-item label="区划备注" prop="remark">
+              <el-input
+                v-model="form.remark"
+                type="textarea"
+                :rows="5"
+                maxlength="255"
+                show-word-limit
+              />
+            </el-form-item>
+          </el-form>
+
+          <div v-if="mode === 'edit' || mode === 'add-child'" class="region-form-actions">
+            <el-button :disabled="operationLocked" @click="handleCancel">取消</el-button>
+            <el-button
+              type="primary"
+              :loading="submitting"
+              :disabled="deleting || dictionaryFailed"
+              @click="handleSubmit"
+            >
+              保存
             </el-button>
-          </template>
-        </el-alert>
-        <el-alert
-          v-if="dictionaryFailed"
-          class="region-form-alert"
-          title="区划等级加载失败，请在等级字段重试"
-          type="error"
-          :closable="false"
-          show-icon
-        />
+          </div>
+        </section>
+      </div>
 
-        <el-form
-          ref="formRef"
-          v-loading="formLoading"
-          :model="form"
-          :rules="formRules"
-          :disabled="formDisabled"
-          label-width="100px"
-        >
-          <el-form-item label="父区划编号">
-            <el-input :model-value="form.parentCode" readonly />
+      <app-dialog
+        v-model="debugVisible"
+        class="region-debug-dialog"
+        title="行政区划数据调试"
+        size="sm"
+        destroy-on-close
+        @close="clearDebugState"
+      >
+        <el-form :model="debugForm" label-width="64px">
+          <el-form-item label="省份">
+            <el-select
+              v-model="debugForm.province"
+              clearable
+              filterable
+              :loading="provinceState.loading.value"
+              placeholder="请选择省份"
+              @change="handleProvinceChange"
+            >
+              <el-option
+                v-for="item in provinceState.options.value"
+                :key="item.code"
+                :label="item.name"
+                :value="item.code"
+              />
+              <template #empty>
+                <el-button
+                  v-if="provinceState.failed.value"
+                  type="primary"
+                  link
+                  :icon="Refresh"
+                  @click="provinceState.load('00')"
+                >
+                  重新加载
+                </el-button>
+                <span v-else>暂无数据</span>
+              </template>
+            </el-select>
           </el-form-item>
-          <el-form-item label="父区划名称">
-            <el-input :model-value="form.parentName" readonly />
+          <el-form-item label="地市">
+            <el-select
+              v-model="debugForm.city"
+              clearable
+              filterable
+              :disabled="!debugForm.province"
+              :loading="cityState.loading.value"
+              placeholder="请选择地市"
+              @change="handleCityChange"
+            >
+              <el-option
+                v-for="item in cityState.options.value"
+                :key="item.code"
+                :label="item.name"
+                :value="item.code"
+              />
+              <template #empty>
+                <el-button
+                  v-if="cityState.failed.value && debugForm.province"
+                  type="primary"
+                  link
+                  :icon="Refresh"
+                  @click="cityState.load(debugForm.province)"
+                >
+                  重新加载
+                </el-button>
+                <span v-else>暂无数据</span>
+              </template>
+            </el-select>
           </el-form-item>
-          <el-form-item v-if="mode === 'add-child'" label="区划子编号" prop="subCode">
-            <el-input v-model="form.subCode" maxlength="12">
-              <template v-if="codePrefix" #prepend>{{ codePrefix }}</template>
-            </el-input>
-          </el-form-item>
-          <el-form-item label="完整区划编号">
-            <el-input :model-value="mode === 'add-child' ? codePreview : form.code" readonly />
-          </el-form-item>
-          <el-form-item v-if="mode === 'edit'" label="区划子编号">
-            <el-input :model-value="form.subCode" readonly />
-          </el-form-item>
-          <el-form-item label="区划名称" prop="name">
-            <el-input v-model="form.name" maxlength="32" show-word-limit />
-          </el-form-item>
-          <el-form-item label="区划等级" prop="level">
-            <dict-select
-              :model-value="form.level"
-              code="region"
-              value-type="number"
-              placeholder="请选择区划等级"
-              @update:model-value="handleLevelChange"
-              @load-error="dictionaryFailed = true"
-              @load-success="dictionaryFailed = false"
-            />
-          </el-form-item>
-          <el-form-item label="区划排序" prop="sort">
-            <el-input-number v-model="form.sort" :min="0" controls-position="right" />
-          </el-form-item>
-          <el-form-item label="区划备注" prop="remark">
-            <el-input
-              v-model="form.remark"
-              type="textarea"
-              :rows="5"
-              maxlength="255"
-              show-word-limit
-            />
+          <el-form-item label="区县">
+            <el-select
+              v-model="debugForm.district"
+              clearable
+              filterable
+              :disabled="!debugForm.city"
+              :loading="districtState.loading.value"
+              placeholder="请选择区县"
+            >
+              <el-option
+                v-for="item in districtState.options.value"
+                :key="item.code"
+                :label="item.name"
+                :value="item.code"
+              />
+              <template #empty>
+                <el-button
+                  v-if="districtState.failed.value && debugForm.city"
+                  type="primary"
+                  link
+                  :icon="Refresh"
+                  @click="districtState.load(debugForm.city)"
+                >
+                  重新加载
+                </el-button>
+                <span v-else>暂无数据</span>
+              </template>
+            </el-select>
           </el-form-item>
         </el-form>
-
-        <div v-if="mode === 'edit' || mode === 'add-child'" class="region-form-actions">
-          <el-button :disabled="operationLocked" @click="handleCancel">取消</el-button>
-          <el-button
-            type="primary"
-            :loading="submitting"
-            :disabled="deleting || dictionaryFailed"
-            @click="handleSubmit"
-          >
-            保存
-          </el-button>
-        </div>
-      </section>
-    </div>
-
-    <el-dialog
-      v-model="debugVisible"
-      class="region-debug-dialog"
-      title="行政区划数据调试"
-      width="480px"
-      append-to-body
-      align-center
-      destroy-on-close
-      @closed="clearDebugState"
-    >
-      <el-form :model="debugForm" label-width="64px">
-        <el-form-item label="省份">
-          <el-select
-            v-model="debugForm.province"
-            clearable
-            filterable
-            :loading="provinceState.loading.value"
-            placeholder="请选择省份"
-            @change="handleProvinceChange"
-          >
-            <el-option
-              v-for="item in provinceState.options.value"
-              :key="item.code"
-              :label="item.name"
-              :value="item.code"
-            />
-            <template #empty>
-              <el-button
-                v-if="provinceState.failed.value"
-                type="primary"
-                link
-                :icon="Refresh"
-                @click="provinceState.load('00')"
-              >
-                重新加载
-              </el-button>
-              <span v-else>暂无数据</span>
-            </template>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="地市">
-          <el-select
-            v-model="debugForm.city"
-            clearable
-            filterable
-            :disabled="!debugForm.province"
-            :loading="cityState.loading.value"
-            placeholder="请选择地市"
-            @change="handleCityChange"
-          >
-            <el-option
-              v-for="item in cityState.options.value"
-              :key="item.code"
-              :label="item.name"
-              :value="item.code"
-            />
-            <template #empty>
-              <el-button
-                v-if="cityState.failed.value && debugForm.province"
-                type="primary"
-                link
-                :icon="Refresh"
-                @click="cityState.load(debugForm.province)"
-              >
-                重新加载
-              </el-button>
-              <span v-else>暂无数据</span>
-            </template>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="区县">
-          <el-select
-            v-model="debugForm.district"
-            clearable
-            filterable
-            :disabled="!debugForm.city"
-            :loading="districtState.loading.value"
-            placeholder="请选择区县"
-          >
-            <el-option
-              v-for="item in districtState.options.value"
-              :key="item.code"
-              :label="item.name"
-              :value="item.code"
-            />
-            <template #empty>
-              <el-button
-                v-if="districtState.failed.value && debugForm.city"
-                type="primary"
-                link
-                :icon="Refresh"
-                @click="districtState.load(debugForm.city)"
-              >
-                重新加载
-              </el-button>
-              <span v-else>暂无数据</span>
-            </template>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="debugVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
-  </basic-container>
+        <template #footer="{ cancel }">
+          <el-button @click="cancel">关闭</el-button>
+        </template>
+      </app-dialog>
+    </basic-container>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -310,6 +313,7 @@ import {
 } from 'element-plus';
 import { storeToRefs } from 'pinia';
 import DictSelect from '@/components/dict-select/main.vue';
+import AppDialog from '@/components/app-dialog/main.vue';
 import { useRemoteDetail } from '@/composables/useRemoteDetail';
 import { useRemoteOptions } from '@/composables/useRemoteOptions';
 import { getDetail, getLazyTree, getRegionOptions, remove, submit } from '@/api/base/region';
@@ -758,7 +762,7 @@ onBeforeUnmount(() => {
 
   :deep(.basic-container__card) {
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--saber-radius-control);
     box-shadow: none;
     background: var(--saber-surface);
   }
@@ -767,10 +771,10 @@ onBeforeUnmount(() => {
 .region-toolbar {
   display: flex;
   min-height: 32px;
-  margin-bottom: 18px;
+  margin-bottom: var(--saber-space-4);
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   :deep(.el-button + .el-button) {
     margin-left: 0;
@@ -787,16 +791,16 @@ onBeforeUnmount(() => {
 .region-tree-panel,
 .region-form-panel {
   min-width: 0;
-  padding-top: 18px;
+  padding-top: var(--saber-space-4);
 }
 
 .region-tree-panel {
-  padding-right: 20px;
+  padding-right: var(--saber-space-5);
   border-right: 1px solid var(--saber-border);
 }
 
 .region-form-panel {
-  padding-left: 24px;
+  padding-left: var(--saber-space-6);
 }
 
 .region-section-title {
@@ -810,21 +814,21 @@ onBeforeUnmount(() => {
 
 .region-form-header {
   display: flex;
-  margin-bottom: 18px;
+  margin-bottom: var(--saber-space-4);
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--saber-space-3);
 }
 
 .region-tree-alert,
 .region-form-alert {
-  margin-bottom: 16px;
+  margin-bottom: var(--saber-space-4);
 }
 
 .region-tree-scroll {
   min-height: 240px;
   max-height: min(680px, calc(100vh - 220px));
-  margin-top: 12px;
+  margin-top: var(--saber-space-3);
   overflow: auto;
 }
 
@@ -832,7 +836,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 6px;
+  gap: var(--saber-space-2);
 }
 
 .region-tree-node__label {
@@ -848,7 +852,7 @@ onBeforeUnmount(() => {
 .region-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   :deep(.el-button + .el-button) {
     margin-left: 0;
@@ -867,7 +871,7 @@ onBeforeUnmount(() => {
 
   .region-tree-panel {
     padding-right: 0;
-    padding-bottom: 20px;
+    padding-bottom: var(--saber-space-5);
     border-right: 0;
     border-bottom: 1px solid var(--saber-border);
   }
@@ -879,21 +883,5 @@ onBeforeUnmount(() => {
   .region-tree-scroll {
     max-height: 360px;
   }
-}
-</style>
-
-<style lang="scss">
-.region-debug-dialog {
-  display: flex;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.region-debug-dialog .el-dialog__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
 }
 </style>

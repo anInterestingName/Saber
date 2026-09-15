@@ -6,7 +6,7 @@
     :loading="detailLoading"
     :submitting="submitting"
     :confirm-disabled="loadFailed || !canSaveCurrentMode"
-    :width="internalMode === 'view' ? '800px' : '640px'"
+    :size="internalMode === 'view' ? 'lg' : 'sm'"
     destroy-on-close
     @confirm="handleSubmit"
     @cancel="resetDialog"
@@ -33,7 +33,9 @@
           </div>
           <div class="tag-category-detail__item">
             <dt>分类编码</dt>
-            <dd><code>{{ detailData.categoryCode }}</code></dd>
+            <dd>
+              <code>{{ detailData.categoryCode }}</code>
+            </dd>
           </div>
           <div class="tag-category-detail__item">
             <dt>选择规则</dt>
@@ -353,14 +355,14 @@ function resetDialog() {
 
 <style scoped lang="scss">
 .tag-category-dialog__alert {
-  margin-bottom: 20px;
+  margin-bottom: var(--saber-space-5);
 }
 
 .tag-category-detail__grid {
   display: grid;
   padding: 0;
   margin: 0;
-  gap: 14px 16px;
+  gap: var(--saber-space-3) var(--saber-space-4);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -369,7 +371,7 @@ function resetDialog() {
   min-height: 64px;
   overflow: hidden;
   border: 1px solid var(--saber-border);
-  border-radius: 6px;
+  border-radius: var(--saber-radius-control);
   background: var(--saber-surface);
   grid-template-columns: 112px minmax(0, 1fr);
 
@@ -378,7 +380,7 @@ function resetDialog() {
     display: flex;
     min-width: 0;
     align-items: center;
-    padding: 14px 16px;
+    padding: var(--saber-space-3) var(--saber-space-4);
     margin: 0;
     line-height: 1.6;
   }
@@ -406,13 +408,13 @@ function resetDialog() {
   grid-template-columns: 1fr;
 
   dt {
-    padding-bottom: 8px;
+    padding-bottom: var(--saber-space-2);
     border-right: 0;
   }
 
   dd {
     align-items: flex-start;
-    padding-top: 12px;
+    padding-top: var(--saber-space-3);
     white-space: pre-wrap;
   }
 }
@@ -438,8 +440,8 @@ function resetDialog() {
 
     dt,
     dd {
-      padding-right: 12px;
-      padding-left: 12px;
+      padding-right: var(--saber-space-3);
+      padding-left: var(--saber-space-3);
     }
   }
 

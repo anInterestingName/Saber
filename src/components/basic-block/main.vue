@@ -54,7 +54,7 @@ const boxStyleName = computed(() => ({
 .basic-block {
   box-sizing: border-box;
   opacity: 0;
-  color: #fff;
+  color: var(--saber-text-on-accent);
   animation: basic-block-enter 1s forwards;
 
   .box {
@@ -62,7 +62,7 @@ const boxStyleName = computed(() => ({
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    padding: 15px;
+    padding: var(--saber-space-4);
     transition: transform 1s;
     background-size: cover;
 
@@ -72,7 +72,7 @@ const boxStyleName = computed(() => ({
   }
 
   a {
-    color: #fff;
+    color: var(--saber-text-on-accent);
   }
 
   span {
@@ -82,7 +82,7 @@ const boxStyleName = computed(() => ({
 
   p {
     width: 80%;
-    color: #eee;
+    color: var(--saber-text-on-accent);
     font-size: 10px;
     line-height: 22px;
   }

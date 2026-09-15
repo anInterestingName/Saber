@@ -1,54 +1,56 @@
 <template>
-  <basic-container class="form-demo">
-    <div class="form-demo__header">
-      <h2>表单示例</h2>
-    </div>
-    <el-form ref="formRef" :model="form" :rules="formRules" label-width="112px">
-      <el-form-item label="用户名" prop="username">
-        <el-input v-model="form.username" maxlength="50" placeholder="请输入用户名" />
-      </el-form-item>
-      <el-form-item label="密码" prop="password">
-        <el-input
-          v-model="form.password"
-          type="password"
-          maxlength="64"
-          show-password
-          placeholder="请输入密码"
-        />
-      </el-form-item>
-      <el-form-item label="再次输入密码" prop="confirmPassword">
-        <el-input
-          v-model="form.confirmPassword"
-          type="password"
-          maxlength="64"
-          show-password
-          placeholder="请再次输入密码"
-        />
-      </el-form-item>
-      <el-form-item label="申请日期" prop="date">
-        <el-date-picker
-          v-model="form.date"
-          type="date"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择申请日期"
-        />
-      </el-form-item>
-      <el-form-item label="个性签名" prop="signature">
-        <el-input
-          v-model="form.signature"
-          type="textarea"
-          :rows="6"
-          maxlength="500"
-          show-word-limit
-          placeholder="请输入个性签名"
-        />
-      </el-form-item>
-      <div class="form-demo__actions">
-        <el-button :icon="RefreshLeft" @click="handleReset">重置</el-button>
-        <el-button type="primary" :icon="CircleCheck" @click="handleValidate">验证</el-button>
+  <page-container layout="content">
+    <basic-container class="form-demo">
+      <div class="form-demo__header">
+        <h2>表单示例</h2>
       </div>
-    </el-form>
-  </basic-container>
+      <el-form ref="formRef" :model="form" :rules="formRules" label-width="112px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" maxlength="50" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            maxlength="64"
+            show-password
+            placeholder="请输入密码"
+          />
+        </el-form-item>
+        <el-form-item label="再次输入密码" prop="confirmPassword">
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            maxlength="64"
+            show-password
+            placeholder="请再次输入密码"
+          />
+        </el-form-item>
+        <el-form-item label="申请日期" prop="date">
+          <el-date-picker
+            v-model="form.date"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="请选择申请日期"
+          />
+        </el-form-item>
+        <el-form-item label="个性签名" prop="signature">
+          <el-input
+            v-model="form.signature"
+            type="textarea"
+            :rows="6"
+            maxlength="500"
+            show-word-limit
+            placeholder="请输入个性签名"
+          />
+        </el-form-item>
+        <div class="form-demo__actions">
+          <el-button :icon="RefreshLeft" @click="handleReset">重置</el-button>
+          <el-button type="primary" :icon="CircleCheck" @click="handleValidate">验证</el-button>
+        </div>
+      </el-form>
+    </basic-container>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -113,7 +115,7 @@ const handleValidate = async () => {
 }
 
 .form-demo__header {
-  margin-bottom: 20px;
+  margin-bottom: var(--saber-space-5);
 
   h2 {
     margin: 0;
@@ -128,7 +130,7 @@ const handleValidate = async () => {
 .form-demo__actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   :deep(.el-button + .el-button) {
     margin-left: 0;

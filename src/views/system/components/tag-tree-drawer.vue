@@ -2,7 +2,7 @@
   <detail-drawer
     v-model="visible"
     :title="category ? `${category.categoryName} - 标签管理` : '标签管理'"
-    size="min(960px, 92vw)"
+    size="xl"
     :loading="loading"
     @close="resetDrawer"
   >
@@ -124,16 +124,14 @@
               @edit="openEdit(row as TagTreeNode)"
               @delete="handleDelete(row as TagTreeNode)"
             >
-              <template v-if="canCreate" #extra>
-                <el-button
-                  type="primary"
-                  link
+              <template v-if="canCreate" #more>
+                <el-dropdown-item
                   :icon="Plus"
                   :disabled="Boolean(tagActionId)"
                   @click="openAddChild(row as TagTreeNode)"
                 >
                   新增子标签
-                </el-button>
+                </el-dropdown-item>
               </template>
             </row-actions>
           </template>
@@ -421,16 +419,16 @@ onBeforeUnmount(() => window.removeEventListener('resize', handleResize));
 
 <style scoped lang="scss">
 .tag-tree-summary {
-  margin-bottom: 20px;
+  margin-bottom: var(--saber-space-5);
 }
 
 .tag-tree-toolbar {
   display: flex;
   min-width: 0;
-  margin-bottom: 16px;
+  margin-bottom: var(--saber-space-4);
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--saber-space-4);
 }
 
 .tag-tree-toolbar__filters {
@@ -438,7 +436,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', handleResize));
   min-width: 0;
   flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--saber-space-3);
 
   :deep(.el-form-item) {
     width: min(210px, 100%);
@@ -451,7 +449,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', handleResize));
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   :deep(.el-button + .el-button) {
     margin-left: 0;
@@ -459,7 +457,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', handleResize));
 }
 
 .tag-tree-empty {
-  padding: 16px 0 24px;
+  padding: var(--saber-space-4) 0 var(--saber-space-6);
   text-align: center;
 }
 

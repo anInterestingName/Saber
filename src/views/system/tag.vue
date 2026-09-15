@@ -1,185 +1,192 @@
 <template>
-  <div class="tag-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      label-width="64px"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="名称">
-          <el-input v-model="searchForm.name" clearable placeholder="请输入分类名称" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="编码">
-          <el-input v-model="searchForm.code" clearable placeholder="请输入分类编码" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="状态">
-          <el-select v-model="searchForm.status" clearable placeholder="全部状态">
-            <el-option label="启用" :value="1" />
-            <el-option label="停用" :value="0" />
-          </el-select>
-        </el-form-item>
-      </el-col>
-    </search-panel>
+  <page-container layout="workspace">
+    <div class="tag-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        label-width="64px"
+        @search="handleSearch"
+        @reset="handleReset"
+      >
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="名称">
+            <el-input v-model="searchForm.name" clearable placeholder="请输入分类名称" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="编码">
+            <el-input v-model="searchForm.code" clearable placeholder="请输入分类编码" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="状态">
+            <el-select v-model="searchForm.status" clearable placeholder="全部状态">
+              <el-option label="启用" :value="1" />
+              <el-option label="停用" :value="0" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </search-panel>
 
-    <list-panel title="标签分类列表">
-      <template #actions>
-        <el-button
-          v-if="canCategoryAdd"
-          type="primary"
-          :icon="Plus"
-          :disabled="Boolean(categoryActionId)"
-          @click="openCategoryDialog('add')"
-        >
-          新增分类
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
+      <list-panel title="标签分类列表">
+        <template #actions>
           <el-button
-            circle
-            :icon="Refresh"
-            :loading="loading"
+            v-if="canCategoryAdd"
+            type="primary"
+            :icon="Plus"
             :disabled="Boolean(categoryActionId)"
-            aria-label="刷新分类列表"
-            @click="refreshCategories"
-          />
-        </el-tooltip>
-      </template>
-
-      <el-table v-loading="loading" :data="data" row-key="id">
-        <el-table-column
-          prop="categoryName"
-          label="分类名称"
-          min-width="180"
-          show-overflow-tooltip
-        />
-        <el-table-column prop="categoryCode" label="分类编码" min-width="170" show-overflow-tooltip>
-          <template #default="{ row }">
-            <code>{{ row.categoryCode }}</code>
-          </template>
-        </el-table-column>
-        <el-table-column label="选择规则" min-width="150">
-          <template #default="{ row }">{{ getSelectionRule(row as TagCategoryListItem) }}</template>
-        </el-table-column>
-        <el-table-column label="标签数量" width="100" align="center">
-          <template #default="{ row }">
-            <el-button
-              v-if="canTagView"
-              type="primary"
-              link
-              :disabled="Boolean(categoryActionId)"
-              @click="openTagDrawer(row as TagCategoryListItem)"
-            >
-              {{ row.tagCount }}
-            </el-button>
-            <span v-else>{{ row.tagCount }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="sort" label="排序" width="80" align="center" />
-        <el-table-column label="状态" width="110" align="center">
-          <template #default="{ row }">
-            <el-switch
-              v-if="canCategoryStatus"
-              :model-value="row.status === 1"
-              :loading="categoryActionId === row.id"
-              :disabled="Boolean(categoryActionId) && categoryActionId !== row.id"
-              inline-prompt
-              active-text="启"
-              inactive-text="停"
-              @change="value => handleStatusChange(row as TagCategoryListItem, Boolean(value))"
-            />
-            <el-tag v-else :type="row.status === 1 ? 'success' : 'info'">
-              {{ row.statusName || (row.status === 1 ? '启用' : '停用') }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="updateTime" label="更新时间" min-width="170">
-          <template #default="{ row }">{{ formatTime(row.updateTime) }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="hasAnyCategoryRowAction"
-          label="操作"
-          fixed="right"
-          width="330"
-          align="center"
-        >
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canCategoryView"
-              :show-edit="canCategoryEdit"
-              :show-delete="canCategoryDelete"
-              :disabled="Boolean(categoryActionId)"
-              @view="openCategoryDialog('view', row as TagCategoryListItem)"
-              @edit="openCategoryDialog('edit', row as TagCategoryListItem)"
-              @delete="handleDelete(row as TagCategoryListItem)"
-            >
-              <template v-if="canTagView" #extra>
-                <el-button
-                  type="primary"
-                  link
-                  :icon="CollectionTag"
-                  :disabled="Boolean(categoryActionId)"
-                  @click="openTagDrawer(row as TagCategoryListItem)"
-                >
-                  管理标签
-                </el-button>
-              </template>
-            </row-actions>
-          </template>
-        </el-table-column>
-
-        <template #empty>
-          <div class="tag-category-empty">
-            <el-empty description="暂无标签分类" :image-size="88" />
-            <el-button
-              v-if="canCategoryAdd"
-              type="primary"
-              :icon="Plus"
-              @click="openCategoryDialog('add')"
-            >
-              新增分类
-            </el-button>
-          </div>
+            @click="openCategoryDialog('add')"
+          >
+            新增分类
+          </el-button>
         </template>
-      </el-table>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              :disabled="Boolean(categoryActionId)"
+              aria-label="刷新分类列表"
+              @click="refreshCategories"
+            />
+          </el-tooltip>
+        </template>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
+        <el-table v-loading="loading" :data="data" row-key="id">
+          <el-table-column
+            prop="categoryName"
+            label="分类名称"
+            min-width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="categoryCode"
+            label="分类编码"
+            min-width="170"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">
+              <code>{{ row.categoryCode }}</code>
+            </template>
+          </el-table-column>
+          <el-table-column label="选择规则" min-width="150">
+            <template #default="{ row }">{{
+              getSelectionRule(row as TagCategoryListItem)
+            }}</template>
+          </el-table-column>
+          <el-table-column label="标签数量" width="100" align="center">
+            <template #default="{ row }">
+              <el-button
+                v-if="canTagView"
+                type="primary"
+                link
+                :disabled="Boolean(categoryActionId)"
+                @click="openTagDrawer(row as TagCategoryListItem)"
+              >
+                {{ row.tagCount }}
+              </el-button>
+              <span v-else>{{ row.tagCount }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="sort" label="排序" width="80" align="center" />
+          <el-table-column label="状态" width="110" align="center">
+            <template #default="{ row }">
+              <el-switch
+                v-if="canCategoryStatus"
+                :model-value="row.status === 1"
+                :loading="categoryActionId === row.id"
+                :disabled="Boolean(categoryActionId) && categoryActionId !== row.id"
+                inline-prompt
+                active-text="启"
+                inactive-text="停"
+                @change="value => handleStatusChange(row as TagCategoryListItem, Boolean(value))"
+              />
+              <el-tag v-else :type="row.status === 1 ? 'success' : 'info'">
+                {{ row.statusName || (row.status === 1 ? '启用' : '停用') }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="updateTime" label="更新时间" min-width="170">
+            <template #default="{ row }">{{ formatTime(row.updateTime) }}</template>
+          </el-table-column>
+          <el-table-column
+            v-if="hasAnyCategoryRowAction"
+            label="操作"
+            fixed="right"
+            width="330"
+            align="center"
+          >
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canCategoryView"
+                :show-edit="canCategoryEdit"
+                :show-delete="canCategoryDelete"
+                :disabled="Boolean(categoryActionId)"
+                @view="openCategoryDialog('view', row as TagCategoryListItem)"
+                @edit="openCategoryDialog('edit', row as TagCategoryListItem)"
+                @delete="handleDelete(row as TagCategoryListItem)"
+              >
+                <template v-if="canTagView" #more>
+                  <el-dropdown-item
+                    :icon="CollectionTag"
+                    :disabled="Boolean(categoryActionId)"
+                    @click="openTagDrawer(row as TagCategoryListItem)"
+                  >
+                    管理标签
+                  </el-dropdown-item>
+                </template>
+              </row-actions>
+            </template>
+          </el-table-column>
 
-    <tag-category-dialog
-      v-model="categoryDialogVisible"
-      :mode="categoryDialogMode"
-      :category-id="categoryDialogId"
-      :can-create="canCategoryAdd"
-      :can-edit="canCategoryEdit"
-      @saved="handleCategorySaved"
-    />
+          <template #empty>
+            <div class="tag-category-empty">
+              <el-empty description="暂无标签分类" :image-size="88" />
+              <el-button
+                v-if="canCategoryAdd"
+                type="primary"
+                :icon="Plus"
+                @click="openCategoryDialog('add')"
+              >
+                新增分类
+              </el-button>
+            </div>
+          </template>
+        </el-table>
 
-    <tag-tree-drawer
-      v-model="tagDrawerVisible"
-      :category="selectedCategory"
-      :can-view="canTagView"
-      :can-create="canTagAdd"
-      :can-edit="canTagEdit"
-      :can-delete="canTagDelete"
-      :can-status="canTagStatus"
-      @changed="refreshCategories"
-    />
-  </div>
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <tag-category-dialog
+        v-model="categoryDialogVisible"
+        :mode="categoryDialogMode"
+        :category-id="categoryDialogId"
+        :can-create="canCategoryAdd"
+        :can-edit="canCategoryEdit"
+        @saved="handleCategorySaved"
+      />
+
+      <tag-tree-drawer
+        v-model="tagDrawerVisible"
+        :category="selectedCategory"
+        :can-view="canTagView"
+        :can-create="canTagAdd"
+        :can-edit="canTagEdit"
+        :can-delete="canTagDelete"
+        :can-status="canTagStatus"
+        @changed="refreshCategories"
+      />
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -383,7 +390,7 @@ onMounted(() => void load());
 }
 
 .tag-category-empty {
-  padding: 16px 0 24px;
+  padding: var(--saber-space-4) 0 var(--saber-space-6);
   text-align: center;
 }
 

@@ -1,6 +1,7 @@
 <template>
   <page-container
     class="log-page"
+    layout="workspace"
     title="监控日志"
     description="查询服务运行日志并查看请求上下文。"
     :show-breadcrumb="false"
