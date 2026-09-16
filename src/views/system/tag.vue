@@ -122,21 +122,15 @@
                 :show-view="canCategoryView"
                 :show-edit="canCategoryEdit"
                 :show-delete="canCategoryDelete"
+                :actions="
+                  canTagView ? [{ key: 'manage-tags', label: '管理标签', icon: CollectionTag }] : []
+                "
                 :disabled="Boolean(categoryActionId)"
                 @view="openCategoryDialog('view', row as TagCategoryListItem)"
                 @edit="openCategoryDialog('edit', row as TagCategoryListItem)"
                 @delete="handleDelete(row as TagCategoryListItem)"
-              >
-                <template v-if="canTagView" #more>
-                  <el-dropdown-item
-                    :icon="CollectionTag"
-                    :disabled="Boolean(categoryActionId)"
-                    @click="openTagDrawer(row as TagCategoryListItem)"
-                  >
-                    管理标签
-                  </el-dropdown-item>
-                </template>
-              </row-actions>
+                @action="openTagDrawer(row as TagCategoryListItem)"
+              />
             </template>
           </el-table-column>
 

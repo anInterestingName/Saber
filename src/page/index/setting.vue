@@ -118,6 +118,18 @@
       <el-divider />
 
       <section class="app-setting__section">
+        <h3 class="app-setting__title">内容区域宽度</h3>
+        <el-segmented
+          :model-value="setting.contentWidth"
+          :options="contentWidthOptions"
+          block
+          @change="setContentWidth"
+        />
+      </section>
+
+      <el-divider />
+
+      <section class="app-setting__section">
         <h3 class="app-setting__title">界面显示</h3>
         <div class="app-setting__switches">
           <div v-for="item in displayOptions" :key="item.key" class="app-setting__switch-row">
@@ -160,7 +172,7 @@ import { ElMessage } from 'element-plus';
 import DetailDrawer from '@/components/detail-drawer/main.vue';
 import { useCommonStore } from '@/store/common';
 import { applyTheme, primaryColorOptions } from '@/utils/theme';
-import type { LayoutMode, ThemeMode } from '@/types/setting';
+import type { ContentWidthMode, LayoutMode, ThemeMode } from '@/types/setting';
 
 type BooleanSettingKey = 'tag' | 'collapse' | 'search' | 'fullscreen' | 'lock' | 'debug';
 
@@ -197,6 +209,11 @@ const layoutOptions: Array<{ label: string; value: LayoutMode }> = [
   { label: '混合', value: 'mix' },
 ];
 
+const contentWidthOptions: Array<{ label: string; value: ContentWidthMode }> = [
+  { label: '流式', value: 'fluid' },
+  { label: '定宽', value: 'fixed' },
+];
+
 const displayOptions: SettingOption[] = [
   { label: '导航标签', key: 'tag' },
   { label: '菜单折叠', key: 'collapse' },
@@ -220,6 +237,11 @@ const setPrimaryColor = (colorPrimary: string) => {
 
 const setLayout = (layout: LayoutMode) => {
   commonStore.setLayout(layout);
+};
+
+const setContentWidth = (contentWidth: string | number | boolean) => {
+  if (contentWidth !== 'fluid' && contentWidth !== 'fixed') return;
+  commonStore.setSetting({ contentWidth });
 };
 
 const updateSetting = (key: BooleanSettingKey, value: string | number | boolean) => {

@@ -71,16 +71,12 @@
                 :show-view="canView"
                 :show-edit="canEdit"
                 :show-delete="canDelete"
+                :actions="isAdmin ? [{ key: 'add-child', label: '新增子项', icon: Plus }] : []"
                 @view="openDetail(row as DictEntity, 'view')"
                 @edit="openDetail(row as DictEntity, 'edit')"
                 @delete="handleRowDelete(row as DictEntity)"
-              >
-                <template v-if="isAdmin" #more>
-                  <el-dropdown-item :icon="Plus" @click="openChild(row as DictEntity)">
-                    新增子项
-                  </el-dropdown-item>
-                </template>
-              </row-actions>
+                @action="openChild(row as DictEntity)"
+              />
             </template>
           </el-table-column>
         </el-table>

@@ -125,11 +125,6 @@ const hasHeader = computed(
   min-width: 0;
 }
 
-.page-container--content {
-  max-width: var(--saber-content-max-width, 1280px);
-  margin-inline: auto;
-}
-
 .page-container--immersive {
   min-height: 100%;
 }

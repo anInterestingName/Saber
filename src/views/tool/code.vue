@@ -119,21 +119,24 @@
                 :show-view="canView"
                 :show-edit="canEdit"
                 :show-delete="canDelete"
+                :actions="
+                  canEdit
+                    ? [
+                        {
+                          key: 'copy',
+                          label: '复制',
+                          icon: CopyDocument,
+                          disabled: generating || (copyingId !== '' && copyingId !== row.id),
+                        },
+                      ]
+                    : []
+                "
                 :disabled="generating || copyingId !== ''"
                 @view="openDetail(row as CodeEntity, 'view')"
                 @edit="openDetail(row as CodeEntity, 'edit')"
                 @delete="handleRowDelete(row as CodeEntity)"
-              >
-                <template v-if="canEdit" #more>
-                  <el-dropdown-item
-                    :icon="CopyDocument"
-                    :disabled="generating || (copyingId !== '' && copyingId !== row.id)"
-                    @click="handleCopy(row as CodeEntity)"
-                  >
-                    复制
-                  </el-dropdown-item>
-                </template>
-              </row-actions>
+                @action="handleCopy(row as CodeEntity)"
+              />
             </template>
           </el-table-column>
         </el-table>

@@ -6,15 +6,15 @@
 | --- | --- |
 | 功能/模块 | 样式审计、主题 Token、主布局、页面容器、查询列表、弹窗抽屉、活动业务页面与公共页面 |
 | 设计编号 | DESIGN-REQ-2026-012 |
-| 文档版本 | 0.4 |
-| 关联需求 | [REQ-2026-012](../requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) |
+| 文档版本 | 0.6 |
+| 关联需求 | [REQ-2026-012 0.6](../requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) |
 | 关联前置 | [REQ-2026-011](../requirements/REQ-2026-011-pro-style-ui-record-panels.md) |
-| 关联测试 | [TEST-REQ-2026-012 0.2](../test/TEST-REQ-2026-012-ui-normalization-spacious-visual-refresh.md) |
+| 关联测试 | [TEST-REQ-2026-012 0.3](../test/TEST-REQ-2026-012-ui-normalization-spacious-visual-refresh.md) |
 | 目标版本/迭代 | Saber 5.x / 界面基础治理与视觉升级单阶段 |
 | 文档状态 | 开发中 |
 | 设计负责人 | Codex |
 | 评审人 | 产品/视觉、前端、测试待指定 |
-| 最后更新日期 | 2026-09-14 |
+| 最后更新日期 | 2026-09-16 |
 
 ## 2. 设计摘要与范围
 
@@ -27,12 +27,13 @@
 
 基础治理阶段保持主要视觉和业务行为不变。新增 `style-audit` 工程检查，通过 Vue SFC 解析和 SCSS/TypeScript
 文本规则识别主题硬编码、直接弹层、高风险 Element Plus 内部覆盖和未分类页面；使用可审查的存量基线与例外清单
-阻止新增风险，并随着迁移逐步归零。视觉阶段不增加永久“经典/年轻”设置，不改变 `AppSetting` 持久化结构，
-因此不会产生双模板和长期双主题维护成本。
+阻止新增风险，并随着迁移逐步归零。视觉阶段不增加永久“经典/年轻”设置，但根据用户评审结论在现有
+`AppSetting` 中增加单一的内容区域宽度偏好，不产生双模板或长期双主题维护成本。
 
 目标视觉采用白色主工作区、极浅中性导航区域、无阴影普通表面、40px 默认控件、48px 左右表格行、分级圆角和
-更充分页面留白。页面按 `workspace`、`content`、`immersive` 三类显式声明布局：后台表格继续使用可用满宽，
-内容型页面限制为 1280px，专项编辑器保留满宽能力。业务请求、权限、租户、认证、动态路由和数据模型不变。
+更充分页面留白。页面按 `workspace`、`content`、`immersive` 三类显式声明语义布局；所有路由主内容的宽度由
+`contentWidth` 全局设置统一控制，默认流式，定宽模式沿用 1280px 最大宽度。业务请求、权限、租户、认证、动态路由
+和数据模型不变。
 
 ### 2.2 关键决策
 
@@ -40,12 +41,12 @@
 | --- | --- | --- | --- |
 | DEC-001 | 基础治理和视觉升级属于一个需求，但以治理门作为强制技术前置 | 用户要求统一阶段实施，同时必须先消除硬编码风险 | 最终统一验收，实施提交仍按可回滚批次拆分 |
 | DEC-002 | 保留 REQ-2026-011 已实现且不冲突的导航、弹层状态和公共组件行为 | 避免重做已验证能力 | 本设计只覆盖其紧凑密度与缺少硬编码门禁的部分 |
-| DEC-003 | 不在 `AppSetting` 增加视觉风格字段 | 不长期维护两套页面视觉和持久化兼容 | 治理完成后新视觉成为统一默认值 |
+| DEC-003 | 在 `AppSetting` 增加 `contentWidth: 'fluid' \| 'fixed'`，默认 `fluid` | 用户需要在统一入口控制所有页面内容宽度；该字段只改变容器宽度，不形成两套页面模板 | 沿用现有本地持久化，旧设置缺失或非法时归一化为 `fluid` |
 | DEC-004 | 样式审计使用现有 `@vue/compiler-sfc`、Node.js 和正则/结构规则，不新增 Stylelint | 当前依赖足以解析 Vue SFC，新增完整 lint 工具成本较高 | 增加两个脚本文件和一个基线文件，不修改锁文件 |
 | DEC-005 | 审计采用“存量基线 + 评审例外 + 新增阻断”模型 | 当前候选项较多，直接一次性严格会阻断迁移 | 基线只能减少；合法例外必须包含类别和原因 |
 | DEC-006 | Token 继续集中在 `src/styles/theme/tokens.scss`，按语义分组，不拆出并行主题框架 | 现有导入链稳定且调用方已使用 CSS 变量 | 降低跨文件迁移和加载顺序风险 |
 | DEC-007 | 默认 Element Plus 控件高度为 40px，small 为 32px，large 为 48px | 用户明确倾向松散风格，同时保留工作区紧凑档 | 需回归输入、按钮、选择器、分页和工具栏布局 |
-| DEC-008 | 内容型页面最大宽度固定为 1280px，工作区和沉浸型不设统一最大宽度 | 1280px 可兼顾内容阅读和常见业务表格 | 不开放任意页面像素宽度属性 |
+| DEC-008 | 页面类型与内容宽度解耦；全部路由主内容默认流式，用户选择定宽后统一限制为 1280px | 首页和提示词管理在超宽视口下暴露出按页面类型强制定宽的问题，全局偏好更符合用户预期 | 最大宽度只在主内容宿主实现，不开放页面级任意像素宽度 |
 | DEC-009 | 新增通用 `AppDialog`；`FormDialog` 包装它提供 CRUD 标题和默认 footer | 现有直接 Dialog 场景不都属于 CRUD，继续扩展 FormDialog 会污染语义 | 最终只有 `AppDialog` 直接持有 `el-dialog` |
 | DEC-010 | `DetailDrawer` 继续作为统一通用抽屉，不新增平行 `AppDrawer` | 当前 API 已具备通用 title、size、状态和 footer 插槽 | 专项抽屉迁移到 DetailDrawer，避免同义组件 |
 | DEC-011 | Dialog 与 Drawer 共用 `useOverlayCloseGuard`，但保持不同容器组件 | 关闭保护逻辑重复，容器布局和方向语义不同 | 复用状态逻辑，不用复杂 variant 合并 DOM |
@@ -62,10 +63,10 @@
 | --- | --- | --- |
 | 工程脚本 | 新增样式审计、基线比较、例外配置和 `package.json` 命令 | 新增 lint 框架、CI 平台改造 |
 | 主题基础 | 扩展 Saber/Element Plus 语义 Token，修正动态主色调色板 | 新增用户主题服务和后端配置 |
-| 主布局 | 页面画布、导航表面、选中态、标签页和统一间距 | 三种导航的路由、滚动、折叠和账户行为 |
+| 主布局 | 页面画布、导航表面、选中态、标签页、统一间距和全局内容宽度宿主 | 三种导航的路由、滚动、折叠和账户行为 |
 | 公共组件 | PageContainer、BasicContainer、SearchPanel、ListPanel、AppDialog、FormDialog、DetailDrawer、Form/Detail Section | 配置驱动 CRUD、字段引擎和业务 API |
 | 业务页面 | 全部活动页面的布局分类、标准容器迁移和专项例外收敛 | 字段、校验、请求参数、权限和业务流程变更 |
-| 公共页面 | 登录、锁屏、错误页、欢迎页、个人中心和界面设置的主题归一化 | 登录方式、加密、上传协议和路由守卫 |
+| 公共页面 | 登录、锁屏、错误页、欢迎页、个人中心和界面设置的主题归一化；界面设置增加内容宽度选择 | 登录方式、加密、上传协议和路由守卫 |
 | 后端/API | 无 | Controller、Service、数据模型和接口契约 |
 | 数据库 | 无 | 表、字段、索引和数据迁移 |
 | 部署 | 增加本地工程验证命令 | 环境变量、镜像、Nginx 和部署拓扑 |
@@ -99,11 +100,14 @@ flowchart TD
     Findings --> Compare
     Compare --> Report[控制台报告与退出码]
 
-    ThemeSetting[现有 AppSetting: theme/colorPrimary/layout] --> ApplyTheme[applyTheme]
+    InterfaceSetting[AppSetting: theme/colorPrimary/layout/contentWidth] --> CommonStore[commonStore]
+    CommonStore --> ApplyTheme[applyTheme]
+    CommonStore --> ContentHost[主内容宽度宿主]
     ApplyTheme --> ElTokens[Element Plus CSS Variables]
     ApplyTheme --> SaberTokens[Saber Semantic Tokens]
     SaberTokens --> Shell[主布局/导航/标签]
-    SaberTokens --> Page[PageContainer]
+    ContentHost --> Page[PageContainer/其他路由根节点]
+    SaberTokens --> Page
     SaberTokens --> Panels[SearchPanel/ListPanel/BasicContainer]
     SaberTokens --> AppDialog[AppDialog]
     AppDialog --> FormDialog[FormDialog]
@@ -125,7 +129,11 @@ flowchart TD
 | `scripts/style-audit-baseline.json` | 保存治理开始时的存量风险签名和数量 | 显式生成命令 | 新增风险比较基线 |
 | `src/styles/theme/tokens.scss` | 定义明暗主题和布局语义 Token，映射 Element Plus 变量 | CSS 主题上下文 | 全局 CSS 变量 |
 | `src/utils/theme.ts` | 根据主题和主色生成 Element Plus/Saber 动态色阶 | `AppSetting.theme/colorPrimary` | 根元素类名和动态颜色变量 |
-| `PageContainer` | 显式页面类型、标题、描述、操作、Tab 和内容宽度 | layout、标题与 slots | 稳定页级结构 |
+| `src/types/setting.ts`、`src/config/website.ts` | 声明内容宽度模式并提供默认流式值 | 默认配置 | 完整 `AppSetting` |
+| `src/store/common.ts` | 归一化、更新和持久化 `contentWidth` | 默认值、旧本地设置、用户选择 | `fluid` 或 `fixed` |
+| `src/page/index/index.vue`、`src/styles/common.scss` | 在路由主内容宿主统一应用流式或定宽模式 | `commonStore.setting.contentWidth` | 全部路由页面一致的内容宽度 |
+| `src/page/index/setting.vue` | 提供流式/定宽分段选择并复用恢复默认能力 | 用户操作 | 更新 `commonStore.setting` |
+| `PageContainer` | 显式页面类型、标题、描述、操作和 Tab | layout、标题与 slots | 稳定页级结构，不持有全局宽度偏好 |
 | `BasicContainer` | 兼容独立 Surface，不承担页面骨架 | variant、padding、block | 语义表面 |
 | `SearchPanel` | 查询表单、自适应折叠和松散搜索区域 | model、loading、响应式列 | search、reset、expandChange |
 | `ListPanel` | 列表标题、工具栏、表格区域和 footer | title、compact、slots | 稳定列表 Section |
@@ -438,8 +446,8 @@ export type PageLayout = 'workspace' | 'content' | 'immersive';
 <page-container layout="immersive" title="代码生成">...</page-container>
 ```
 
-`layout` 不写入路由 meta 和 Pinia，不持久化，不由后端菜单控制。页面类型只决定内容宽度、页头尺寸、Section 间距和
-响应式密度，不影响路由、权限或请求。
+`layout` 不写入路由 meta 和 Pinia，不持久化，不由后端菜单控制。页面类型只决定页头尺寸、Section 间距和响应式密度，
+不再决定内容最大宽度，也不影响路由、权限或请求。内容宽度由 `AppSetting.contentWidth` 在主内容宿主统一控制。
 
 初始分类：
 
@@ -523,7 +531,7 @@ export type PageLayout = 'workspace' | 'content' | 'immersive';
 | `--saber-page-gutter-x-mobile` | `16px` | 767px 及以下 |
 | `--saber-section-gap` | `32px` | 默认页面 Section 间距 |
 | `--saber-form-row-gap` | `24px` | 表单项纵向间距 |
-| `--saber-content-max-width` | `1280px` | 内容型页面最大宽度 |
+| `--saber-content-max-width` | `1280px` | 用户选择定宽模式时的全局主内容最大宽度 |
 | `--saber-control-height` | `40px` | 默认控件 |
 | `--saber-control-height-small` | `32px` | 紧凑工具和低频辅助操作 |
 | `--saber-control-height-large` | `48px` | 登录主操作和少量强调控件 |
@@ -595,11 +603,29 @@ const paletteTarget = setting.theme === 'dark' ? '#1b1f26' : '#ffffff';
 - `dark-2` 继续向黑色混合。
 - 增加 `--saber-accent-soft`、`--saber-accent-hover`、`--saber-focus-ring-color` 动态变量，供菜单、页签、
   选择项和焦点环使用。
-- 不改变 `AppSetting`、`commonStore` 和本地存储结构；已有用户打开新版后直接获得新的统一视觉。
+- `AppSetting` 增加 `contentWidth`；`commonStore.createSetting()` 对旧设置和非法值回落为 `fluid`，无需单独迁移脚本。
 
 主色切换只修改动态颜色变量，不重写表面、间距、圆角和布局 Token。
 
 ### 7.6 PageContainer 设计
+
+全局内容宽度契约：
+
+```ts
+export type ContentWidthMode = 'fluid' | 'fixed';
+
+interface AppSetting {
+  contentWidth: ContentWidthMode;
+}
+```
+
+- `website.setting.contentWidth` 固定默认为 `fluid`。
+- 界面设置使用“流式/定宽”分段控件；选择后通过 `commonStore.setSetting()` 立即更新并写入现有 `setting` 本地存储。
+- `src/page/index/index.vue` 在 `#saber-view` 内提供唯一 `.saber-view__content` 宿主；流式宽度为 100%，定宽增加
+  `max-width: var(--saber-content-max-width)` 和 `margin-inline: auto`。
+- 宽度宿主包裹 `router-view`，因此覆盖 PageContainer 页面、欢迎页、动态菜单页和 iframe 等路由根节点。
+- 设置只控制主内容区域；侧栏、顶栏、标签栏、搜索浮层、Dialog 和 Drawer 继续使用各自尺寸规则。
+- 375px 等窄视口下，两种模式都受可用宽度约束，不得产生页面根节点横向溢出。
 
 组件契约：
 
@@ -620,12 +646,12 @@ interface PageContainerProps {
 
 结构规则：
 
-- `#saber-view` 继续作为滚动容器，负责统一页面 gutter；不再由每个页面自己复制外边距。
+- `#saber-view` 继续作为滚动容器，负责统一页面 gutter；其内部宽度宿主负责用户级流式/定宽选择，不再由每个页面复制外边距或最大宽度。
 - PageContainer 页头不表现为独立卡片，使用透明/画布背景和下方间距；是否分隔由内容层级决定，不默认绘制整宽边框。
-- `workspace`：宽度 100%，标题 20px，数据区允许使用可用满宽。
-- `content`：容器 `max-width: var(--saber-content-max-width)`、`margin-inline: auto`，标题 24px，描述最大 800px。
-- `immersive`：宽度 100%，最小高度可继承视口；允许页面通过 slots 建立编辑画布，但仍使用统一页头和主题。
-- 页头与正文属于同一个最大宽度容器，避免标题和内容左右边界不一致。
+- `workspace`：标题 20px，数据区按全局宽度宿主使用可用空间。
+- `content`：标题 24px，描述最大 960px，通过分组和纵向留白保持阅读体验，不再设置局部最大宽度。
+- `immersive`：最小高度可继承视口；允许页面通过 slots 建立编辑画布，但仍服从用户选择的主内容宽度和统一主题。
+- 页头与正文属于同一个 PageContainer，确保在两种全局宽度模式下左右边界一致。
 - actions 在桌面右对齐；1024px 下允许换行；767px 下位于标题下方并保持主要操作在前。
 - breadcrumb、title、status、actions、tabs 任一缺失时不产生空节点和额外高度。
 
@@ -696,7 +722,7 @@ ListPanel 直接渲染 `<section class="list-panel">`，默认透明/画布背�
 - 表格外框和顶部伪边界隐藏，行分隔使用 `--saber-border`，表头使用 muted surface。
 - hover/selected 使用动态弱主色或 muted surface；表格行不强制圆角，以免固定列和虚拟滚动出现断裂。
 - 内容区使用 `overflow-x: auto` 作为通用兜底；Element Plus Table 继续拥有实际列滚动，页面根节点不得因宽表产生横向滚动。
-- 关键操作列固定在右侧；行内高频操作最多保留查看、编辑、删除等 2 至 3 项，第四项及以后通过 RowActions 的 `more` 槽进入下拉菜单。
+- 关键操作列固定在右侧；页面先按按钮权限和行级状态生成 RowActions `actions`，组件将标准操作与自定义操作合并计数，前三项直接展示，第四项及以后进入下拉菜单。权限隐藏按钮后必须按实际可见数量重新计算，不得保留空的“更多”入口。
 - 固定操作列内容不得依赖溢出显示；RowActions 的 `scrollWidth` 不应大于 `clientWidth`。移动端允许横向滑动数据列，但固定操作和“更多”入口必须可达。
 - 移动端工具栏主操作优先，低频 tools 换到下一行；表格最小宽度由具体页面按字段决定。
 
@@ -936,7 +962,7 @@ DetailDrawer 是唯一允许直接使用 `el-drawer` 的组件。保持现有 AP
 | G3 标准页面 | system、monitor、desk、report、datasource | 标准页面使用 PageContainer 和公共弹层 |
 | G4 复杂页面 | authority、region、user/topmenu 专项弹层 | 专项弹层完成迁移或登记 |
 | G5 内容与公共页 | asset、user/info、welcome、login、error、setting、util | 全部路由页分类，治理门通过 |
-| V1 视觉原型 | param、role、prompt | 40px/1280px/圆角/表面基线评审通过 |
+| V1 视觉原型 | param、role、prompt | 40px/内容宽度设置/圆角/表面基线评审通过 |
 | V2 全量视觉 | 工作区、内容型和沉浸型全部页面 | 主题、布局和视口矩阵通过 |
 | V3 收尾 | 删除陈旧基线、旧兼容类和无调用样式 | style-audit strict + fail-on-stale 通过 |
 
@@ -945,12 +971,13 @@ V1 通过后再调整目标值，确保视觉变化集中、diff 可审查。
 
 ### 7.13 页面状态、请求与缓存
 
-本需求不新增全局 UI store。页面类型是静态 props，主题仍由 `commonStore.setting` 管理。业务状态所有权保持：
+本需求复用现有 `commonStore.setting` 增加内容宽度偏好，不新增平行全局 Store。页面类型仍是静态 props。状态所有权为：
 
 | 状态 | 所有者 | 本需求处理 |
 | --- | --- | --- |
-| theme/colorPrimary/layout | `useCommonStore` | 保持字段与持久化格式，调整 applyTheme 输出 |
-| 页面 layout | 各路由页 PageContainer prop | 不持久化、不动态切换 |
+| theme/colorPrimary/layout/contentWidth | `useCommonStore` | 沿用现有 `setting` 本地存储；内容宽度旧值缺失或非法时回落流式 |
+| 页面 layout | 各路由页 PageContainer prop | 不持久化、不动态切换，只表达页面语义 |
+| 主内容宽度 | `src/page/index/index.vue` | 根据 `contentWidth` 在统一宿主动态切换，所有路由页面共享 |
 | 查询/分页/loading | `usePagedList` 或现有页面 | 不修改请求流程 |
 | 树列表 | `useTreeList` | 不修改展开和错误恢复 |
 | 详情/选项 | `useRemoteDetail/useRemoteOptions` | 弹层迁移继续复用 |
@@ -968,7 +995,7 @@ V1 通过后再调整目标值，确保视觉变化集中、diff 可审查。
 | 新表/改表/索引 | 否 | 纯前端基础和视觉改造 | 数据库设计不涉及 |
 | 数据迁移/回填 | 否 | 不改变业务数据和浏览器数据结构 | 不适用 |
 | API | 否 | 沿用全部现有接口 | 本文第 6 节 |
-| AppSetting | 否 | 不新增风格、密度或内容宽度字段 | 本文第 7.5 节 |
+| AppSetting | 是 | 增加 `contentWidth` 字段，默认 `fluid`，沿用浏览器本地持久化并兼容旧值 | 本文第 7.6 节 |
 | package scripts | 是 | 新增 `style-audit` 命令 | 本文第 7.2.5 节 |
 | 环境变量 | 否 | 不新增 Vite 或部署环境变量 | 不适用 |
 | 依赖/锁文件 | 否 | 复用现有 `@vue/compiler-sfc` 和 Node 标准库 | 不适用 |
@@ -1002,7 +1029,7 @@ V1 通过后再调整目标值，确保视觉变化集中、diff 可审查。
 | 新增硬编码阻断 | 工程脚本 | 新增颜色、圆角、阴影、直接弹层使退出码为 1 | AC-003、AC-004 |
 | Token 来源 | 静态/主题 | 主框架、公共组件和公共页可追溯到语义变量 | AC-005、AC-006、AC-008 |
 | 治理无主动改版 | 对照/Network | 代表页主要视觉、请求和业务行为保持 | AC-007、AC-021 |
-| 页面类型 | 静态/浏览器 | 路由页显式分类，workspace/content 宽度符合设计 | AC-009 至 AC-012 |
+| 页面类型与宽度 | 静态/浏览器 | 路由页显式分类；默认流式、定宽 1280px，并由统一宿主覆盖全部页面 | AC-009 至 AC-012、AC-037 |
 | 公共弹层 | 静态/浏览器 | 只有 AppDialog/DetailDrawer 直接持有 EP 弹层 | AC-013、AC-014、AC-017 |
 | 弹层滚动和关闭 | 浏览器 | header/footer 可达，dirty/submitting 行为一致 | AC-015、AC-016 |
 | 页面级样式治理 | 静态 | 无未登记主题硬编码，内部覆盖具备根类作用域 | AC-018 至 AC-020 |
@@ -1012,7 +1039,7 @@ V1 通过后再调整目标值，确保视觉变化集中、diff 可审查。
 | 导航和页签 | 视觉/键盘 | 圆角选中、状态可区分、焦点环不裁切、原行为不变 | AC-030 至 AC-033 |
 | 参数管理代表页 | 浏览器/Network | 查询、分页、编辑和请求次数正确 | AC-034 |
 | 角色管理代表页 | 浏览器/Network | 树、Tab、授权和弹层在松散布局下可用 | AC-035 |
-| 提示词代表页 | 浏览器/Network | 列表、编辑、预览、版本符合内容型产品体验 | AC-036、AC-037 |
+| 提示词代表页 | 浏览器/Network | 默认流式下列表利用可用宽度，编辑、预览、版本保持内容型产品体验 | AC-036 |
 | 主题矩阵 | 视觉 | 浅色、深色、非默认主色无固定错误色和不可读状态 | AC-038 |
 | 视口矩阵 | 视觉/交互 | 1440、1024、375px 无重叠且主要操作可达 | AC-039 |
 | 禁用依赖 | 静态/依赖 | 无 Avue、Ant Design Vue 和第二套 UI 运行时 | AC-040 |
@@ -1048,11 +1075,11 @@ git diff --check
 2026-09-14 已完成 G0-G5 与 V1-V3 实现，当前结果如下：
 
 | 批次 | 已完成内容 | 当前结果 |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | G0 风险基线 | 新增 `style-audit.mjs`、规则配置、页面分类登记和初始基线 | 扫描覆盖 12 类规则；基线现为 0 个未登记项；报告模式、默认新增门禁和 `--fail-on-stale` 均可执行 |
 | G1 基础 Token | 增加 canvas/chrome、尺寸、间距、圆角、动效和 Element Plus 映射；补齐主色 RGB、深色混合目标和弱主色变量 | 已启用 40px 控件、44px 菜单、48-52px 表格行、24/32px gutter 和分级圆角目标 |
 | G2 公共组件 | 增加 `PageLayout`、`AppDialog`、`useOverlayCloseGuard`；FormDialog 组合 AppDialog；DetailDrawer 复用关闭保护；PageContainer、BasicContainer、SearchPanel、ListPanel 和 Section 建立语义契约 | 公共组件已承载全部标准弹层和活动路由页骨架 |
-| G3-G5 页面治理 | 全部活动路由页增加 `PageContainer` 显式分类；角色、用户、区域、顶部菜单、权限范围、设置和提示词专项弹层迁移 | `rg -n "<el-dialog|<el-drawer" src` 仅命中 AppDialog 和 DetailDrawer |
+| G3-G5 页面治理 | 全部活动路由页增加 `PageContainer` 显式分类；角色、用户、区域、顶部菜单、权限范围、设置和提示词专项弹层迁移 | `rg -n "<el-dialog | <el-drawer" src` 仅命中 AppDialog 和 DetailDrawer |
 | V1-V3 视觉收尾 | 切换画布、chrome、控件、表格、导航、标签和浮层 Token，清理旧列表兼容类，登记第三方适配例外 | 登录、参数、角色、提示词代表页面已在 1440/1024/375 中完成部分视觉检查；完整主题/导航/键盘矩阵记录在测试文档 |
 
 已执行并取得结果：`pnpm run style-audit -- --fail-on-stale`、`pnpm run type-check`、
@@ -1103,7 +1130,7 @@ git diff --check
 | --- | --- | --- | --- | --- |
 | ITEM-001 | 风险 | 基线重写命令可能被用于静默接受新问题 | 前端负责人 | 不提供普通 package script；基线 diff 必须人工评审 |
 | ITEM-002 | 风险 | 40px 全局控件可能使复杂工具栏溢出 | 前端/产品 | 默认 40px，明确工具区使用 small 32px，代表页验证 |
-| ITEM-003 | 风险 | 1280px 内容宽度可能限制提示词列表字段 | 前端/产品 | 列表支持横向滚动；原型不通过时调整页面类型而非任意宽度 |
+| ITEM-003 | 风险 | 全局定宽可能降低复杂工作区和沉浸编辑器的空间利用率 | 前端/产品 | 默认流式；定宽仅由用户主动选择，并可随时恢复流式 |
 | ITEM-004 | 风险 | 删除 BasicContainer 卡片包裹可能改变遗留欢迎/示例页面 padding | 前端负责人 | 先迁移 PageContainer，再逐页对照 padding |
 | ITEM-005 | 风险 | AppDialog 抽象可能形成过多 props | 前端负责人 | 只承载壳层状态，业务 footer 和内容使用 slots |
 | ITEM-006 | 风险 | 专项 Prompt/授权弹层存在复杂局部样式 | 模块负责人 | 保留专项内容 class，公共 header/body/footer 归一化 |
@@ -1117,10 +1144,10 @@ git diff --check
 | 领域 | 结论 | 评审人 | 日期 | 备注 |
 | --- | --- | --- | --- | --- |
 | 后端/API | 不适用 | 待指定 | 待评审 | 不改变接口、认证、权限和数据 |
-| 前端架构 | 已实现，待评审 | Codex | 2026-09-14 | audit、AppDialog、PageContainer、页面分类和迁移顺序已落地 |
-| 产品/视觉 | 已实现，待视觉复核 | Codex | 2026-09-14 | 40px 控件、1280px 内容宽度和目标 Token 已在代表页面检查 |
+| 前端架构 | 已实现，待评审 | Codex | 2026-09-16 | audit、AppDialog、PageContainer、页面分类和全局内容宽度宿主已落地 |
+| 产品/视觉 | 方案已确认，待回归 | 用户/Codex | 2026-09-16 | 内容宽度改为全局流式/定宽选择并默认流式；多视口浏览器检查待执行 |
 | 数据库/发布 | 不适用 | 待指定 | 待评审 | 无数据库变化，视觉可独立回滚 |
-| 测试 | 部分执行 | Codex | 2026-09-14 | 已创建测试文档并执行工程/代表页面检查，完整矩阵待目标环境 |
+| 测试 | 部分执行，有失败项 | Codex | 2026-09-16 | 类型检查和生产构建通过；宽度浏览器矩阵待执行；严格样式审计被既有登录页间距命中阻断 |
 
 ### 11.3 变更记录
 
@@ -1130,3 +1157,5 @@ git diff --check
 | 2026-09-14 | 0.2 | 记录 G0-G2 首批实现：样式审计、479 项基线、页面分类、语义 Token、动态主色色阶、公共容器契约、AppDialog 和统一关闭保护已落地；明确 G3-G5 与 V1-V3 尚未完成及未执行业务验收 | 用户要求开始实现最新需求 | 工程门禁、主题基础、公共组件、代表页和验证记录 | Codex |
 | 2026-09-14 | 0.3 | 完成 G3-G5、V1-V3 和代表页面浏览器检查；基线清理为 0 个未登记项，正式测试文档已创建并记录 35 通过、6 未执行、1 阻塞 | 用户要求继续执行后续计划 | 全部活动页面、主题、导航、公共组件、弹层和测试归档 | Codex |
 | 2026-09-14 | 0.4 | 增加列表溢出治理：ListPanel 横向滚动兜底、固定操作列规则和 RowActions `more` 槽；多操作页面将第四项操作收进下拉菜单并完成宽屏/窄屏回归 | 用户反馈菜单管理固定操作列裁剪“新增子项” | ListPanel、RowActions、树表、多操作列表和测试证据 | Codex |
+| 2026-09-16 | 0.5 | 推翻内容型页面固定 1280px 的原宽度决策，新增 `AppSetting.contentWidth`，默认流式并提供全局定宽选择；宽度控制上移到主路由内容宿主，PageContainer 页面类型只保留语义排版职责 | 用户确认所有界面内容宽度应由界面设置统一管理，并由用户选择流式或定宽 | AppSetting、commonStore、界面设置、主布局、PageContainer、全部路由页面和测试矩阵 | Codex |
+| 2026-09-16 | 0.6 | RowActions 改为接收权限过滤后的自定义动作，并与查看、编辑、删除合并计算实际可见数量；前三项行内展示，仅将第四项及以后折叠 | 用户反馈低权限角色只有少量操作时仍出现“更多”折叠 | RowActions、提示词、菜单、部门、字典、顶部菜单、代码生成和标签管理 | Codex |

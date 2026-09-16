@@ -144,6 +144,9 @@
                   <div class="prompt-version-summary__identity">
                     <span>{{ selectedVersion.promptName }}</span>
                     <code>{{ selectedVersion.promptCode }}</code>
+                    <el-tag size="small" effect="plain">
+                      {{ selectedVersion.promptTypeName || selectedVersion.promptType }}
+                    </el-tag>
                   </div>
                   <p>{{ selectedVersion.changeNote || '无变更说明' }}</p>
                 </div>
@@ -296,6 +299,16 @@
                 <el-tab-pane label="技术信息" name="metadata">
                   <el-form label-position="top" class="prompt-version-readonly-form">
                     <el-row :gutter="16">
+                      <el-col :xs="24" :sm="12">
+                        <el-form-item label="提示词类型">
+                          <el-input
+                            :model-value="
+                              selectedVersion.promptTypeName || selectedVersion.promptType
+                            "
+                            readonly
+                          />
+                        </el-form-item>
+                      </el-col>
                       <el-col :xs="24" :sm="12">
                         <el-form-item label="发布来源">
                           <el-input
@@ -450,9 +463,14 @@ const variableTypeLabels: { [key in PromptVariableType]: string } = {
 const getSourceLabel = (sourceType: number) => {
   if (sourceType === 1) return '普通发布';
   if (sourceType === 2) return '回滚发布';
+  if (sourceType === 3) return '自动发布';
   return `未知来源 (${sourceType})`;
 };
-const getSourceType = (sourceType: number) => (sourceType === 2 ? 'warning' : 'primary');
+const getSourceType = (sourceType: number) => {
+  if (sourceType === 2) return 'warning';
+  if (sourceType === 3) return 'success';
+  return 'primary';
+};
 const getVariableTypeLabel = (type: PromptVariableType) => variableTypeLabels[type] ?? type;
 const formatTime = (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-');
 const formatListTime = (value?: string) => (value ? dayjs(value).format('MM-DD HH:mm') : '-');

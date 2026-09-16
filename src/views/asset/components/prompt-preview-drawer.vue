@@ -283,6 +283,7 @@ const runPreview = async () => {
   previewing.value = true;
   try {
     const response = await previewPrompt({
+      promptType: props.snapshot.promptType,
       fixedInstruction: props.snapshot.fixedInstruction,
       userTemplate: props.snapshot.userTemplate,
       variables: props.snapshot.variables.map(variable => ({ ...variable })),

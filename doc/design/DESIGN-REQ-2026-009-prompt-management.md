@@ -6,15 +6,15 @@
 | --- | --- |
 | 功能/模块 | 资产管理、提示词草稿、预览与版本发布 |
 | 设计编号 | DESIGN-REQ-2026-009 |
-| 文档版本 | 0.3 |
+| 文档版本 | 0.5 |
 | 关联需求 | [REQ-2026-009 Saber 提示词管理](../requirements/REQ-2026-009-prompt-management.md) |
 | 关联测试 | [TEST-REQ-2026-009 Saber 提示词管理](../test/TEST-REQ-2026-009-prompt-management.md) |
-| 后端基线 | SpringBlade `REQ-2026-001` 0.3、`DESIGN-REQ-2026-001` 0.4 及当前 `blade-ai` Java 契约 |
+| 后端基线 | SpringBlade REQ-2026-001 0.3、REQ-2026-005 0.5 及当前 blade-ai Java 契约 |
 | 目标版本/迭代 | Saber 5.x / AI 能力第一阶段 |
 | 文档状态 | 开发中（已实现，待联调与业务验收） |
 | 设计负责人 | Codex |
 | 评审人 | 前端、后端、安全、测试待指定 |
-| 最后更新日期 | 2026-09-09 |
+| 最后更新日期 | 2026-09-16 |
 
 ## 2. 设计摘要与范围
 
@@ -27,6 +27,8 @@
 前端严格使用后端返回的字符串 Long、`lockVersion`、`draftDirty`、`actions` 和结构化预览结果。所有写操作
 同时受按钮权限、服务端动作状态和独立执行锁控制。发布、停用和回滚前重新读取详情，发生 `48004` 冲突时
 保留本地输入并要求人工核对，不自动覆盖或重放。
+
+REQ-2026-005 增强后，列表和详情同时承载稳定提示词类型与发布方式。自动发布仍复用新增/编辑入口，但只有同时具备 create/edit 与 publish 权限时可选择；保存按钮明确显示“保存并发布”，并要求变更说明。
 
 ### 2.2 关键决策
 
@@ -259,13 +261,13 @@ export interface PromptVariable {
 
 | 前端函数 | 方法与路径 | 请求 | 响应 data | 权限 |
 | --- | --- | --- | --- | --- |
-| `getPromptList` | `GET /blade-ai/prompt/list` | current/size/name/code/status | `PageResult<PromptListItem>` | `ai:prompt:view` |
+| `getPromptList` | `GET /blade-ai/prompt/list` | current/size/name/code/status/promptType/publishMode | `PageResult<PromptListItem>` | `ai:prompt:view` |
 | `getPromptDetail` | `GET /blade-ai/prompt/detail` | id | `PromptDetail` | `ai:prompt:view` |
 | `createPrompt` | `POST /blade-ai/prompt/create` | `PromptCreatePayload` | `PromptMutation` | `ai:prompt:create` |
 | `updatePrompt` | `POST /blade-ai/prompt/update` | `PromptUpdatePayload` | `PromptMutation` | `ai:prompt:edit` |
 | `copyPrompt` | `POST /blade-ai/prompt/copy` | sourcePromptId/name/code | `PromptMutation` | `ai:prompt:copy` |
 | `removePrompt` | `POST /blade-ai/prompt/remove` | id/lockVersion | boolean | `ai:prompt:delete` |
-| `previewPrompt` | `POST /blade-ai/prompt/preview` | content/variables/testVariables | `PromptRenderResult` | `ai:prompt:preview` |
+| `previewPrompt` | `POST /blade-ai/prompt/preview` | promptType/content/variables/testVariables | `PromptRenderResult` | `ai:prompt:preview` |
 | `publishPrompt` | `POST /blade-ai/prompt/publish` | id/lockVersion/changeNote | `PromptMutation` | `ai:prompt:publish` |
 | `disablePrompt` | `POST /blade-ai/prompt/disable` | id/lockVersion/disableNote | `PromptMutation` | `ai:prompt:disable` |
 | `getPromptVersionList` | `GET /blade-ai/prompt/version/list` | promptId/current/size | `PageResult<PromptVersion>` | `ai:prompt:view` |
@@ -322,21 +324,24 @@ export class BladeBusinessError extends Error {
 - 名称：`name`，文本输入。
 - 编码：`code`，文本输入，查询时 trim 和 lowercase。
 - 状态：本地枚举 Select，值保持 number。
+- 类型：GENERAL、SYSTEM、TEXT、IMAGE 稳定编码 Select。
+- 发布方式：1 普通发布、2 自动发布 Select。
 
 列表列：
 
 | 列 | 宽度策略 | 展示 |
 | --- | --- | --- |
-| 名称 | min 180 | 主文本，溢出提示 |
-| 编码 | min 180 | 等宽或普通代码样式，纯文本 |
-| 状态 | width 100 | 状态 Tag |
-| 当前版本 | width 110 | `V{currentVersionNo}`，0 显示“-” |
-| 草稿状态 | width 130 | `draftDirty=true` 显示“有待发布草稿” |
-| 更新时间 | min 170 | 后端时间原样或 dayjs 格式化 |
+| 名称 | min 160 | 主文本，溢出提示 |
+| 编码 | min 160 | 等宽或普通代码样式，纯文本 |
+| 类型 | min 100 | 后端类型名称，缺失时显示稳定编码 |
+| 发布方式 | min 120 | 普通/自动发布 Tag |
+| 状态 | min 100 | 状态 Tag |
+| 当前版本 | min 110 | `V{currentVersionNo}`，0 显示“-” |
+| 草稿状态 | min 140 | `draftDirty=true` 显示“有待发布草稿” |
+| 更新时间 | min 180 | 后端时间原样或 dayjs 格式化 |
 | 操作 | fixed right 230 | 查看、编辑、更多下拉 |
 
-列表不提供选择列和批量操作。`RowActions` 用于查看和编辑；复制、预览、版本、发布、停用、删除放入
-“更多”下拉，危险动作使用图标、分组和危险色。动作计算为：
+除固定操作列外，业务列统一使用 `min-width`，由 Element Plus Table 按最小宽度比例共同吸收宽屏剩余空间，避免只有名称、编码和更新时间被拉伸。列表不提供选择列和批量操作。`RowActions` 用于查看和编辑；复制、预览、版本、发布、停用、删除按实际可见数量展示或进入“更多”下拉，危险动作使用图标、分组和危险色。动作计算为：
 
 ```text
 visible = buttonPermission && serverAction && !contextLoading
@@ -352,12 +357,12 @@ header/footer 固定。移动端占满可用宽度。
 
 编辑器分区：
 
-1. 基本信息：名称、编码、状态、当前版本、草稿修订。
+1. 基本信息：名称、编码、类型、发布方式、状态、当前版本、草稿修订。
 2. 提示词内容：固定指令、用户输入模板，两者均为带字数提示的 textarea。
 3. 变量定义：有序折叠列表，标题显示序号、变量名、类型、必填状态和警告标记。
 4. 服务端警告：保存或详情响应的 warnings，按变量名和字段归组展示。
 
-底部操作：取消/关闭、预览、保存。view 模式只显示关闭和有权限的预览；add/edit 模式显示保存。
+自动发布显示立即上线警告和不超过 500 字符的变更说明；未获得 publish 权限时自动发布选项不可选择。底部操作为取消/关闭、预览、保存或保存并发布。view 模式只显示关闭和有权限的预览，并从详情 `currentVersion.changeNote` 回填最近一次发布说明；只读模式不挂载新的变更说明必填规则。新增和编辑模式仍保持说明为空，用于填写下一次自动发布说明。
 保存成功后显示成功消息、触发主列表刷新并关闭窗口；重新编辑时重新读取详情及最新 `lockVersion`。保存失败时保持
 窗口和用户输入，允许修正后重试。
 
@@ -519,10 +524,12 @@ rg -n -i "avue|ant-design|\.ant-|\.avue-" src/views/asset src/api/ai src/axios.t
 ### 10.3 实现与工程检查记录
 
 - 已新增 `src/views/asset/prompt.vue`、五个模块组件和 `src/api/ai/prompt.ts`，并完成 Axios 业务错误码与三语 route key 接入。
+- 已增加提示词类型、发布方式筛选与展示，编辑器支持有权限的自动发布，预览传递类型，版本抽屉展示类型和自动发布来源。
 - `pnpm run type-check` 在 Node 24.11.1 下退出码为 0；新增文件 Prettier 检查和禁用引用静态检索通过。
 - 初次 `pnpm run build:prod` 在 Vite 清理非空 `dist` 时以 Windows 异常码 `3221226505` 退出；改用全新 `outDir` 和干净 `HEAD` 均可构建，确认不是提示词代码、Node 或 Rollup 版本问题。
 - 新增 `scripts/clean-dist.mjs`，由独立 Node 进程在 Vite 启动前完整删除 `dist`；`build` 和 `build:prod` 均复用该步骤，不新增依赖。
 - 使用原始 Vite 5.4.21、Rollup 4.60.3 和 Node 24.11.1 连续两次执行 `pnpm run build:prod` 均退出码为 0，2030 个模块转换、产物生成和 gzip 压缩完成。`dist` 仍为忽略的构建产物，不提交。
+- 2026-09-16 再次执行 `pnpm run type-check` 与 `pnpm run build:prod` 均退出码为 0，本次 production 构建转换 2060 个模块。
 - 普通列表成功、普通业务失败、401、动态菜单、API Scope、租户、写操作和多视口主题仍需目标环境联调与手工验收。
 
 ## 11. 发布与回滚
@@ -550,7 +557,7 @@ rg -n -i "avue|ant-design|\.ant-|\.avue-" src/views/asset src/api/ai src/axios.t
 
 | 编号 | 类型 | 内容 | 负责人 | 状态/结论 |
 | --- | --- | --- | --- | --- |
-| DESIGN-ITEM-001 | 依赖 | 菜单、按钮和 Scope 绑定数据未实现 | 后端/部署 | 开放，联调阻塞项 |
+| DESIGN-ITEM-001 | 依赖 | 菜单、按钮、API Scope 与 DataScope 数据需按环境部署并清缓存 | 后端/部署 | SpringBlade SQL 已实现，目标环境联调仍为阻塞项 |
 | DESIGN-ITEM-002 | 权限 | 高风险权限默认角色尚未确认 | 产品/安全 | 开放，不在前端硬编码管理员 |
 | DESIGN-ITEM-003 | 共享变更 | `BladeBusinessError` 修改 Axios 失败对象 | 前端 | 需回归普通失败、401 和白名单 |
 | DESIGN-ITEM-004 | 契约 | 后端长度配置可覆盖但无读取接口 | 前后端 | 当前按默认值提示，服务端最终校验 |
@@ -575,3 +582,5 @@ rg -n -i "avue|ant-design|\.ant-|\.avue-" src/views/asset src/api/ai src/axios.t
 | 2026-09-09 | 0.1 | 建立 Saber 提示词管理前端详细设计，映射实际 DTO/VO、权限和并发契约，菜单确定为“资产管理 > 提示词管理” | 启动前端规划并明确菜单领域和页面标题 | 资产管理页面、模块组件、API、Axios、i18n 和联调数据 | Codex |
 | 2026-09-09 | 0.2 | 按设计完成前端实现，修复 Windows 重复构建时的 `dist` 清理崩溃，并完成类型、静态和生产构建检查 | 用户要求基于最新详细设计开始实现 | 页面、组件、API、Axios、i18n、构建脚本、验证记录和联调风险 | Codex |
 | 2026-09-09 | 0.3 | 增加变量规范化工具，文本最大长度缺省为 255、非文本移除长度，并将保存成功行为改为关闭编辑器后刷新列表 | 修复文本长度被输入组件回填为 1 及保存后窗口未关闭的缺陷 | 变量编辑器、编辑弹窗、列表预览、测试与验收契约 | Codex |
+| 2026-09-16 | 0.4 | 对齐 SpringBlade REQ-2026-005，补充类型、发布方式、自动发布权限/说明和版本来源实现，并重新通过类型检查与生产构建 | 后端管理契约升级 | API 类型、主列表、编辑器、预览、版本抽屉和发布联调 | Codex |
+| 2026-09-16 | 0.5 | 列表全部业务列改为按最小宽度共同分配宽屏空间；查看模式使用详情中的当前版本变更说明并移除只读校验 | 修复列表前两列过度拉伸和查看弹窗要求填写禁用字段的问题 | 列表布局、查看弹窗、工程验证和手工回归 | Codex |

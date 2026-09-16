@@ -47,6 +47,55 @@
               </el-form-item>
             </el-col>
           </el-row>
+          <el-row :gutter="16">
+            <el-col :xs="24" :md="12">
+              <el-form-item label="类型" prop="promptType">
+                <el-select v-model="form.promptType" placeholder="请选择提示词类型">
+                  <el-option
+                    v-for="option in promptTypeOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :md="12">
+              <el-form-item label="发布方式" prop="publishMode">
+                <el-select v-model="form.publishMode" placeholder="请选择发布方式">
+                  <el-option
+                    v-for="option in promptPublishModeOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                    :disabled="option.value === 2 && !canUseAutoPublish"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-alert
+            v-if="form.publishMode === 2 && !readonly"
+            class="prompt-editor-auto-alert"
+            title="自动发布会在保存成功后立即生成线上版本"
+            type="warning"
+            :closable="false"
+            show-icon
+          />
+          <el-form-item
+            v-if="form.publishMode === 2 || (readonly && currentVersionNo)"
+            label="变更说明"
+            :prop="readonly ? undefined : 'changeNote'"
+          >
+            <el-input
+              v-model="form.changeNote"
+              type="textarea"
+              :rows="3"
+              maxlength="500"
+              :show-word-limit="!readonly"
+              :placeholder="readonly ? '上一次发布未填写变更说明' : '请输入本次自动发布的变更说明'"
+            />
+          </el-form-item>
           <el-descriptions v-if="internalMode !== 'add'" :column="4" border>
             <el-descriptions-item label="状态">
               <el-tag :type="statusType">{{ statusLabel }}</el-tag>
@@ -154,7 +203,7 @@
           :disabled="loading || saving"
           @click="saveDraft"
         >
-          保存
+          {{ saveButtonText }}
         </el-button>
       </div>
     </template>
@@ -174,6 +223,8 @@ import { BladeBusinessError } from '@/axios';
 import {
   createPrompt,
   getPromptDetail,
+  promptPublishModeOptions,
+  promptTypeOptions,
   updatePrompt,
   type PromptDetail,
   type PromptDraftPayload,
@@ -188,6 +239,7 @@ interface PromptEditorDialogProps {
   mode: CrudMode;
   promptId?: string;
   canPreview?: boolean;
+  canPublish?: boolean;
   canCreate?: boolean;
   canEdit?: boolean;
 }
@@ -195,6 +247,7 @@ interface PromptEditorDialogProps {
 const props = withDefaults(defineProps<PromptEditorDialogProps>(), {
   promptId: undefined,
   canPreview: false,
+  canPublish: false,
   canCreate: false,
   canEdit: false,
 });
@@ -207,9 +260,12 @@ const emit = defineEmits<{
 const createInitialForm = (): PromptDraftPayload => ({
   promptName: '',
   promptCode: '',
+  promptType: 'GENERAL',
+  publishMode: 1,
   fixedInstruction: '',
   userTemplate: '',
   variables: [],
+  changeNote: '',
 });
 
 const form = ref<PromptDraftPayload>(createInitialForm());
@@ -237,12 +293,15 @@ const visible = computed({
   set: value => emit('update:modelValue', value),
 });
 const readonly = computed(() => internalMode.value === 'view');
+const canUseAutoPublish = computed(() => props.canPublish || readonly.value);
 const formDirty = computed(
   () => !readonly.value && JSON.stringify(form.value) !== initialFormSnapshot.value
 );
-const canSaveCurrentMode = computed(() =>
-  internalMode.value === 'add' ? props.canCreate : props.canEdit
-);
+const canSaveCurrentMode = computed(() => {
+  const canSave = internalMode.value === 'add' ? props.canCreate : props.canEdit;
+  return canSave && (form.value.publishMode !== 2 || props.canPublish);
+});
+const saveButtonText = computed(() => (form.value.publishMode === 2 ? '保存并发布' : '保存'));
 const dialogTitle = computed(() => {
   const prefix: { [key in CrudMode]: string } = { add: '新增', edit: '编辑', view: '查看' };
   return `${prefix[internalMode.value]}提示词`;
@@ -284,9 +343,17 @@ const formRules = computed<FormRules>(() => {
       { required: true, message: '请输入提示词编码', trigger: 'blur' },
       { max: 64, message: '提示词编码不能超过 64 个字符', trigger: 'blur' },
     ],
+    promptType: [{ required: true, message: '请选择提示词类型', trigger: 'change' }],
+    publishMode: [{ required: true, message: '请选择发布方式', trigger: 'change' }],
     fixedInstruction: [{ validator: validateContent, trigger: 'blur' }],
     userTemplate: [{ validator: validateContent, trigger: 'blur' }],
   };
+  if (!readonly.value && form.value.publishMode === 2) {
+    rules.changeNote = [
+      { required: true, message: '请输入自动发布变更说明', trigger: 'blur' },
+      { max: 500, message: '变更说明不能超过 500 个字符', trigger: 'blur' },
+    ];
+  }
   form.value.variables.forEach((variable, index) => {
     rules[`variables.${index}.name`] = [
       { required: true, message: '请输入变量名', trigger: 'blur' },
@@ -350,9 +417,12 @@ const applyDetail = (detail: PromptDetail) => {
   form.value = {
     promptName: detail.promptName,
     promptCode: detail.promptCode,
+    promptType: detail.promptType,
+    publishMode: detail.publishMode,
     fixedInstruction: detail.fixedInstruction ?? '',
     userTemplate: detail.userTemplate ?? '',
     variables: (detail.variables ?? []).map(normalizePromptVariable),
+    changeNote: readonly.value ? detail.currentVersion?.changeNote ?? '' : '',
   };
   initialFormSnapshot.value = JSON.stringify(form.value);
   applyDetailMetadata(detail);
@@ -397,6 +467,8 @@ watch(
 const buildDraftPayload = (): PromptDraftPayload => ({
   promptName: form.value.promptName.trim(),
   promptCode: form.value.promptCode.trim().toLowerCase(),
+  promptType: form.value.promptType,
+  publishMode: form.value.publishMode,
   fixedInstruction: form.value.fixedInstruction,
   userTemplate: form.value.userTemplate,
   variables: form.value.variables.map(variable =>
@@ -407,6 +479,7 @@ const buildDraftPayload = (): PromptDraftPayload => ({
       description: variable.description?.trim() || undefined,
     })
   ),
+  changeNote: form.value.publishMode === 2 ? form.value.changeNote?.trim() : undefined,
 });
 
 const loadConflictSummary = async () => {
@@ -446,10 +519,15 @@ const saveDraft = async () => {
     lockVersion.value = mutation.lockVersion;
     draftRevision.value = mutation.draftRevision;
     status.value = mutation.status;
+    currentVersionNo.value = mutation.versionNo ?? currentVersionNo.value;
     warnings.value = mutation.warnings ?? [];
     internalMode.value = 'edit';
-    draftDirty.value = true;
-    ElMessage.success('保存成功');
+    draftDirty.value = mutation.publishMode !== 2;
+    ElMessage.success(
+      mutation.publishMode === 2 && mutation.versionNo
+        ? `保存并自动发布成功，当前版本 V${mutation.versionNo}`
+        : '保存成功'
+    );
     emit('saved', mutation);
     visible.value = false;
   } catch (error) {
@@ -540,6 +618,14 @@ function resetDialog() {
 
 .prompt-editor-variables-item {
   margin-bottom: 0;
+}
+
+.prompt-editor-section .el-select {
+  width: 100%;
+}
+
+.prompt-editor-auto-alert {
+  margin-bottom: var(--saber-space-4);
 }
 
 .prompt-editor-variables-item > .el-form-item__content {

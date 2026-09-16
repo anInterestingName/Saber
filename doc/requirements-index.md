@@ -20,7 +20,7 @@
 
 | 年份 | 下一个编号 | 最后分配日期 | 维护人 |
 | --- | --- | --- | --- |
-| 2026 | `REQ-2026-013` | 2026-09-14 | Codex |
+| 2026 | `REQ-2026-014` | 2026-09-15 | Codex |
 
 > 分配需求编号后，立即将“下一个编号”加一。例如分配 `REQ-2026-002` 后，本表更新为 `REQ-2026-003`。
 
@@ -36,10 +36,11 @@
 | [REQ-2026-006](requirements/REQ-2026-006-pinia-migration-and-vuex-removal.md) | Saber Pinia 状态管理迁移与 Vuex 4 完全移除 | 前端基础能力、应用启动、认证会话、动态路由、主布局、权限与日志 | 0.3 | 开发中 | Saber 5.x / Vue 3 状态管理升级 | [需求文档 0.3（开发完成，待验收）](requirements/REQ-2026-006-pinia-migration-and-vuex-removal.md) | 不涉及 | [详细设计 0.2（已实现，待业务验收）](design/DESIGN-REQ-2026-006-pinia-migration-and-vuex-removal.md)；[测试文档 0.1（5 通过/11 阻塞）](test/TEST-REQ-2026-006-pinia-migration-and-vuex-removal.md) | 待指定 | 2026-09-04 |
 | [REQ-2026-007](requirements/REQ-2026-007-sidebar-collapse-navigation-theme.md) | 主导航折叠交互与导航背景统一 | 前端主布局、侧栏、顶部栏、响应式导航 | 0.2 | 开发中 | Saber 5.x / 主布局体验优化 | [需求文档 0.2（开发完成，待验收）](requirements/REQ-2026-007-sidebar-collapse-navigation-theme.md) | 不涉及 | [详细设计 0.2（已实现，部分验证）](design/DESIGN-REQ-2026-007-sidebar-collapse-navigation-theme.md)；[测试文档 0.1（4 通过/1 阻塞）](test/TEST-REQ-2026-007-sidebar-collapse-navigation-theme.md) | 待指定 | 2026-09-04 |
 | [REQ-2026-008](requirements/REQ-2026-008-ghcr-image-publishing.md) | GitHub Actions 构建并发布公开 GHCR 测试镜像 | CI/CD、Docker、Nginx、GHCR | 0.4 | 开发中 | Saber 5.x / 容器化发布 | [需求文档 0.4（公开测试模式，待远端验收）](requirements/REQ-2026-008-ghcr-image-publishing.md) | 不涉及 | [详细设计 0.4（公开拉取模式已实现）](design/DESIGN-REQ-2026-008-ghcr-image-publishing.md)；[测试文档 0.4（4 通过/1 阻塞）](test/TEST-REQ-2026-008-ghcr-image-publishing.md) | Codex | 2026-09-04 |
-| [REQ-2026-009](requirements/REQ-2026-009-prompt-management.md) | Saber 提示词管理 | 资产管理、提示词草稿、预览与版本发布 | 0.3 | 开发中 | Saber 5.x / AI 能力第一阶段 | [需求文档 0.3（缺陷修复完成，待联调验收）](requirements/REQ-2026-009-prompt-management.md) | 不涉及 | [详细设计 0.3（变量默认值与保存交互已更新）](design/DESIGN-REQ-2026-009-prompt-management.md)；[测试文档 0.3（待执行，12 项未执行）](test/TEST-REQ-2026-009-prompt-management.md) | 待指定 | 2026-09-09 |
+| [REQ-2026-009](requirements/REQ-2026-009-prompt-management.md) | Saber 提示词管理 | 资产管理、提示词草稿、预览与版本发布 | 0.5 | 开发中 | Saber 5.x / AI 能力第一阶段 | [需求文档 0.5（列表列宽与查看说明已修正，待联调验收）](requirements/REQ-2026-009-prompt-management.md) | 不涉及 | [详细设计 0.5（宽屏列宽与当前版本说明回填）](design/DESIGN-REQ-2026-009-prompt-management.md)；[测试文档 0.5（待执行，13 项未执行）](test/TEST-REQ-2026-009-prompt-management.md) | 待指定 | 2026-09-16 |
 | [REQ-2026-010](requirements/REQ-2026-010-tag-management-frontend.md) | Saber 标签分类与标签管理 | 系统管理、标签分类、层级标签 | 0.5 | 开发中 | Saber 5.x / 标签基础能力前端第一阶段 | [需求文档 0.5（分类查看样式已优化，待联调验收）](requirements/REQ-2026-010-tag-management-frontend.md) | 不涉及 | [详细设计 0.5（非表格详情网格已实现）](design/DESIGN-REQ-2026-010-tag-management-frontend.md)；[测试文档 0.5（待执行，10 项未执行）](test/TEST-REQ-2026-010-tag-management-frontend.md) | 待指定 | 2026-09-10 |
 | [REQ-2026-011](requirements/REQ-2026-011-pro-style-ui-record-panels.md) | Saber 中前台视觉体系与记录弹层统一 | 前端基础能力、主布局、工作台、业务页面、记录弹层 | 0.10 | 开发中 | Saber 5.x / 中前台体验升级第一阶段 | [需求文档 0.10（已关联后续松散型视觉治理）](requirements/REQ-2026-011-pro-style-ui-record-panels.md) | 不涉及 | [详细设计 0.9（顶级导航 Token、动效与箭头区域）](design/DESIGN-REQ-2026-011-pro-style-ui-record-panels.md)；[测试文档 0.9（待执行，15 项未执行）](test/TEST-REQ-2026-011-pro-style-ui-record-panels.md) | 待指定 | 2026-09-14 |
-| [REQ-2026-012](requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | Saber 界面基础归一化与松散型中前台视觉升级 | 前端基础能力、主题与主布局、公共组件、活动业务页面 | 0.5 | 开发中 | Saber 5.x / 界面基础治理与视觉升级单阶段 | [需求文档 0.5（列表溢出治理已回归）](requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | 不涉及 | [详细设计 0.4（列表滚动与操作收纳规则已实现）](design/DESIGN-REQ-2026-012-ui-normalization-spacious-visual-refresh.md)；[测试文档 0.2（35 通过/6 未执行/1 阻塞）](test/TEST-REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | Codex | 2026-09-14 |
+| [REQ-2026-012](requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | Saber 界面基础归一化与松散型中前台视觉升级 | 前端基础能力、主题与主布局、公共组件、活动业务页面 | 0.6 | 开发中 | Saber 5.x / 界面基础治理与视觉升级单阶段 | [需求文档 0.6（内容宽度改为全局可选并默认流式）](requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | 不涉及 | [详细设计 0.6（行操作按实际权限数量折叠）](design/DESIGN-REQ-2026-012-ui-normalization-spacious-visual-refresh.md)；[测试文档 0.3（32 通过/1 失败/8 未执行/1 阻塞）](test/TEST-REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | Codex | 2026-09-16 |
+| [REQ-2026-013](requirements/REQ-2026-013-image-prompt-reverse.md) | Saber 图片提示词反推 | 资产管理、图片分析、标签结果与提示词复制 | 0.2 | 待评审 | [需求文档 0.2](requirements/REQ-2026-013-image-prompt-reverse.md) | 不涉及 | 待编写 | 待编写 | 待指定 | 2026-09-15 |
 
 ## 状态说明
 

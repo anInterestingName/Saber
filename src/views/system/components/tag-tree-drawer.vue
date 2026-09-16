@@ -119,21 +119,13 @@
               :show-view="canView"
               :show-edit="canEdit"
               :show-delete="canDelete"
+              :actions="canCreate ? [{ key: 'add-child', label: '新增子标签', icon: Plus }] : []"
               :disabled="Boolean(tagActionId)"
               @view="openView(row as TagTreeNode)"
               @edit="openEdit(row as TagTreeNode)"
               @delete="handleDelete(row as TagTreeNode)"
-            >
-              <template v-if="canCreate" #more>
-                <el-dropdown-item
-                  :icon="Plus"
-                  :disabled="Boolean(tagActionId)"
-                  @click="openAddChild(row as TagTreeNode)"
-                >
-                  新增子标签
-                </el-dropdown-item>
-              </template>
-            </row-actions>
+              @action="openAddChild(row as TagTreeNode)"
+            />
           </template>
         </el-table-column>
 

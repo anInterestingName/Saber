@@ -4,6 +4,20 @@ import type { PageResult } from '@/types/list';
 
 export type PromptValue = string | number | boolean | null;
 export type PromptVariableType = 'TEXT' | 'MULTILINE_TEXT' | 'NUMBER' | 'BOOLEAN';
+export type PromptType = 'GENERAL' | 'SYSTEM' | 'TEXT' | 'IMAGE';
+export type PromptPublishMode = 1 | 2;
+
+export const promptTypeOptions: { label: string; value: PromptType }[] = [
+  { label: '通用', value: 'GENERAL' },
+  { label: '系统', value: 'SYSTEM' },
+  { label: '文本', value: 'TEXT' },
+  { label: '图像', value: 'IMAGE' },
+];
+
+export const promptPublishModeOptions: { label: string; value: PromptPublishMode }[] = [
+  { label: '普通发布', value: 1 },
+  { label: '自动发布', value: 2 },
+];
 
 export interface PromptValueMap {
   [name: string]: PromptValue;
@@ -38,6 +52,10 @@ export interface PromptListItem {
   id: string;
   promptCode: string;
   promptName: string;
+  promptType: PromptType;
+  promptTypeName?: string;
+  publishMode: PromptPublishMode;
+  publishModeName?: string;
   status: number;
   statusName?: string;
   currentVersionNo?: number;
@@ -56,10 +74,13 @@ export interface PromptVersion {
   versionNo: number;
   promptCode: string;
   promptName: string;
+  promptType: PromptType;
+  promptTypeName?: string;
   fixedInstruction?: string;
   userTemplate?: string;
   variables: PromptVariable[];
   sourceType: number;
+  sourceTypeName?: string;
   sourceVersionId?: string;
   sourceDraftRevision: string;
   contentHash?: string;
@@ -72,6 +93,10 @@ export interface PromptDetail {
   id: string;
   promptCode: string;
   promptName: string;
+  promptType: PromptType;
+  promptTypeName?: string;
+  publishMode: PromptPublishMode;
+  publishModeName?: string;
   fixedInstruction?: string;
   userTemplate?: string;
   variables: PromptVariable[];
@@ -91,6 +116,10 @@ export interface PromptDetail {
 
 export interface PromptMutation {
   id: string;
+  promptType: PromptType;
+  promptTypeName?: string;
+  publishMode: PromptPublishMode;
+  publishModeName?: string;
   status: number;
   lockVersion: string;
   draftRevision: string;
@@ -107,6 +136,8 @@ export interface PromptMessage {
 export interface PromptRenderResult {
   valid: boolean;
   promptCode?: string;
+  promptType?: PromptType;
+  promptTypeName?: string;
   versionId?: string;
   versionNo?: number;
   fixedInstruction?: string;
@@ -122,14 +153,19 @@ export interface PromptQuery {
   name?: string;
   code?: string;
   status?: number;
+  promptType?: PromptType;
+  publishMode?: PromptPublishMode;
 }
 
 export interface PromptDraftPayload {
   promptName: string;
   promptCode: string;
+  promptType: PromptType;
+  publishMode: PromptPublishMode;
   fixedInstruction?: string;
   userTemplate?: string;
   variables: PromptVariable[];
+  changeNote?: string;
 }
 
 export type PromptCreatePayload = PromptDraftPayload;
@@ -151,6 +187,7 @@ export interface PromptDeletePayload {
 }
 
 export interface PromptPreviewPayload {
+  promptType: PromptType;
   fixedInstruction?: string;
   userTemplate?: string;
   variables: PromptVariable[];

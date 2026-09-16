@@ -1,10 +1,12 @@
 export type LayoutMode = 'side' | 'top' | 'mix';
 export type ThemeMode = 'light' | 'dark';
+export type ContentWidthMode = 'fluid' | 'fixed';
 
 export interface AppSetting {
   theme: ThemeMode;
   colorPrimary: string;
   layout: LayoutMode;
+  contentWidth: ContentWidthMode;
   sidebar: 'vertical' | 'horizontal';
   tag: boolean;
   debug: boolean;

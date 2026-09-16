@@ -79,21 +79,13 @@
                 :show-view="canView"
                 :show-edit="canEdit"
                 :show-delete="canDelete"
+                :actions="canSetting ? [{ key: 'setting', label: '配置', icon: Setting }] : []"
                 :disabled="sortingId !== ''"
                 @view="openDetail(row as TopMenuEntity, 'view')"
                 @edit="openDetail(row as TopMenuEntity, 'edit')"
                 @delete="handleRowDelete(row as TopMenuEntity)"
-              >
-                <template v-if="canSetting" #more>
-                  <el-dropdown-item
-                    :icon="Setting"
-                    :disabled="sortingId !== ''"
-                    @click="openGrant(row as TopMenuEntity)"
-                  >
-                    配置
-                  </el-dropdown-item>
-                </template>
-              </row-actions>
+                @action="openGrant(row as TopMenuEntity)"
+              />
             </template>
           </el-table-column>
         </el-table>

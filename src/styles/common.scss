@@ -228,6 +228,18 @@ a {
   background: var(--saber-canvas);
 }
 
+.saber-view__content {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.saber-view__content--fixed {
+  max-width: var(--saber-content-max-width);
+  margin-inline: auto;
+}
+
 @media (min-width: 1440px) {
   #saber-view {
     padding: var(--saber-page-gutter-x-wide);

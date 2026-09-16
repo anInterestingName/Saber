@@ -31,11 +31,13 @@
         <search class="saber-view" v-show="isSearch"></search>
         <!-- 主体视图层 -->
         <div id="saber-view" v-show="!isSearch" v-if="isRefresh">
-          <router-view #="{ Component }">
-            <keep-alive :include="tagsKeep">
-              <component :is="Component" />
-            </keep-alive>
-          </router-view>
+          <div class="saber-view__content" :class="`saber-view__content--${setting.contentWidth}`">
+            <router-view #="{ Component }">
+              <keep-alive :include="tagsKeep">
+                <component :is="Component" />
+              </keep-alive>
+            </router-view>
+          </div>
         </div>
       </div>
     </div>
