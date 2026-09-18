@@ -1,13 +1,9 @@
 <template>
-  <span @click="logsFlag?'':handleOpen()">
-    <el-badge :value="logsFlag?'':logsLen"
-              :max="99">
+  <span @click="logsFlag ? '' : handleOpen()">
+    <el-badge :value="logsFlag ? '' : logsLen" :max="99">
       <i class="icon-rizhi1"></i>
     </el-badge>
-    <el-dialog title="日志"
-               v-model="box"
-               width="60%"
-               append-to-body>
+    <app-dialog v-model="box" title="日志" size="lg">
       <el-button type="primary" @click="send">
         <el-icon><Upload /></el-icon>
         <span>上传服务器</span>
@@ -17,28 +13,14 @@
         <span>清空本地日志</span>
       </el-button>
       <el-table :data="logsList">
-        <el-table-column prop="type"
-                         label="类型"
-                         width="50px">
+        <el-table-column prop="type" label="类型" width="50px"> </el-table-column>
+        <el-table-column prop="url" label="地址" show-overflow-tooltip width="180">
         </el-table-column>
-        <el-table-column prop="url"
-                         label="地址"
-                         show-overflow-tooltip
-                         width="180">
-        </el-table-column>
-        <el-table-column prop="message"
-                         show-overflow-tooltip
-                         label="内容">
-        </el-table-column>
-        <el-table-column prop="stack"
-                         show-overflow-tooltip
-                         label="错误堆栈">
-        </el-table-column>
-        <el-table-column prop="time"
-                         label="时间">
-        </el-table-column>
+        <el-table-column prop="message" show-overflow-tooltip label="内容"> </el-table-column>
+        <el-table-column prop="stack" show-overflow-tooltip label="错误堆栈"> </el-table-column>
+        <el-table-column prop="time" label="时间"> </el-table-column>
       </el-table>
-    </el-dialog>
+    </app-dialog>
   </span>
 </template>
 
@@ -46,16 +28,17 @@
 import { mapActions, mapState } from 'pinia';
 import { Delete, Upload } from '@element-plus/icons-vue';
 import { useLogsStore } from '@/store/logs';
+import AppDialog from '@/components/app-dialog/main.vue';
 export default {
-  name: "top-logs",
-  components: { Delete, Upload },
-  data () {
+  name: 'top-logs',
+  components: { AppDialog, Delete, Upload },
+  data() {
     return {
-      box: false
+      box: false,
     };
   },
-  created () { },
-  mounted () { },
+  created() {},
+  mounted() {},
   computed: {
     ...mapState(useLogsStore, {
       logsList: store => store.logsList,
@@ -66,43 +49,43 @@ export default {
   props: [],
   methods: {
     ...mapActions(useLogsStore, ['SendLogs', 'clearLogs']),
-    handleOpen () {
+    handleOpen() {
       this.box = true;
     },
-    send () {
-      this.$confirm("确定上传本地日志到服务器?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
+    send() {
+      this.$confirm('确定上传本地日志到服务器?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
       })
         .then(() => {
           this.SendLogs().then(() => {
             this.box = false;
             this.$message({
-              type: "success",
-              message: "发送成功!"
+              type: 'success',
+              message: '发送成功!',
             });
           });
         })
-        .catch(() => { });
+        .catch(() => {});
     },
-    clear () {
-      this.$confirm("确定清空本地日志记录?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
+    clear() {
+      this.$confirm('确定清空本地日志记录?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
       })
         .then(() => {
           this.clearLogs();
           this.box = false;
           this.$message({
-            type: "success",
-            message: "清空成功!"
+            type: 'success',
+            message: '清空成功!',
           });
         })
-        .catch(() => { });
-    }
-  }
+        .catch(() => {});
+    },
+  },
 };
 </script>
 
@@ -112,6 +95,6 @@ export default {
   display: block;
   font-family: monospace;
   white-space: pre;
-  margin: 1em 0px;
+  margin: var(--saber-space-4) var(--saber-space-1);
 }
 </style>

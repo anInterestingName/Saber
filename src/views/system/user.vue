@@ -1,434 +1,432 @@
 <template>
-  <div class="user-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      label-width="72px"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="登录账号">
-          <el-input v-model="searchForm.account" clearable placeholder="请输入登录账号" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="用户姓名">
-          <el-input v-model="searchForm.realName" clearable placeholder="请输入用户姓名" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="用户昵称">
-          <el-input v-model="searchForm.name" clearable placeholder="请输入用户昵称" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="手机号码">
-          <el-input v-model="searchForm.phone" clearable placeholder="请输入手机号码" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="电子邮箱">
-          <el-input v-model="searchForm.email" clearable placeholder="请输入电子邮箱" />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="用户列表">
-      <template #actions>
-        <el-button
-          v-if="canAdd"
-          type="primary"
-          :icon="Plus"
-          :disabled="operationRunning"
-          @click="openAdd"
-        >
-          新增
-        </el-button>
-        <el-button
-          v-if="canDelete"
-          type="danger"
-          plain
-          :icon="Delete"
-          :loading="deleting"
-          :disabled="operationRunning && !deleting"
-          @click="handleBatchDelete"
-        >
-          删除
-        </el-button>
-        <el-dropdown v-if="hasMoreActions" trigger="click" @command="handleMoreAction">
-          <el-button :disabled="operationRunning">
-            更多操作<el-icon class="user-more-icon"><ArrowDown /></el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item v-if="isAdmin" :icon="User" command="grant">角色配置</el-dropdown-item>
-              <el-dropdown-item v-if="canReset" :icon="RefreshLeft" command="reset">
-                密码重置
-              </el-dropdown-item>
-              <el-dropdown-item v-if="isAdmin" :icon="Unlock" command="unlock">
-                账号解封
-              </el-dropdown-item>
-              <el-dropdown-item v-if="isAdmin" divided :icon="Upload" command="import">
-                导入
-              </el-dropdown-item>
-              <el-dropdown-item v-if="isAdmin" :icon="Download" command="export">
-                导出
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="user-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        label-width="72px"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column prop="account" label="登录账号" min-width="150" show-overflow-tooltip />
-        <el-table-column
-          v-if="website.tenantMode"
-          prop="tenantId"
-          label="所属租户"
-          min-width="180"
-          show-overflow-tooltip
-        >
-          <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
-        </el-table-column>
-        <el-table-column prop="name" label="用户昵称" min-width="140" show-overflow-tooltip />
-        <el-table-column prop="realName" label="用户姓名" min-width="140" show-overflow-tooltip />
-        <el-table-column prop="roleName" label="所属角色" min-width="180" show-overflow-tooltip>
-          <template #default="{ row }"><el-tag>{{ row.roleName || '-' }}</el-tag></template>
-        </el-table-column>
-        <el-table-column prop="deptName" label="所属部门" min-width="180" show-overflow-tooltip>
-          <template #default="{ row }">
-            <el-tag type="info">{{ row.deptName || '-' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="phone" label="手机号码" min-width="140" show-overflow-tooltip />
-        <el-table-column prop="statusName" label="账号状态" width="110" align="center" />
-        <el-table-column label="操作" fixed="right" width="200" align="center">
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              :disabled="operationRunning"
-              @view="openDetail(row as UserEntity, 'view')"
-              @edit="openDetail(row as UserEntity, 'edit')"
-              @delete="handleRowDelete(row as UserEntity)"
-            />
-          </template>
-        </el-table-column>
-      </el-table>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="登录账号">
+            <el-input v-model="searchForm.account" clearable placeholder="请输入登录账号" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="用户姓名">
+            <el-input v-model="searchForm.realName" clearable placeholder="请输入用户姓名" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="用户昵称">
+            <el-input v-model="searchForm.name" clearable placeholder="请输入用户昵称" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="手机号码">
+            <el-input v-model="searchForm.phone" clearable placeholder="请输入手机号码" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="电子邮箱">
+            <el-input v-model="searchForm.email" clearable placeholder="请输入电子邮箱" />
+          </el-form-item>
+        </el-col>
+      </search-panel>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading || operationRunning"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
-
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="用户"
-      :submitting="submitting"
-      :loading="formLoading"
-      width="820px"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-result v-if="detailFailed" icon="error" title="用户详情加载失败">
-        <template #extra>
-          <el-button type="primary" @click="retryDetail">重试</el-button>
+      <list-panel title="用户列表">
+        <template #actions>
+          <el-button
+            v-if="canAdd"
+            type="primary"
+            :icon="Plus"
+            :disabled="operationRunning"
+            @click="openAdd"
+          >
+            新增
+          </el-button>
+          <el-button
+            v-if="canDelete"
+            type="danger"
+            plain
+            :icon="Delete"
+            :loading="deleting"
+            :disabled="operationRunning && !deleting"
+            @click="handleBatchDelete"
+          >
+            删除
+          </el-button>
+          <el-dropdown v-if="hasMoreActions" trigger="click" @command="handleMoreAction">
+            <el-button :disabled="operationRunning">
+              更多操作<el-icon class="user-more-icon"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-if="isAdmin" :icon="User" command="grant"
+                  >角色配置</el-dropdown-item
+                >
+                <el-dropdown-item v-if="canReset" :icon="RefreshLeft" command="reset">
+                  密码重置
+                </el-dropdown-item>
+                <el-dropdown-item v-if="isAdmin" :icon="Unlock" command="unlock">
+                  账号解封
+                </el-dropdown-item>
+                <el-dropdown-item v-if="isAdmin" divided :icon="Upload" command="import">
+                  导入
+                </el-dropdown-item>
+                <el-dropdown-item v-if="isAdmin" :icon="Download" command="export">
+                  导出
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </template>
-      </el-result>
-      <template v-else>
-        <el-alert
-          v-if="website.tenantMode && tenantFailed"
-          type="error"
-          :closable="false"
-          show-icon
-        >
-          <template #title>
-            租户选项加载失败
-            <el-button type="primary" link @click="loadTenantOptions">重试</el-button>
-          </template>
-        </el-alert>
-        <el-alert v-if="linkedOptionsFailed" type="error" :closable="false" show-icon>
-          <template #title>
-            关联选项加载失败
-            <el-button type="primary" link @click="retryLinkedOptions">重试</el-button>
-          </template>
-        </el-alert>
-        <el-form
-          ref="formRef"
-          :model="form"
-          :rules="formRules"
-          :disabled="
-            mode === 'view' ||
-            formLoading ||
-            linkedOptionsFailed ||
-            (website.tenantMode && tenantFailed)
-          "
-          label-width="88px"
-        >
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="登录账号" prop="account">
-                <el-input v-model="form.account" maxlength="100" />
-              </el-form-item>
-            </el-col>
-            <el-col v-if="website.tenantMode" :xs="24" :sm="12">
-              <el-form-item label="所属租户" prop="tenantId">
-                <el-select
-                  v-model="form.tenantId"
-                  filterable
-                  :loading="tenantLoading"
-                  @change="handleTenantChange"
-                >
-                  <el-option
-                    v-for="tenant in tenantOptions"
-                    :key="tenant.tenantId"
-                    :label="tenant.tenantName"
-                    :value="tenant.tenantId"
-                  />
-                  <template #empty>
-                    <el-button
-                      v-if="tenantFailed"
-                      type="primary"
-                      link
-                      @click="loadTenantOptions"
-                    >
-                      重新加载租户
-                    </el-button>
-                    <span v-else>暂无租户数据</span>
-                  </template>
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col v-if="mode === 'add'" :xs="24" :sm="12">
-              <el-form-item label="密码" prop="password">
-                <el-input
-                  v-model="form.password"
-                  type="password"
-                  show-password
-                  autocomplete="new-password"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col v-if="mode === 'add'" :xs="24" :sm="12">
-              <el-form-item label="确认密码" prop="password2">
-                <el-input
-                  v-model="form.password2"
-                  type="password"
-                  show-password
-                  autocomplete="new-password"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="用户昵称" prop="name">
-                <el-input v-model="form.name" maxlength="100" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="用户姓名" prop="realName">
-                <el-input v-model="form.realName" maxlength="100" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="所属角色" prop="roleId">
-                <el-tree-select
-                  v-model="form.roleId"
-                  :data="roleOptions"
-                  node-key="id"
-                  :props="treeSelectProps"
-                  multiple
-                  check-strictly
-                  show-checkbox
-                  filterable
-                  clearable
-                  :loading="roleLoading"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="所属部门" prop="deptId">
-                <el-tree-select
-                  v-model="form.deptId"
-                  :data="deptOptions"
-                  node-key="id"
-                  :props="treeSelectProps"
-                  multiple
-                  check-strictly
-                  show-checkbox
-                  filterable
-                  clearable
-                  :loading="deptLoading"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="用户编号" prop="code">
-                <el-input v-model="form.code" maxlength="100" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="所属岗位" prop="postId">
-                <el-select
-                  v-model="form.postId"
-                  multiple
-                  filterable
-                  clearable
-                  :loading="postLoading"
-                >
-                  <el-option
-                    v-for="post in postOptions"
-                    :key="post.id"
-                    :label="post.postName"
-                    :value="post.id"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="手机号码" prop="phone">
-                <el-input v-model="form.phone" maxlength="20" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="电子邮箱" prop="email">
-                <el-input v-model="form.email" maxlength="100" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="用户性别" prop="sex">
-                <el-select v-model="form.sex" clearable>
-                  <el-option label="男" :value="1" />
-                  <el-option label="女" :value="2" />
-                  <el-option label="未知" :value="3" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="用户生日" prop="birthday">
-                <el-date-picker
-                  v-model="form.birthday"
-                  type="datetime"
-                  value-format="YYYY-MM-DD HH:mm:ss"
-                  placeholder="请选择用户生日"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-form>
-      </template>
-    </form-dialog>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
 
-    <el-dialog
-      v-model="grantVisible"
-      title="用户角色配置"
-      width="640px"
-      append-to-body
-      :close-on-click-modal="!grantSubmitting"
-      :close-on-press-escape="!grantSubmitting"
-      :show-close="!grantSubmitting"
-      :before-close="handleGrantBeforeClose"
-    >
-      <el-alert
-        v-if="grantTargetCount > 1"
-        class="user-grant-alert"
-        type="warning"
-        :closable="false"
-        show-icon
-        :title="`将以当前勾选覆盖所选 ${grantTargetCount} 个用户的角色`"
-      />
-      <div v-loading="grantLoading" class="user-grant-dialog">
-        <el-result v-if="grantFailed" icon="error" title="角色数据加载失败">
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column prop="account" label="登录账号" min-width="150" show-overflow-tooltip />
+          <el-table-column
+            v-if="website.tenantMode"
+            prop="tenantId"
+            label="所属租户"
+            min-width="180"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
+          </el-table-column>
+          <el-table-column prop="name" label="用户昵称" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="realName" label="用户姓名" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="roleName" label="所属角色" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }"
+              ><el-tag>{{ row.roleName || '-' }}</el-tag></template
+            >
+          </el-table-column>
+          <el-table-column prop="deptName" label="所属部门" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">
+              <el-tag type="info">{{ row.deptName || '-' }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="phone" label="手机号码" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="statusName" label="账号状态" width="110" align="center" />
+          <el-table-column label="操作" fixed="right" width="200" align="center">
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :disabled="operationRunning"
+                @view="openDetail(row as UserEntity, 'view')"
+                @edit="openDetail(row as UserEntity, 'edit')"
+                @delete="handleRowDelete(row as UserEntity)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading || operationRunning"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="用户"
+        :submitting="submitting"
+        :loading="formLoading"
+        size="lg"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
+      >
+        <el-result v-if="detailFailed" icon="error" title="用户详情加载失败">
           <template #extra>
-            <el-button type="primary" @click="retryGrant">重试</el-button>
+            <el-button type="primary" @click="retryDetail">重试</el-button>
           </template>
         </el-result>
-        <tree-check-panel
-          v-else
-          v-model="grantKeys"
-          v-model:linked="grantLinked"
-          :data="grantTreeData"
-          :loading="grantLoading"
-          :disabled="grantSubmitting"
-        />
-      </div>
-      <template #footer>
-        <el-button :disabled="grantSubmitting" @click="closeGrant">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="grantSubmitting"
-          :disabled="grantLoading || grantFailed"
-          @click="submitGrant"
-        >
-          确定
-        </el-button>
-      </template>
-    </el-dialog>
-
-    <el-dialog
-      v-model="importVisible"
-      title="用户数据导入"
-      width="560px"
-      append-to-body
-      :close-on-click-modal="!importing"
-      :close-on-press-escape="!importing"
-      :show-close="!importing"
-      :before-close="handleImportBeforeClose"
-    >
-      <el-upload
-        ref="uploadRef"
-        v-model:file-list="importFiles"
-        drag
-        accept=".xls,.xlsx"
-        :limit="1"
-        :auto-upload="false"
-        :disabled="importing"
-        :http-request="handleImportRequest"
-        :before-upload="validateImportFile"
-      >
-        <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-        <div class="el-upload__text">将 Excel 文件拖到此处，或<em>点击选择</em></div>
-        <template #tip>
-          <div class="el-upload__tip">仅支持 .xls、.xlsx 格式文件</div>
+        <template v-else>
+          <el-alert
+            v-if="website.tenantMode && tenantFailed"
+            type="error"
+            :closable="false"
+            show-icon
+          >
+            <template #title>
+              租户选项加载失败
+              <el-button type="primary" link @click="loadTenantOptions">重试</el-button>
+            </template>
+          </el-alert>
+          <el-alert v-if="linkedOptionsFailed" type="error" :closable="false" show-icon>
+            <template #title>
+              关联选项加载失败
+              <el-button type="primary" link @click="retryLinkedOptions">重试</el-button>
+            </template>
+          </el-alert>
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="formRules"
+            :disabled="
+              mode === 'view' ||
+              formLoading ||
+              linkedOptionsFailed ||
+              (website.tenantMode && tenantFailed)
+            "
+            label-width="88px"
+          >
+            <el-row :gutter="24">
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="登录账号" prop="account">
+                  <el-input v-model="form.account" maxlength="100" />
+                </el-form-item>
+              </el-col>
+              <el-col v-if="website.tenantMode" :xs="24" :sm="12">
+                <el-form-item label="所属租户" prop="tenantId">
+                  <el-select
+                    v-model="form.tenantId"
+                    filterable
+                    :loading="tenantLoading"
+                    @change="handleTenantChange"
+                  >
+                    <el-option
+                      v-for="tenant in tenantOptions"
+                      :key="tenant.tenantId"
+                      :label="tenant.tenantName"
+                      :value="tenant.tenantId"
+                    />
+                    <template #empty>
+                      <el-button v-if="tenantFailed" type="primary" link @click="loadTenantOptions">
+                        重新加载租户
+                      </el-button>
+                      <span v-else>暂无租户数据</span>
+                    </template>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col v-if="mode === 'add'" :xs="24" :sm="12">
+                <el-form-item label="密码" prop="password">
+                  <el-input
+                    v-model="form.password"
+                    type="password"
+                    show-password
+                    autocomplete="new-password"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col v-if="mode === 'add'" :xs="24" :sm="12">
+                <el-form-item label="确认密码" prop="password2">
+                  <el-input
+                    v-model="form.password2"
+                    type="password"
+                    show-password
+                    autocomplete="new-password"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="用户昵称" prop="name">
+                  <el-input v-model="form.name" maxlength="100" />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="用户姓名" prop="realName">
+                  <el-input v-model="form.realName" maxlength="100" />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="所属角色" prop="roleId">
+                  <el-tree-select
+                    v-model="form.roleId"
+                    :data="roleOptions"
+                    node-key="id"
+                    :props="treeSelectProps"
+                    multiple
+                    check-strictly
+                    show-checkbox
+                    filterable
+                    clearable
+                    :loading="roleLoading"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="所属部门" prop="deptId">
+                  <el-tree-select
+                    v-model="form.deptId"
+                    :data="deptOptions"
+                    node-key="id"
+                    :props="treeSelectProps"
+                    multiple
+                    check-strictly
+                    show-checkbox
+                    filterable
+                    clearable
+                    :loading="deptLoading"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="用户编号" prop="code">
+                  <el-input v-model="form.code" maxlength="100" />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="所属岗位" prop="postId">
+                  <el-select
+                    v-model="form.postId"
+                    multiple
+                    filterable
+                    clearable
+                    :loading="postLoading"
+                  >
+                    <el-option
+                      v-for="post in postOptions"
+                      :key="post.id"
+                      :label="post.postName"
+                      :value="post.id"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="手机号码" prop="phone">
+                  <el-input v-model="form.phone" maxlength="20" />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="电子邮箱" prop="email">
+                  <el-input v-model="form.email" maxlength="100" />
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="用户性别" prop="sex">
+                  <el-select v-model="form.sex" clearable>
+                    <el-option label="男" :value="1" />
+                    <el-option label="女" :value="2" />
+                    <el-option label="未知" :value="3" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12">
+                <el-form-item label="用户生日" prop="birthday">
+                  <el-date-picker
+                    v-model="form.birthday"
+                    type="datetime"
+                    value-format="YYYY-MM-DD HH:mm:ss"
+                    placeholder="请选择用户生日"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
         </template>
-      </el-upload>
-      <el-button
-        class="user-template-button"
-        :icon="Download"
-        :loading="templateLoading"
-        :disabled="importing"
-        @click="handleTemplateDownload"
+      </form-dialog>
+
+      <app-dialog
+        v-model="grantVisible"
+        title="用户角色配置"
+        size="sm"
+        :loading="grantLoading"
+        :failed="grantFailed"
+        :submitting="grantSubmitting"
+        @retry="retryGrant"
+        @cancel="closeGrant"
       >
-        下载导入模板
-      </el-button>
-      <template #footer>
-        <el-button :disabled="importing" @click="closeImport">取消</el-button>
-        <el-button type="primary" :loading="importing" @click="submitImport">开始导入</el-button>
-      </template>
-    </el-dialog>
-  </div>
+        <el-alert
+          v-if="grantTargetCount > 1"
+          class="user-grant-alert"
+          type="warning"
+          :closable="false"
+          show-icon
+          :title="`将以当前勾选覆盖所选 ${grantTargetCount} 个用户的角色`"
+        />
+        <div class="user-grant-dialog">
+          <tree-check-panel
+            v-model="grantKeys"
+            v-model:linked="grantLinked"
+            :data="grantTreeData"
+            :loading="grantLoading"
+            :disabled="grantSubmitting"
+          />
+        </div>
+        <template #footer="{ cancel }">
+          <el-button :disabled="grantSubmitting" @click="cancel">取消</el-button>
+          <el-button
+            type="primary"
+            :loading="grantSubmitting"
+            :disabled="grantLoading || grantFailed"
+            @click="submitGrant"
+          >
+            确定
+          </el-button>
+        </template>
+      </app-dialog>
+
+      <app-dialog
+        v-model="importVisible"
+        title="用户数据导入"
+        size="sm"
+        :submitting="importing"
+        @cancel="closeImport"
+      >
+        <el-upload
+          ref="uploadRef"
+          v-model:file-list="importFiles"
+          drag
+          accept=".xls,.xlsx"
+          :limit="1"
+          :auto-upload="false"
+          :disabled="importing"
+          :http-request="handleImportRequest"
+          :before-upload="validateImportFile"
+        >
+          <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+          <div class="el-upload__text">将 Excel 文件拖到此处，或<em>点击选择</em></div>
+          <template #tip>
+            <div class="el-upload__tip">仅支持 .xls、.xlsx 格式文件</div>
+          </template>
+        </el-upload>
+        <el-button
+          class="user-template-button"
+          :icon="Download"
+          :loading="templateLoading"
+          :disabled="importing"
+          @click="handleTemplateDownload"
+        >
+          下载导入模板
+        </el-button>
+        <template #footer="{ cancel }">
+          <el-button :disabled="importing" @click="cancel">取消</el-button>
+          <el-button type="primary" :loading="importing" @click="submitImport">开始导入</el-button>
+        </template>
+      </app-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -462,6 +460,7 @@ import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import AppDialog from '@/components/app-dialog/main.vue';
 import { useUserStore } from '@/store/user';
 import TreeCheckPanel from '@/components/tree-check-panel/main.vue';
 import { useCrudPermission } from '@/composables/useCrudPermission';
@@ -952,11 +951,6 @@ const closeGrant = () => {
   grantVisible.value = false;
   clearGrant();
 };
-const handleGrantBeforeClose = (done: () => void) => {
-  if (grantSubmitting.value) return;
-  clearGrant();
-  done();
-};
 const submitGrant = async () => {
   if (grantSubmitting.value || grantLoading.value || grantFailed.value) return;
   grantSubmitting.value = true;
@@ -1012,13 +1006,6 @@ const closeImport = () => {
   importFiles.value = [];
   uploadRef.value?.clearFiles();
 };
-const handleImportBeforeClose = (done: () => void) => {
-  if (importing.value) return;
-  importFiles.value = [];
-  uploadRef.value?.clearFiles();
-  done();
-};
-
 const showDownloadError = (error: object) => {
   if (!axios.isAxiosError(error) && error instanceof Error) ElMessage.error(error.message);
 };
@@ -1073,7 +1060,7 @@ onMounted(() => {
 }
 
 .user-more-icon {
-  margin-left: 6px;
+  margin-left: var(--saber-space-2);
 }
 
 .user-grant-dialog {
@@ -1081,11 +1068,11 @@ onMounted(() => {
 }
 
 .user-grant-alert {
-  margin-bottom: 16px;
+  margin-bottom: var(--saber-space-4);
 }
 
 .user-template-button {
-  margin-top: 16px;
+  margin-top: var(--saber-space-4);
 }
 
 :deep(.el-select),

@@ -1,16 +1,11 @@
 <template>
-  <el-dialog
+  <app-dialog
     v-model="visible"
     class="prompt-action-dialog"
-    append-to-body
-    align-center
-    width="560px"
     :title="title"
-    :close-on-click-modal="!submitting"
-    :close-on-press-escape="!submitting"
-    :show-close="!submitting"
-    :before-close="handleBeforeClose"
-    @closed="resetState"
+    size="sm"
+    :submitting="submitting"
+    @close="resetState"
   >
     <el-alert
       :title="consequenceTitle"
@@ -59,9 +54,9 @@
       show-icon
     />
 
-    <template #footer>
+    <template #footer="{ cancel }">
       <div class="prompt-action-dialog__footer">
-        <el-button :disabled="submitting" @click="visible = false">取消</el-button>
+        <el-button :disabled="submitting" @click="cancel">取消</el-button>
         <el-button
           :type="action === 'disable' ? 'danger' : 'primary'"
           :loading="submitting"
@@ -72,13 +67,14 @@
         </el-button>
       </div>
     </template>
-  </el-dialog>
+  </app-dialog>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { ElForm, ElMessage, type FormRules } from 'element-plus';
 import { BladeBusinessError } from '@/axios';
+import AppDialog from '@/components/app-dialog/main.vue';
 import {
   disablePrompt,
   publishPrompt,
@@ -213,10 +209,6 @@ const confirmAction = async () => {
   }
 };
 
-const handleBeforeClose = (done: () => void) => {
-  if (!submitting.value) done();
-};
-
 const resetState = () => {
   form.value = { note: '' };
   conflict.value = false;
@@ -227,19 +219,17 @@ const resetState = () => {
 
 <style lang="scss">
 .prompt-action-dialog {
-  max-width: calc(100vw - 32px);
-  border-radius: 6px;
   background: var(--saber-surface-elevated);
 }
 
 .prompt-action-dialog__summary {
-  margin: 18px 0;
+  margin: var(--saber-space-4) 0;
 }
 
 .prompt-action-dialog__footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-action-dialog__footer .el-button + .el-button {

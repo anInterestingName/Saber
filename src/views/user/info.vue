@@ -1,142 +1,144 @@
 <template>
-  <div>
-    <basic-container>
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <!-- 个人信息 Tab -->
-        <el-tab-pane label="个人信息" name="info">
-          <el-form ref="infoFormRef" :model="infoForm" label-width="100px">
-            <el-form-item label="头像">
-              <div class="avatar-upload-container">
-                <div class="avatar-wrapper" v-if="infoForm.avatar">
-                  <img :src="infoForm.avatar" alt="用户头像" class="avatar" />
-                  <div class="avatar-overlay">
-                    <el-icon class="avatar-action" @click="previewAvatar"><View /></el-icon>
-                    <el-icon class="avatar-action" @click="deleteAvatar"><Delete /></el-icon>
+  <page-container layout="content">
+    <div>
+      <basic-container>
+        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+          <!-- 个人信息 Tab -->
+          <el-tab-pane label="个人信息" name="info">
+            <el-form ref="infoFormRef" :model="infoForm" label-width="100px">
+              <el-form-item label="头像">
+                <div class="avatar-upload-container">
+                  <div class="avatar-wrapper" v-if="infoForm.avatar">
+                    <img :src="infoForm.avatar" alt="用户头像" class="avatar" />
+                    <div class="avatar-overlay">
+                      <el-icon class="avatar-action" @click="previewAvatar"><View /></el-icon>
+                      <el-icon class="avatar-action" @click="deleteAvatar"><Delete /></el-icon>
+                    </div>
                   </div>
+                  <el-upload
+                    v-else
+                    class="avatar-uploader"
+                    action="/api/blade-resource/oss/endpoint/put-file"
+                    :headers="uploadHeaders"
+                    :show-file-list="false"
+                    :on-success="handleAvatarSuccess"
+                    :before-upload="beforeAvatarUpload"
+                    accept=".jpg,.jpeg,.png,.gif"
+                  >
+                    <el-icon class="avatar-uploader-icon"><Plus /></el-icon>
+                  </el-upload>
+                  <div class="el-upload__tip">支持 JPG/PNG/GIF 格式，文件大小不超过 1MB</div>
                 </div>
-                <el-upload
-                  v-else
-                  class="avatar-uploader"
-                  action="/api/blade-resource/oss/endpoint/put-file"
-                  :headers="uploadHeaders"
-                  :show-file-list="false"
-                  :on-success="handleAvatarSuccess"
-                  :before-upload="beforeAvatarUpload"
-                  accept=".jpg,.jpeg,.png,.gif"
-                >
-                  <el-icon class="avatar-uploader-icon"><Plus /></el-icon>
-                </el-upload>
-                <div class="el-upload__tip">支持 JPG/PNG/GIF 格式，文件大小不超过 1MB</div>
-              </div>
-            </el-form-item>
-            <el-form-item label="姓名">
-              <el-input v-model="infoForm.realName" placeholder="请输入姓名">
-                <template #prefix>
-                  <el-icon><Bell /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item label="用户名">
-              <el-input v-model="infoForm.name" placeholder="请输入用户名">
-                <template #prefix>
-                  <el-icon><User /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item label="手机号">
-              <el-input v-model="infoForm.phone" placeholder="请输入手机号">
-                <template #prefix>
-                  <el-icon><Iphone /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item label="邮箱">
-              <el-input v-model="infoForm.email" placeholder="请输入邮箱">
-                <template #prefix>
-                  <el-icon><Message /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item>
-              <div class="button-group">
-                <el-button type="primary" @click="submitInfo" :loading="loading">
-                  <el-icon><Check /></el-icon>
-                  <span>提交</span>
-                </el-button>
-                <el-button @click="resetForm">
-                  <el-icon><RefreshRight /></el-icon>
-                  <span>清空</span>
-                </el-button>
-              </div>
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
+              </el-form-item>
+              <el-form-item label="姓名">
+                <el-input v-model="infoForm.realName" placeholder="请输入姓名">
+                  <template #prefix>
+                    <el-icon><Bell /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item label="用户名">
+                <el-input v-model="infoForm.name" placeholder="请输入用户名">
+                  <template #prefix>
+                    <el-icon><User /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item label="手机号">
+                <el-input v-model="infoForm.phone" placeholder="请输入手机号">
+                  <template #prefix>
+                    <el-icon><Iphone /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item label="邮箱">
+                <el-input v-model="infoForm.email" placeholder="请输入邮箱">
+                  <template #prefix>
+                    <el-icon><Message /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item>
+                <div class="button-group">
+                  <el-button type="primary" @click="submitInfo" :loading="loading">
+                    <el-icon><Check /></el-icon>
+                    <span>提交</span>
+                  </el-button>
+                  <el-button @click="resetForm">
+                    <el-icon><RefreshRight /></el-icon>
+                    <span>清空</span>
+                  </el-button>
+                </div>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
 
-        <!-- 修改密码 Tab -->
-        <el-tab-pane label="修改密码" name="password">
-          <el-form ref="passwordFormRef" :model="passwordForm" label-width="100px">
-            <el-form-item label="原密码">
-              <el-input
-                v-model="passwordForm.oldPassword"
-                type="password"
-                placeholder="请输入原密码"
-                show-password
-              >
-                <template #prefix>
-                  <el-icon><Lock /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item label="新密码">
-              <el-input
-                v-model="passwordForm.newPassword"
-                type="password"
-                placeholder="请输入新密码"
-                show-password
-              >
-                <template #prefix>
-                  <el-icon><Lock /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item label="确认密码">
-              <el-input
-                v-model="passwordForm.newPassword1"
-                type="password"
-                placeholder="请确认新密码"
-                show-password
-              >
-                <template #prefix>
-                  <el-icon><Lock /></el-icon>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item>
-              <div class="button-group">
-                <el-button type="primary" @click="submitPassword" :loading="loading">
-                  <el-icon><Check /></el-icon>
-                  <span>提交</span>
-                </el-button>
-                <el-button @click="resetForm">
-                  <el-icon><RefreshRight /></el-icon>
-                  <span>清空</span>
-                </el-button>
-              </div>
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
-      </el-tabs>
-    </basic-container>
-    <!-- 头像预览组件 -->
-    <el-image-viewer
-      v-if="showAvatarPreview"
-      :url-list="avatarPreviewList"
-      :initial-index="0"
-      :hide-on-click-modal="true"
-      :teleported="true"
-      @close="showAvatarPreview = false"
-    />
-  </div>
+          <!-- 修改密码 Tab -->
+          <el-tab-pane label="修改密码" name="password">
+            <el-form ref="passwordFormRef" :model="passwordForm" label-width="100px">
+              <el-form-item label="原密码">
+                <el-input
+                  v-model="passwordForm.oldPassword"
+                  type="password"
+                  placeholder="请输入原密码"
+                  show-password
+                >
+                  <template #prefix>
+                    <el-icon><Lock /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item label="新密码">
+                <el-input
+                  v-model="passwordForm.newPassword"
+                  type="password"
+                  placeholder="请输入新密码"
+                  show-password
+                >
+                  <template #prefix>
+                    <el-icon><Lock /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item label="确认密码">
+                <el-input
+                  v-model="passwordForm.newPassword1"
+                  type="password"
+                  placeholder="请确认新密码"
+                  show-password
+                >
+                  <template #prefix>
+                    <el-icon><Lock /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+              <el-form-item>
+                <div class="button-group">
+                  <el-button type="primary" @click="submitPassword" :loading="loading">
+                    <el-icon><Check /></el-icon>
+                    <span>提交</span>
+                  </el-button>
+                  <el-button @click="resetForm">
+                    <el-icon><RefreshRight /></el-icon>
+                    <span>清空</span>
+                  </el-button>
+                </div>
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
+        </el-tabs>
+      </basic-container>
+      <!-- 头像预览组件 -->
+      <el-image-viewer
+        v-if="showAvatarPreview"
+        :url-list="avatarPreviewList"
+        :initial-index="0"
+        :hide-on-click-modal="true"
+        :teleported="true"
+        @close="showAvatarPreview = false"
+      />
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -302,8 +304,7 @@ const submitPassword = () => {
 // 头像上传成功回调
 const handleAvatarSuccess = (response: UploadResult) => {
   if (response && response.data) {
-    infoForm.value.avatar =
-      (response.data as { link?: string }).link || (response.data as string);
+    infoForm.value.avatar = (response.data as { link?: string }).link || (response.data as string);
   }
 };
 
@@ -385,15 +386,15 @@ if (activeTab.value === 'info') {
   position: relative;
   width: 200px;
   height: 200px;
-  border-radius: 12px;
+  border-radius: var(--saber-radius-overlay);
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--saber-shadow-media);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .avatar-wrapper:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--saber-shadow-media-hover);
   transform: translateY(-2px);
 }
 
@@ -401,7 +402,7 @@ if (activeTab.value === 'info') {
   width: 200px;
   height: 200px;
   display: block;
-  border-radius: 12px;
+  border-radius: var(--saber-radius-overlay);
   object-fit: cover;
 }
 
@@ -411,11 +412,11 @@ if (activeTab.value === 'info') {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 100%);
+  background: var(--saber-media-scrim);
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: var(--saber-space-5);
   opacity: 0;
   transition: opacity 0.3s ease;
   backdrop-filter: blur(2px);
@@ -427,11 +428,11 @@ if (activeTab.value === 'info') {
 
 .avatar-action {
   font-size: 20px;
-  color: #fff;
+  color: var(--saber-text-on-accent);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.2);
+  padding: var(--saber-space-2);
+  border-radius: var(--saber-radius-round);
+  background-color: var(--saber-media-action-bg);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -439,21 +440,21 @@ if (activeTab.value === 'info') {
 }
 
 .avatar-action:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--saber-media-action-bg-hover);
   transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--saber-shadow-media-action);
 }
 
 .avatar-uploader :deep(.el-upload) {
-  border: 2px dashed #d9d9d9;
-  border-radius: 12px;
+  border: 2px dashed var(--saber-border-strong);
+  border-radius: var(--saber-radius-overlay);
   cursor: pointer;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
   width: 200px;
   height: 200px;
-  background-color: #fafafa;
+  background-color: var(--saber-surface-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -461,12 +462,12 @@ if (activeTab.value === 'info') {
 
 .avatar-uploader :deep(.el-upload:hover) {
   border-color: var(--el-color-primary);
-  background-color: #f5f5f5;
+  background-color: var(--saber-surface-subtle);
 }
 
 .avatar-uploader-icon {
   font-size: 40px;
-  color: #8c939d;
+  color: var(--saber-text-tertiary);
   transition: color 0.3s ease;
 }
 
@@ -476,16 +477,16 @@ if (activeTab.value === 'info') {
 
 .el-upload__tip {
   font-size: 12px;
-  color: #969799;
-  margin-top: 10px;
+  color: var(--saber-text-tertiary);
+  margin-top: var(--saber-space-2);
   line-height: 1.5;
-  padding-left: 4px;
+  padding-left: var(--saber-space-1);
 }
 
 .button-group {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: var(--saber-space-4);
   width: 100%;
 }
 

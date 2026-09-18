@@ -30,6 +30,11 @@ const mixColor = (source: string, target: string, ratio: number) => {
   return `#${channels.map(channel => channel.toString(16).padStart(2, '0')).join('')}`;
 };
 
+const toRgb = (color: string) => {
+  const value = Number.parseInt(color.slice(1), 16);
+  return [16, 8, 0].map(shift => (value >> shift) & 0xff).join(', ');
+};
+
 export const normalizePrimaryColor = (color: string | undefined) => {
   return normalizeHex(color || DEFAULT_PRIMARY_COLOR);
 };
@@ -45,11 +50,16 @@ export const applyTheme = (setting: Pick<AppSetting, 'theme' | 'colorPrimary'>) 
     .forEach(className => body.classList.remove(className));
   body.classList.toggle('theme-dark', setting.theme === 'dark');
 
+  const paletteTarget = setting.theme === 'dark' ? '#1b1f26' : '#ffffff';
   root.style.setProperty('--el-color-primary', primaryColor);
-  root.style.setProperty('--el-color-primary-light-3', mixColor(primaryColor, '#ffffff', 0.3));
-  root.style.setProperty('--el-color-primary-light-5', mixColor(primaryColor, '#ffffff', 0.5));
-  root.style.setProperty('--el-color-primary-light-7', mixColor(primaryColor, '#ffffff', 0.7));
-  root.style.setProperty('--el-color-primary-light-8', mixColor(primaryColor, '#ffffff', 0.8));
-  root.style.setProperty('--el-color-primary-light-9', mixColor(primaryColor, '#ffffff', 0.9));
+  root.style.setProperty('--el-color-primary-rgb', toRgb(primaryColor));
+  root.style.setProperty('--el-color-primary-light-3', mixColor(primaryColor, paletteTarget, 0.3));
+  root.style.setProperty('--el-color-primary-light-5', mixColor(primaryColor, paletteTarget, 0.5));
+  root.style.setProperty('--el-color-primary-light-7', mixColor(primaryColor, paletteTarget, 0.7));
+  root.style.setProperty('--el-color-primary-light-8', mixColor(primaryColor, paletteTarget, 0.8));
+  root.style.setProperty('--el-color-primary-light-9', mixColor(primaryColor, paletteTarget, 0.9));
   root.style.setProperty('--el-color-primary-dark-2', mixColor(primaryColor, '#000000', 0.2));
+  root.style.setProperty('--saber-accent-soft', mixColor(primaryColor, paletteTarget, 0.9));
+  root.style.setProperty('--saber-accent-hover', mixColor(primaryColor, paletteTarget, 0.94));
+  root.style.setProperty('--saber-focus-ring-color', mixColor(primaryColor, paletteTarget, 0.55));
 };

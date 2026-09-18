@@ -1,34 +1,19 @@
 <template>
-  <el-dialog
+  <app-dialog
     v-model="visible"
     class="prompt-editor-dialog"
-    append-to-body
-    align-center
-    width="min(1120px, calc(100vw - 32px))"
+    size="lg"
     destroy-on-close
-    :close-on-click-modal="!saving"
-    :close-on-press-escape="!saving"
-    :show-close="!saving"
-    :before-close="handleBeforeClose"
     :title="dialogTitle"
-    @closed="resetDialog"
+    :loading="loading"
+    :failed="loadFailed"
+    :submitting="saving"
+    :dirty="formDirty"
+    @retry="loadDetail"
+    @close="resetDialog"
   >
-    <div v-loading="loading" class="prompt-editor-dialog__body">
-      <el-result
-        v-if="loadFailed"
-        icon="error"
-        title="提示词详情加载失败"
-        sub-title="旧详情已清空，请重新加载后继续"
-      >
-        <template #extra>
-          <el-button type="primary" :disabled="!localPromptId" @click="loadDetail">
-            重新加载
-          </el-button>
-        </template>
-      </el-result>
-
+    <div class="prompt-editor-dialog__body">
       <el-form
-        v-else
         ref="formRef"
         :model="form"
         :rules="formRules"
@@ -62,6 +47,55 @@
               </el-form-item>
             </el-col>
           </el-row>
+          <el-row :gutter="16">
+            <el-col :xs="24" :md="12">
+              <el-form-item label="类型" prop="promptType">
+                <el-select v-model="form.promptType" placeholder="请选择提示词类型">
+                  <el-option
+                    v-for="option in promptTypeOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :md="12">
+              <el-form-item label="发布方式" prop="publishMode">
+                <el-select v-model="form.publishMode" placeholder="请选择发布方式">
+                  <el-option
+                    v-for="option in promptPublishModeOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                    :disabled="option.value === 2 && !canUseAutoPublish"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-alert
+            v-if="form.publishMode === 2 && !readonly"
+            class="prompt-editor-auto-alert"
+            title="自动发布会在保存成功后立即生成线上版本"
+            type="warning"
+            :closable="false"
+            show-icon
+          />
+          <el-form-item
+            v-if="form.publishMode === 2 || (readonly && currentVersionNo)"
+            label="变更说明"
+            :prop="readonly ? undefined : 'changeNote'"
+          >
+            <el-input
+              v-model="form.changeNote"
+              type="textarea"
+              :rows="3"
+              maxlength="500"
+              :show-word-limit="!readonly"
+              :placeholder="readonly ? '上一次发布未填写变更说明' : '请输入本次自动发布的变更说明'"
+            />
+          </el-form-item>
           <el-descriptions v-if="internalMode !== 'add'" :column="4" border>
             <el-descriptions-item label="状态">
               <el-tag :type="statusType">{{ statusLabel }}</el-tag>
@@ -148,9 +182,9 @@
       </el-form>
     </div>
 
-    <template #footer>
+    <template #footer="{ cancel }">
       <div class="prompt-editor-dialog__footer">
-        <el-button :disabled="saving" @click="closeDialog">
+        <el-button :disabled="saving" @click="cancel">
           {{ readonly ? '关闭' : '取消' }}
         </el-button>
         <el-button
@@ -169,11 +203,11 @@
           :disabled="loading || saving"
           @click="saveDraft"
         >
-          保存
+          {{ saveButtonText }}
         </el-button>
       </div>
     </template>
-  </el-dialog>
+  </app-dialog>
 
   <prompt-preview-drawer v-model="previewVisible" :snapshot="previewSnapshot" />
 </template>
@@ -184,10 +218,13 @@ import { DocumentChecked, View } from '@element-plus/icons-vue';
 import { ElForm, ElMessage, type FormRules } from 'element-plus';
 import PromptVariableEditor from './prompt-variable-editor.vue';
 import PromptPreviewDrawer from './prompt-preview-drawer.vue';
+import AppDialog from '@/components/app-dialog/main.vue';
 import { BladeBusinessError } from '@/axios';
 import {
   createPrompt,
   getPromptDetail,
+  promptPublishModeOptions,
+  promptTypeOptions,
   updatePrompt,
   type PromptDetail,
   type PromptDraftPayload,
@@ -202,6 +239,7 @@ interface PromptEditorDialogProps {
   mode: CrudMode;
   promptId?: string;
   canPreview?: boolean;
+  canPublish?: boolean;
   canCreate?: boolean;
   canEdit?: boolean;
 }
@@ -209,6 +247,7 @@ interface PromptEditorDialogProps {
 const props = withDefaults(defineProps<PromptEditorDialogProps>(), {
   promptId: undefined,
   canPreview: false,
+  canPublish: false,
   canCreate: false,
   canEdit: false,
 });
@@ -221,12 +260,16 @@ const emit = defineEmits<{
 const createInitialForm = (): PromptDraftPayload => ({
   promptName: '',
   promptCode: '',
+  promptType: 'GENERAL',
+  publishMode: 1,
   fixedInstruction: '',
   userTemplate: '',
   variables: [],
+  changeNote: '',
 });
 
 const form = ref<PromptDraftPayload>(createInitialForm());
+const initialFormSnapshot = ref(JSON.stringify(form.value));
 const internalMode = ref<CrudMode>('add');
 const localPromptId = ref('');
 const lockVersion = ref('');
@@ -250,9 +293,15 @@ const visible = computed({
   set: value => emit('update:modelValue', value),
 });
 const readonly = computed(() => internalMode.value === 'view');
-const canSaveCurrentMode = computed(() =>
-  internalMode.value === 'add' ? props.canCreate : props.canEdit
+const canUseAutoPublish = computed(() => props.canPublish || readonly.value);
+const formDirty = computed(
+  () => !readonly.value && JSON.stringify(form.value) !== initialFormSnapshot.value
 );
+const canSaveCurrentMode = computed(() => {
+  const canSave = internalMode.value === 'add' ? props.canCreate : props.canEdit;
+  return canSave && (form.value.publishMode !== 2 || props.canPublish);
+});
+const saveButtonText = computed(() => (form.value.publishMode === 2 ? '保存并发布' : '保存'));
 const dialogTitle = computed(() => {
   const prefix: { [key in CrudMode]: string } = { add: '新增', edit: '编辑', view: '查看' };
   return `${prefix[internalMode.value]}提示词`;
@@ -294,9 +343,17 @@ const formRules = computed<FormRules>(() => {
       { required: true, message: '请输入提示词编码', trigger: 'blur' },
       { max: 64, message: '提示词编码不能超过 64 个字符', trigger: 'blur' },
     ],
+    promptType: [{ required: true, message: '请选择提示词类型', trigger: 'change' }],
+    publishMode: [{ required: true, message: '请选择发布方式', trigger: 'change' }],
     fixedInstruction: [{ validator: validateContent, trigger: 'blur' }],
     userTemplate: [{ validator: validateContent, trigger: 'blur' }],
   };
+  if (!readonly.value && form.value.publishMode === 2) {
+    rules.changeNote = [
+      { required: true, message: '请输入自动发布变更说明', trigger: 'blur' },
+      { max: 500, message: '变更说明不能超过 500 个字符', trigger: 'blur' },
+    ];
+  }
   form.value.variables.forEach((variable, index) => {
     rules[`variables.${index}.name`] = [
       { required: true, message: '请输入变量名', trigger: 'blur' },
@@ -360,10 +417,14 @@ const applyDetail = (detail: PromptDetail) => {
   form.value = {
     promptName: detail.promptName,
     promptCode: detail.promptCode,
+    promptType: detail.promptType,
+    publishMode: detail.publishMode,
     fixedInstruction: detail.fixedInstruction ?? '',
     userTemplate: detail.userTemplate ?? '',
     variables: (detail.variables ?? []).map(normalizePromptVariable),
+    changeNote: readonly.value ? detail.currentVersion?.changeNote ?? '' : '',
   };
+  initialFormSnapshot.value = JSON.stringify(form.value);
   applyDetailMetadata(detail);
 };
 
@@ -406,6 +467,8 @@ watch(
 const buildDraftPayload = (): PromptDraftPayload => ({
   promptName: form.value.promptName.trim(),
   promptCode: form.value.promptCode.trim().toLowerCase(),
+  promptType: form.value.promptType,
+  publishMode: form.value.publishMode,
   fixedInstruction: form.value.fixedInstruction,
   userTemplate: form.value.userTemplate,
   variables: form.value.variables.map(variable =>
@@ -416,6 +479,7 @@ const buildDraftPayload = (): PromptDraftPayload => ({
       description: variable.description?.trim() || undefined,
     })
   ),
+  changeNote: form.value.publishMode === 2 ? form.value.changeNote?.trim() : undefined,
 });
 
 const loadConflictSummary = async () => {
@@ -455,10 +519,15 @@ const saveDraft = async () => {
     lockVersion.value = mutation.lockVersion;
     draftRevision.value = mutation.draftRevision;
     status.value = mutation.status;
+    currentVersionNo.value = mutation.versionNo ?? currentVersionNo.value;
     warnings.value = mutation.warnings ?? [];
     internalMode.value = 'edit';
-    draftDirty.value = true;
-    ElMessage.success('保存成功');
+    draftDirty.value = mutation.publishMode !== 2;
+    ElMessage.success(
+      mutation.publishMode === 2 && mutation.versionNo
+        ? `保存并自动发布成功，当前版本 V${mutation.versionNo}`
+        : '保存成功'
+    );
     emit('saved', mutation);
     visible.value = false;
   } catch (error) {
@@ -475,18 +544,11 @@ const formatIssue = (issue: PromptValidationIssue) => {
   return target ? `${target}：${issue.message}` : issue.message;
 };
 
-const closeDialog = () => {
-  if (!saving.value) visible.value = false;
-};
-
-const handleBeforeClose = (done: () => void) => {
-  if (!saving.value) done();
-};
-
 function resetDialog() {
   latestDetailRequest += 1;
   latestConflictRequest += 1;
   form.value = createInitialForm();
+  initialFormSnapshot.value = JSON.stringify(form.value);
   internalMode.value = 'add';
   localPromptId.value = '';
   lockVersion.value = '';
@@ -507,38 +569,11 @@ function resetDialog() {
 
 <style lang="scss">
 .prompt-editor-dialog {
-  display: flex;
-  max-height: calc(100vh - 32px);
-  max-width: calc(100vw - 32px);
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: 6px;
   background: var(--saber-surface-elevated);
-}
-
-.prompt-editor-dialog .el-dialog__header {
-  flex: 0 0 auto;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--saber-border);
-  margin-right: 0;
-}
-
-.prompt-editor-dialog .el-dialog__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 0;
-  overflow: auto;
-}
-
-.prompt-editor-dialog .el-dialog__footer {
-  flex: 0 0 auto;
-  padding: 14px 24px;
-  border-top: 1px solid var(--saber-border);
 }
 
 .prompt-editor-dialog__body {
   min-height: 260px;
-  padding: 24px;
 }
 
 .prompt-editor-dialog__footer {
@@ -546,7 +581,7 @@ function resetDialog() {
   min-height: 32px;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-editor-dialog__footer .el-button + .el-button {
@@ -554,13 +589,13 @@ function resetDialog() {
 }
 
 .prompt-editor-section + .prompt-editor-section {
-  padding-top: 24px;
+  padding-top: var(--saber-space-6);
   border-top: 1px solid var(--saber-border);
-  margin-top: 24px;
+  margin-top: var(--saber-space-6);
 }
 
 .prompt-editor-section__heading {
-  margin-bottom: 16px;
+  margin-bottom: var(--saber-space-4);
 }
 
 .prompt-editor-section__heading h3,
@@ -585,6 +620,14 @@ function resetDialog() {
   margin-bottom: 0;
 }
 
+.prompt-editor-section .el-select {
+  width: 100%;
+}
+
+.prompt-editor-auto-alert {
+  margin-bottom: var(--saber-space-4);
+}
+
 .prompt-editor-variables-item > .el-form-item__content {
   display: block;
   margin-left: 0 !important;
@@ -592,21 +635,14 @@ function resetDialog() {
 
 .prompt-editor-warnings {
   display: grid;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .prompt-editor-conflict {
-  margin-top: 20px;
+  margin-top: var(--saber-space-5);
 }
 
 @media (max-width: 767px) {
-  .prompt-editor-dialog .el-dialog__header,
-  .prompt-editor-dialog__body,
-  .prompt-editor-dialog .el-dialog__footer {
-    padding-right: 16px;
-    padding-left: 16px;
-  }
-
   .prompt-editor-dialog__footer {
     align-items: stretch;
     flex-direction: column-reverse;

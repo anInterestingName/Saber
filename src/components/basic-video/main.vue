@@ -97,7 +97,7 @@ export default {
       width: 30px;
       height: 30px;
       border-width: 4px;
-      color: #0073eb;
+      color: var(--el-color-primary);
       border-style: solid;
       &:nth-child(1) {
         left: 15px;

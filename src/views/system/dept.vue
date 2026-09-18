@@ -1,151 +1,160 @@
 <template>
-  <div class="tree-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="部门名称">
-          <el-input v-model="searchForm.deptName" clearable placeholder="请输入部门名称" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="部门全称">
-          <el-input v-model="searchForm.fullName" clearable placeholder="请输入部门全称" />
-        </el-form-item>
-      </el-col>
-      <el-col v-if="website.tenantMode" :xs="24" :sm="12" :md="6">
-        <el-form-item label="所属租户">
-          <el-select v-model="searchForm.tenantId" clearable filterable :loading="tenantLoading">
-            <el-option
-              v-for="tenant in tenantOptions"
-              :key="tenant.tenantId"
-              :label="tenant.tenantName"
-              :value="tenant.tenantId"
+  <page-container layout="workspace">
+    <div class="tree-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
+      >
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="部门名称">
+            <el-input v-model="searchForm.deptName" clearable placeholder="请输入部门名称" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="部门全称">
+            <el-input v-model="searchForm.fullName" clearable placeholder="请输入部门全称" />
+          </el-form-item>
+        </el-col>
+        <el-col v-if="website.tenantMode" :xs="24" :sm="12" :md="6">
+          <el-form-item label="所属租户">
+            <el-select v-model="searchForm.tenantId" clearable filterable :loading="tenantLoading">
+              <el-option
+                v-for="tenant in tenantOptions"
+                :key="tenant.tenantId"
+                :label="tenant.tenantName"
+                :value="tenant.tenantId"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </search-panel>
+
+      <list-panel title="部门列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
+            删除
+          </el-button>
+        </template>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
             />
-          </el-select>
-        </el-form-item>
-      </el-col>
-    </search-panel>
+          </el-tooltip>
+        </template>
 
-    <list-panel title="部门列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
-          删除
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        :expand-row-keys="tableExpandedRowKeys"
-        :tree-props="{ children: 'children' }"
-        @expand-change="handleTableExpandChange"
-        @selection-change="handleSelectionChange"
-      >
-        <el-table-column type="selection" width="48" />
-        <el-table-column type="index" label="#" width="60" align="center" />
-        <el-table-column prop="deptName" label="部门名称" min-width="200" show-overflow-tooltip />
-        <el-table-column
-          v-if="website.tenantMode"
-          prop="tenantId"
-          label="所属租户"
-          min-width="180"
-          show-overflow-tooltip
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          :expand-row-keys="tableExpandedRowKeys"
+          :tree-props="{ children: 'children' }"
+          @expand-change="handleTableExpandChange"
+          @selection-change="handleSelectionChange"
         >
-          <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
-        </el-table-column>
-        <el-table-column prop="fullName" label="部门全称" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="sort" label="排序" width="100" align="center" />
-        <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
-        <el-table-column label="操作" fixed="right" width="300" align="center">
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              @view="openDetail(row as DeptEntity, 'view')"
-              @edit="openDetail(row as DeptEntity, 'edit')"
-              @delete="handleRowDelete(row as DeptEntity)"
-            >
-              <template v-if="isAdmin" #extra>
-                <el-button type="primary" link :icon="Plus" @click="openChild(row as DeptEntity)">
-                  新增子项
-                </el-button>
-              </template>
-            </row-actions>
-          </template>
-        </el-table-column>
-      </el-table>
-    </list-panel>
+          <el-table-column type="selection" width="48" />
+          <el-table-column type="index" label="#" width="60" align="center" />
+          <el-table-column prop="deptName" label="部门名称" min-width="200" show-overflow-tooltip />
+          <el-table-column
+            v-if="website.tenantMode"
+            prop="tenantId"
+            label="所属租户"
+            min-width="180"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
+          </el-table-column>
+          <el-table-column prop="fullName" label="部门全称" min-width="220" show-overflow-tooltip />
+          <el-table-column prop="sort" label="排序" width="100" align="center" />
+          <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
+          <el-table-column label="操作" fixed="right" width="300" align="center">
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :actions="isAdmin ? [{ key: 'add-child', label: '新增子项', icon: Plus }] : []"
+                @view="openDetail(row as DeptEntity, 'view')"
+                @edit="openDetail(row as DeptEntity, 'edit')"
+                @delete="handleRowDelete(row as DeptEntity)"
+                @action="openChild(row as DeptEntity)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+      </list-panel>
 
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="部门"
-      :submitting="submitting"
-      :loading="formLoading"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-alert v-if="detailFailed || parentOptionsFailed" type="error" :closable="false" show-icon>
-        <template #title>数据加载失败，请关闭后重试</template>
-      </el-alert>
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || formLoading || detailFailed || parentOptionsFailed"
-        label-width="88px"
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="部门"
+        :submitting="submitting"
+        :loading="formLoading"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
       >
-        <el-form-item label="部门名称" prop="deptName">
-          <el-input v-model="form.deptName" maxlength="100" />
-        </el-form-item>
-        <el-form-item v-if="website.tenantMode && mode === 'view'" label="所属租户">
-          <el-input :model-value="getTenantName(form.tenantId)" />
-        </el-form-item>
-        <el-form-item label="部门全称" prop="fullName">
-          <el-input v-model="form.fullName" maxlength="200" />
-        </el-form-item>
-        <el-form-item label="上级部门" prop="parentId">
-          <el-tree-select
-            v-model="form.parentId"
-            :data="parentOptions"
-            :props="parentTreeProps"
-            node-key="id"
-            check-strictly
-            clearable
-            filterable
-            :disabled="Boolean(parentContext)"
-            placeholder="请选择上级部门"
-          />
-        </el-form-item>
-        <el-form-item label="排序" prop="sort">
-          <el-input-number v-model="form.sort" :min="0" controls-position="right" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-            v-model="form.remark"
-            type="textarea"
-            :rows="4"
-            maxlength="500"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-    </form-dialog>
-  </div>
+        <el-alert
+          v-if="detailFailed || parentOptionsFailed"
+          type="error"
+          :closable="false"
+          show-icon
+        >
+          <template #title>数据加载失败，请关闭后重试</template>
+        </el-alert>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || formLoading || detailFailed || parentOptionsFailed"
+          label-width="88px"
+        >
+          <el-form-item label="部门名称" prop="deptName">
+            <el-input v-model="form.deptName" maxlength="100" />
+          </el-form-item>
+          <el-form-item v-if="website.tenantMode && mode === 'view'" label="所属租户">
+            <el-input :model-value="getTenantName(form.tenantId)" />
+          </el-form-item>
+          <el-form-item label="部门全称" prop="fullName">
+            <el-input v-model="form.fullName" maxlength="200" />
+          </el-form-item>
+          <el-form-item label="上级部门" prop="parentId">
+            <el-tree-select
+              v-model="form.parentId"
+              :data="parentOptions"
+              :props="parentTreeProps"
+              node-key="id"
+              check-strictly
+              clearable
+              filterable
+              :disabled="Boolean(parentContext)"
+              placeholder="请选择上级部门"
+            />
+          </el-form-item>
+          <el-form-item label="排序" prop="sort">
+            <el-input-number v-model="form.sort" :min="0" controls-position="right" />
+          </el-form-item>
+          <el-form-item label="备注" prop="remark">
+            <el-input
+              v-model="form.remark"
+              type="textarea"
+              :rows="4"
+              maxlength="500"
+              show-word-limit
+            />
+          </el-form-item>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -279,9 +288,7 @@ const getTenantName = (tenantId?: string) =>
   tenantOptions.value.find(tenant => tenant.tenantId === tenantId)?.tenantName ?? tenantId ?? '-';
 const handleSearch = () => void search({ ...searchForm.value });
 const handleTableExpandChange = (row: DeptEntity, expanded: boolean | DeptEntity[]) => {
-  const isExpanded = Array.isArray(expanded)
-    ? expanded.some(item => item.id === row.id)
-    : expanded;
+  const isExpanded = Array.isArray(expanded) ? expanded.some(item => item.id === row.id) : expanded;
   handleExpandChange(row, isExpanded);
 };
 const handleReset = () => {

@@ -136,6 +136,6 @@ export default {
   cursor: pointer;
 }
 .msg-text.display {
-  color: #ccc;
+  color: var(--saber-text-disabled);
 }
 </style>

@@ -1,33 +1,35 @@
 <template>
-  <div class="permission-demo">
-    <basic-container class="permission-demo__controls">
-      <div class="permission-demo__switch-row">
-        <span>显示操作按钮</span>
-        <el-switch v-model="actionsEnabled" aria-label="显示操作按钮" />
-        <el-tag :type="actionsEnabled ? 'success' : 'info'" effect="plain">
-          {{ actionsEnabled ? '已显示' : '已隐藏' }}
-        </el-tag>
-      </div>
-    </basic-container>
+  <page-container layout="content">
+    <div class="permission-demo">
+      <basic-container class="permission-demo__controls">
+        <div class="permission-demo__switch-row">
+          <span>显示操作按钮</span>
+          <el-switch v-model="actionsEnabled" aria-label="显示操作按钮" />
+          <el-tag :type="actionsEnabled ? 'success' : 'info'" effect="plain">
+            {{ actionsEnabled ? '已显示' : '已隐藏' }}
+          </el-tag>
+        </div>
+      </basic-container>
 
-    <list-panel title="权限控制示例">
-      <template v-if="actionsEnabled" #actions>
-        <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
-      </template>
+      <list-panel title="权限控制示例">
+        <template v-if="actionsEnabled" #actions>
+          <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
+        </template>
 
-      <el-table :data="rows" row-key="id">
-        <el-table-column prop="name" label="姓名" min-width="180" />
-        <el-table-column prop="age" label="年龄" width="100" align="center" />
-        <el-table-column v-if="actionsEnabled" label="操作" width="120" align="center">
-          <template #default="{ row }">
-            <el-button type="danger" link :icon="Delete" @click="handleDelete(row as DemoRow)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </list-panel>
-  </div>
+        <el-table :data="rows" row-key="id">
+          <el-table-column prop="name" label="姓名" min-width="180" />
+          <el-table-column prop="age" label="年龄" width="100" align="center" />
+          <el-table-column v-if="actionsEnabled" label="操作" width="120" align="center">
+            <template #default="{ row }">
+              <el-button type="danger" link :icon="Delete" @click="handleDelete(row as DemoRow)">
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </list-panel>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -64,7 +66,7 @@ const handleDelete = (row: DemoRow) =>
   min-height: 32px;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--saber-space-3);
   color: var(--saber-text-primary);
 }
 </style>

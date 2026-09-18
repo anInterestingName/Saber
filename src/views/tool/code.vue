@@ -1,258 +1,265 @@
 <template>
-  <div class="code-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="数据源">
-          <el-select
-            v-model="searchForm.datasourceId"
-            clearable
-            filterable
-            :loading="datasourceLoading"
-            placeholder="请选择数据源"
-          >
-            <el-option
-              v-for="source in datasourceOptions"
-              :key="source.id"
-              :label="source.name"
-              :value="source.id"
-            />
-          </el-select>
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="模块名">
-          <el-input v-model="searchForm.codeName" clearable placeholder="请输入模块名" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="服务名">
-          <el-input v-model="searchForm.serviceName" clearable placeholder="请输入服务名" />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="代码生成配置">
-      <template #actions>
-        <el-button
-          v-if="canAdd"
-          type="primary"
-          :icon="Plus"
-          :disabled="generating"
-          @click="openAdd"
-        >
-          新增
-        </el-button>
-        <el-button
-          v-if="canDelete"
-          type="danger"
-          plain
-          :icon="Delete"
-          :disabled="generating"
-          @click="handleBatchDelete"
-        >
-          删除
-        </el-button>
-        <el-button
-          v-if="isAdmin"
-          type="primary"
-          plain
-          :icon="Cpu"
-          :loading="generating"
-          @click="handleBuild"
-        >
-          代码生成
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button
-            circle
-            :icon="Refresh"
-            :loading="loading"
-            :disabled="generating"
-            aria-label="刷新"
-            @click="refresh"
-          />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
+  <page-container layout="immersive">
+    <div class="code-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column prop="datasourceId" label="数据源" min-width="160" show-overflow-tooltip>
-          <template #default="{ row }">{{ getDatasourceName(row.datasourceId) }}</template>
-        </el-table-column>
-        <el-table-column prop="codeName" label="模块名" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="serviceName" label="服务名" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="tableName" label="表名" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="packageName" label="包名" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="baseMode" label="基础业务" width="110" align="center">
-          <template #default="{ row }">
-            <dict-tag code="yes_no" :value="row.baseMode" value-type="number" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="wrapMode" label="包装器" width="100" align="center">
-          <template #default="{ row }">
-            <dict-tag code="yes_no" :value="row.wrapMode" value-type="number" />
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" fixed="right" width="260" align="center">
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              :disabled="generating || copyingId !== ''"
-              @view="openDetail(row as CodeEntity, 'view')"
-              @edit="openDetail(row as CodeEntity, 'edit')"
-              @delete="handleRowDelete(row as CodeEntity)"
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="数据源">
+            <el-select
+              v-model="searchForm.datasourceId"
+              clearable
+              filterable
+              :loading="datasourceLoading"
+              placeholder="请选择数据源"
             >
-              <template v-if="canEdit" #extra>
-                <el-button
-                  type="primary"
-                  link
-                  :icon="CopyDocument"
-                  :loading="copyingId === row.id"
-                  :disabled="generating || (copyingId !== '' && copyingId !== row.id)"
-                  @click="handleCopy(row as CodeEntity)"
-                >
-                  复制
-                </el-button>
-              </template>
-            </row-actions>
-          </template>
-        </el-table-column>
-      </el-table>
+              <el-option
+                v-for="source in datasourceOptions"
+                :key="source.id"
+                :label="source.name"
+                :value="source.id"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="模块名">
+            <el-input v-model="searchForm.codeName" clearable placeholder="请输入模块名" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="服务名">
+            <el-input v-model="searchForm.serviceName" clearable placeholder="请输入服务名" />
+          </el-form-item>
+        </el-col>
+      </search-panel>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading || generating"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
-
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="代码配置"
-      :submitting="submitting"
-      :loading="detailLoading || datasourceLoading"
-      width="860px"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-result v-if="detailFailed" icon="error" title="代码配置详情加载失败">
-        <template #extra>
-          <el-button type="primary" @click="retryDetail">重试</el-button>
+      <list-panel title="代码生成配置">
+        <template #actions>
+          <el-button
+            v-if="canAdd"
+            type="primary"
+            :icon="Plus"
+            :disabled="generating"
+            @click="openAdd"
+          >
+            新增
+          </el-button>
+          <el-button
+            v-if="canDelete"
+            type="danger"
+            plain
+            :icon="Delete"
+            :disabled="generating"
+            @click="handleBatchDelete"
+          >
+            删除
+          </el-button>
+          <el-button
+            v-if="isAdmin"
+            type="primary"
+            plain
+            :icon="Cpu"
+            :loading="generating"
+            @click="handleBuild"
+          >
+            代码生成
+          </el-button>
         </template>
-      </el-result>
-      <el-form
-        v-else
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || detailLoading || datasourceLoading || datasourceFailed"
-        label-width="108px"
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              :disabled="generating"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
+
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column prop="datasourceId" label="数据源" min-width="160" show-overflow-tooltip>
+            <template #default="{ row }">{{ getDatasourceName(row.datasourceId) }}</template>
+          </el-table-column>
+          <el-table-column prop="codeName" label="模块名" min-width="150" show-overflow-tooltip />
+          <el-table-column
+            prop="serviceName"
+            label="服务名"
+            min-width="160"
+            show-overflow-tooltip
+          />
+          <el-table-column prop="tableName" label="表名" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="packageName" label="包名" min-width="220" show-overflow-tooltip />
+          <el-table-column prop="baseMode" label="基础业务" width="110" align="center">
+            <template #default="{ row }">
+              <dict-tag code="yes_no" :value="row.baseMode" value-type="number" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="wrapMode" label="包装器" width="100" align="center">
+            <template #default="{ row }">
+              <dict-tag code="yes_no" :value="row.wrapMode" value-type="number" />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" fixed="right" width="260" align="center">
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :actions="
+                  canEdit
+                    ? [
+                        {
+                          key: 'copy',
+                          label: '复制',
+                          icon: CopyDocument,
+                          disabled: generating || (copyingId !== '' && copyingId !== row.id),
+                        },
+                      ]
+                    : []
+                "
+                :disabled="generating || copyingId !== ''"
+                @view="openDetail(row as CodeEntity, 'view')"
+                @edit="openDetail(row as CodeEntity, 'edit')"
+                @delete="handleRowDelete(row as CodeEntity)"
+                @action="handleCopy(row as CodeEntity)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading || generating"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="代码配置"
+        :submitting="submitting"
+        :loading="detailLoading || datasourceLoading"
+        size="lg"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
       >
-        <el-alert v-if="datasourceFailed" type="error" :closable="false" show-icon>
-          <template #title>
-            数据源选项加载失败
-            <el-button type="primary" link @click="loadDatasourceOptions">重试</el-button>
+        <el-result v-if="detailFailed" icon="error" title="代码配置详情加载失败">
+          <template #extra>
+            <el-button type="primary" @click="retryDetail">重试</el-button>
           </template>
-        </el-alert>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="数据源" prop="datasourceId">
-              <el-select v-model="form.datasourceId" filterable :loading="datasourceLoading">
-                <el-option
-                  v-for="source in datasourceOptions"
-                  :key="source.id"
-                  :label="source.name"
-                  :value="source.id"
+        </el-result>
+        <el-form
+          v-else
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || detailLoading || datasourceLoading || datasourceFailed"
+          label-width="108px"
+        >
+          <el-alert v-if="datasourceFailed" type="error" :closable="false" show-icon>
+            <template #title>
+              数据源选项加载失败
+              <el-button type="primary" link @click="loadDatasourceOptions">重试</el-button>
+            </template>
+          </el-alert>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="数据源" prop="datasourceId">
+                <el-select v-model="form.datasourceId" filterable :loading="datasourceLoading">
+                  <el-option
+                    v-for="source in datasourceOptions"
+                    :key="source.id"
+                    :label="source.name"
+                    :value="source.id"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="模块名" prop="codeName">
+                <el-input v-model="form.codeName" maxlength="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="服务名" prop="serviceName">
+                <el-input v-model="form.serviceName" maxlength="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="表名" prop="tableName">
+                <el-input v-model="form.tableName" maxlength="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="表前缀" prop="tablePrefix">
+                <el-input v-model="form.tablePrefix" maxlength="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="主键名" prop="pkName">
+                <el-input v-model="form.pkName" maxlength="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="包名" prop="packageName">
+                <el-input v-model="form.packageName" maxlength="200" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="基础业务" prop="baseMode">
+                <dict-select
+                  v-model="form.baseMode"
+                  code="yes_no"
+                  value-type="number"
+                  :disabled="mode === 'view'"
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="模块名" prop="codeName">
-              <el-input v-model="form.codeName" maxlength="100" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="服务名" prop="serviceName">
-              <el-input v-model="form.serviceName" maxlength="100" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="表名" prop="tableName">
-              <el-input v-model="form.tableName" maxlength="100" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="表前缀" prop="tablePrefix">
-              <el-input v-model="form.tablePrefix" maxlength="100" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="主键名" prop="pkName">
-              <el-input v-model="form.pkName" maxlength="100" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="包名" prop="packageName">
-              <el-input v-model="form.packageName" maxlength="200" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="基础业务" prop="baseMode">
-              <dict-select
-                v-model="form.baseMode"
-                code="yes_no"
-                value-type="number"
-                :disabled="mode === 'view'"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="包装器" prop="wrapMode">
-              <dict-select
-                v-model="form.wrapMode"
-                code="yes_no"
-                value-type="number"
-                :disabled="mode === 'view'"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="后端生成路径" prop="apiPath">
-              <el-input v-model="form.apiPath" type="textarea" :rows="2" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="前端生成路径" prop="webPath">
-              <el-input v-model="form.webPath" type="textarea" :rows="2" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </form-dialog>
-  </div>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="包装器" prop="wrapMode">
+                <dict-select
+                  v-model="form.wrapMode"
+                  code="yes_no"
+                  value-type="number"
+                  :disabled="mode === 'view'"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="后端生成路径" prop="apiPath">
+                <el-input v-model="form.apiPath" type="textarea" :rows="2" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="前端生成路径" prop="webPath">
+                <el-input v-model="form.webPath" type="textarea" :rows="2" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">

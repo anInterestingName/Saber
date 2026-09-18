@@ -7,45 +7,130 @@
   --el-color-primary-light-8: #d0e4ff;
   --el-color-primary-light-9: #e8f2ff;
   --el-color-primary-dark-2: #125fcc;
-  --el-border-radius-base: 6px;
-  --el-border-radius-small: 4px;
-  --saber-page-bg: #f5f5f5;
+  --saber-space-1: 4px;
+  --saber-space-2: 8px;
+  --saber-space-3: 12px;
+  --saber-space-4: 16px;
+  --saber-space-5: 20px;
+  --saber-space-6: 24px;
+  --saber-space-7: 32px;
+  --saber-space-8: 40px;
+  --saber-space-9: 48px;
+  --saber-page-gutter-x: 24px;
+  --saber-page-gutter-x-wide: 32px;
+  --saber-page-gutter-x-mobile: 16px;
+  --saber-section-gap: 32px;
+  --saber-form-row-gap: 24px;
+  --saber-content-max-width: 1280px;
+  --saber-control-height: 40px;
+  --saber-control-height-small: 32px;
+  --saber-control-height-large: 48px;
+  --saber-nav-item-height: 44px;
+  --saber-tags-height: 50px;
+  --saber-table-header-padding-y: 12px;
+  --saber-table-cell-padding-y: 8px;
+  --saber-table-cell-padding-y-compact: 8px;
+  --saber-radius-xs: 4px;
+  --saber-radius-control: 6px;
+  --saber-radius-surface: 8px;
+  --saber-radius-overlay: 12px;
+  --saber-radius-round: 999px;
+  --saber-motion-fast: 160ms;
+  --saber-motion-normal: 200ms;
+  --saber-nav-duration: 260ms;
+  --saber-nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --saber-canvas: #ffffff;
+  --saber-chrome-bg: #f7f8fa;
+  --saber-page-bg: var(--saber-canvas);
   --saber-surface: #ffffff;
-  --saber-surface-elevated: #ffffff;
-  --saber-surface-muted: #fafafa;
-  --saber-border: #e5e7eb;
-  --saber-border-strong: #d9d9d9;
-  --saber-text-primary: rgba(0, 0, 0, 0.88);
-  --saber-text-secondary: rgba(0, 0, 0, 0.65);
-  --saber-text-tertiary: rgba(0, 0, 0, 0.45);
-  --saber-header-bg: var(--saber-surface);
-  --saber-sidebar-bg: var(--saber-header-bg);
-  --saber-sidebar-active: var(--el-color-primary-light-9);
+  --saber-surface-elevated: var(--saber-surface);
+  --saber-surface-muted: #f6f8fa;
+  --saber-surface-overlay: #ffffff;
+  --saber-surface-subtle: #f1f4f7;
+  --saber-border: #e7ebf0;
+  --saber-border-strong: #d6dce4;
+  --saber-text-primary: #1f2329;
+  --saber-text-secondary: #5f6875;
+  --saber-text-tertiary: #858e9b;
+  --saber-text-disabled: #b4bbc5;
+  --saber-text-on-accent: #ffffff;
+  --saber-backdrop: rgba(0, 0, 0, 0.7);
+  --saber-media-scrim: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 100%);
+  --saber-media-action-bg: rgba(255, 255, 255, 0.2);
+  --saber-media-action-bg-hover: rgba(255, 255, 255, 0.3);
+  --saber-dialog-size-sm: 600px;
+  --saber-dialog-size-md: 760px;
+  --saber-dialog-size-lg: 920px;
+  --saber-drawer-size-md: 680px;
+  --saber-drawer-size-lg: 840px;
+  --saber-drawer-size-xl: 1040px;
+  --saber-overlay-header-height: 64px;
+  --saber-overlay-body-padding: 32px;
+  --saber-overlay-footer-height: 68px;
+  --saber-header-bg: var(--saber-chrome-bg);
+  --saber-sidebar-bg: var(--saber-chrome-bg);
+  --saber-sidebar-hover: var(--saber-accent-hover);
+  --saber-sidebar-active: var(--saber-accent-soft);
   --saber-sidebar-text: var(--saber-text-secondary);
   --saber-sidebar-text-active: var(--el-color-primary);
-  --saber-sidebar-tip-bg: #f5f5f5;
+  --saber-sidebar-tip-bg: var(--saber-surface);
   --saber-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --saber-shadow-drawer: -6px 0 16px rgba(0, 0, 0, 0.08);
+  --saber-shadow-media: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --saber-shadow-media-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --saber-shadow-media-action: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --saber-shadow-auth-action: 0 8px 20px rgba(104, 71, 219, 0.18);
+  --saber-shadow-popover: 0 8px 24px rgba(31, 35, 41, 0.1);
+  --saber-shadow-overlay: 0 18px 48px rgba(31, 35, 41, 0.16);
+  --saber-shadow-drawer: -12px 0 36px rgba(31, 35, 41, 0.12);
+  --saber-accent-soft: var(--el-color-primary-light-9);
+  --saber-accent-hover: var(--el-color-primary-light-9);
+  --saber-focus-ring-color: var(--el-color-primary-light-5);
+  --el-component-size: var(--saber-control-height);
+  --el-component-size-small: var(--saber-control-height-small);
+  --el-component-size-large: var(--saber-control-height-large);
+  --el-border-radius-base: var(--saber-radius-control);
+  --el-border-radius-small: var(--saber-radius-xs);
+  --el-border-radius-round: var(--saber-radius-round);
+  --el-bg-color: var(--saber-surface);
+  --el-bg-color-page: var(--saber-canvas);
+  --el-bg-color-overlay: var(--saber-surface-overlay);
+  --el-text-color-primary: var(--saber-text-primary);
+  --el-text-color-regular: var(--saber-text-secondary);
+  --el-text-color-secondary: var(--saber-text-tertiary);
+  --el-text-color-disabled: var(--saber-text-disabled);
+  --el-border-color: var(--saber-border);
+  --el-border-color-light: var(--saber-border);
+  --el-fill-color-light: var(--saber-surface-muted);
+  --el-fill-color-lighter: var(--saber-surface-subtle);
+  --el-fill-color-blank: var(--saber-surface);
 }
 
 html.dark {
   color-scheme: dark;
-  --saber-page-bg: #0f1013;
-  --saber-surface: #17191f;
-  --saber-surface-elevated: #1d2027;
-  --saber-surface-muted: #1b1e24;
-  --saber-border: #2a2e37;
-  --saber-border-strong: #3a3f4a;
-  --saber-text-primary: rgba(255, 255, 255, 0.88);
-  --saber-text-secondary: rgba(255, 255, 255, 0.65);
-  --saber-text-tertiary: rgba(255, 255, 255, 0.45);
-  --saber-header-bg: var(--saber-surface);
-  --saber-sidebar-bg: var(--saber-header-bg);
-  --saber-sidebar-active: rgba(255, 255, 255, 0.12);
-  --saber-sidebar-text-active: #ffffff;
+  --saber-canvas: #111318;
+  --saber-chrome-bg: #171a20;
+  --saber-surface: #1b1f26;
+  --saber-surface-elevated: var(--saber-surface-overlay);
+  --saber-surface-muted: #22272f;
+  --saber-surface-overlay: #242a33;
+  --saber-surface-subtle: #292f39;
+  --saber-border: #303744;
+  --saber-border-strong: #46505f;
+  --saber-text-primary: rgba(255, 255, 255, 0.9);
+  --saber-text-secondary: rgba(255, 255, 255, 0.68);
+  --saber-text-tertiary: rgba(255, 255, 255, 0.48);
+  --saber-text-disabled: rgba(255, 255, 255, 0.3);
+  --saber-text-on-accent: #ffffff;
+  --saber-header-bg: var(--saber-chrome-bg);
+  --saber-sidebar-bg: var(--saber-chrome-bg);
+  --saber-sidebar-hover: var(--saber-accent-hover);
+  --saber-sidebar-active: var(--saber-accent-soft);
+  --saber-sidebar-text-active: var(--el-color-primary);
   --saber-sidebar-tip-bg: rgba(255, 255, 255, 0.06);
   --saber-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
-  --saber-shadow-drawer: -6px 0 18px rgba(0, 0, 0, 0.32);
+  --saber-shadow-popover: 0 10px 28px rgba(0, 0, 0, 0.36);
+  --saber-shadow-overlay: 0 20px 52px rgba(0, 0, 0, 0.48);
+  --saber-shadow-drawer: -12px 0 40px rgba(0, 0, 0, 0.4);
 }
 
 html,
@@ -69,7 +154,10 @@ body {
 
   .saber-sidebar .el-menu-item,
   .saber-sidebar .el-sub-menu__title {
-    &:hover,
+    &:hover {
+      background: var(--saber-sidebar-hover);
+    }
+
     &.is-active {
       background: var(--saber-sidebar-active);
     }

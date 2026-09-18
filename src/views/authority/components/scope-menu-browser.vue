@@ -257,14 +257,14 @@ onBeforeUnmount(() => {
 }
 
 .scope-menu-browser__alert {
-  margin-bottom: 16px;
+  margin-bottom: var(--saber-space-4);
 }
 
 .scope-menu-browser__name {
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 8px;
+  gap: var(--saber-space-2);
 }
 
 .scope-menu-browser__retry {

@@ -1,200 +1,208 @@
 <template>
-  <div class="notice-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="8">
-        <el-form-item label="通知标题">
-          <el-input v-model="searchForm.title" clearable placeholder="请输入通知标题" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="8">
-        <el-form-item label="通知类型">
-          <dict-select
-            v-model="searchForm.category"
-            code="notice"
-            value-type="number"
-            placeholder="请选择通知类型"
-          />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="通知公告列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button
-          v-if="canDelete"
-          type="danger"
-          plain
-          :icon="Delete"
-          :disabled="loading"
-          @click="handleBatchDelete"
-        >
-          删除
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="notice-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column prop="title" label="通知标题" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="category" label="通知类型" min-width="130">
-          <template #default="{ row }">
-            <dict-tag code="notice" :value="row.category" value-type="number" />
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="releaseTime"
-          label="通知日期"
-          min-width="180"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="contentSummary"
-          label="通知内容"
-          min-width="280"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          v-if="canView || canEdit || canDelete"
-          label="操作"
-          fixed="right"
-          width="200"
-          align="center"
-        >
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              :disabled="loading || submitting"
-              @view="openDetail(row as NoticeListItem, 'view')"
-              @edit="openDetail(row as NoticeListItem, 'edit')"
-              @delete="handleRowDelete(row as NoticeListItem)"
+        <el-col :xs="24" :sm="12" :md="8">
+          <el-form-item label="通知标题">
+            <el-input v-model="searchForm.title" clearable placeholder="请输入通知标题" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="8">
+          <el-form-item label="通知类型">
+            <dict-select
+              v-model="searchForm.category"
+              code="notice"
+              value-type="number"
+              placeholder="请选择通知类型"
             />
-          </template>
-        </el-table-column>
-      </el-table>
+          </el-form-item>
+        </el-col>
+      </search-panel>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
-
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="通知公告"
-      :submitting="submitting"
-      :loading="detailLoading"
-      :confirm-disabled="formUnavailable"
-      width="880px"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-result v-if="detailFailed" status="error" title="通知公告详情加载失败">
-        <template #extra>
-          <el-button type="primary" :icon="Refresh" @click="retryDetail">重新加载</el-button>
+      <list-panel title="通知公告列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button
+            v-if="canDelete"
+            type="danger"
+            plain
+            :icon="Delete"
+            :disabled="loading"
+            @click="handleBatchDelete"
+          >
+            删除
+          </el-button>
         </template>
-      </el-result>
-      <el-form
-        v-else
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || detailLoading"
-        label-width="88px"
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
+
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column prop="title" label="通知标题" min-width="220" show-overflow-tooltip />
+          <el-table-column prop="category" label="通知类型" min-width="130">
+            <template #default="{ row }">
+              <dict-tag code="notice" :value="row.category" value-type="number" />
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="releaseTime"
+            label="通知日期"
+            min-width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="contentSummary"
+            label="通知内容"
+            min-width="280"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            v-if="canView || canEdit || canDelete"
+            label="操作"
+            fixed="right"
+            width="200"
+            align="center"
+          >
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :disabled="loading || submitting"
+                @view="openDetail(row as NoticeListItem, 'view')"
+                @edit="openDetail(row as NoticeListItem, 'edit')"
+                @delete="handleRowDelete(row as NoticeListItem)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="通知公告"
+        :submitting="submitting"
+        :loading="detailLoading"
+        :confirm-disabled="formUnavailable"
+        size="lg"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
       >
-        <el-row :gutter="24">
-          <el-col :span="24">
-            <el-form-item label="通知标题" prop="title">
-              <el-input v-model="form.title" placeholder="请输入通知标题" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="通知类型" prop="category">
-              <dict-select
-                v-model="form.category"
-                code="notice"
-                value-type="number"
-                :disabled="mode === 'view'"
-                placeholder="请选择通知类型"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="通知日期" prop="releaseTime">
-              <el-date-picker
-                v-model="form.releaseTime"
-                type="datetime"
-                format="YYYY-MM-DD HH:mm:ss"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                placeholder="请选择通知日期"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="通知内容">
-              <el-alert
-                v-if="contentCompatibilityRisk"
-                class="notice-management-page__editor-alert"
-                type="warning"
-                :closable="false"
-                title="历史内容包含当前安全白名单不支持的结构，仅允许查看，不能直接覆盖保存。"
-                show-icon
-              />
-              <el-alert
-                v-if="editorFailed"
-                class="notice-management-page__editor-alert"
-                type="error"
-                :closable="false"
-                title="富文本编辑器加载失败，已禁止提交。"
-                show-icon
-              >
-                <template #default>
-                  <el-button type="primary" link :icon="Refresh" @click="retryEditor">
-                    重新加载编辑器
-                  </el-button>
-                </template>
-              </el-alert>
-              <notice-editor
-                v-if="mode === 'add' || detailData"
-                :key="editorVersion"
-                v-model="form.content"
-                :disabled="mode === 'view' || detailLoading"
-                :rows="3"
-                @ready="handleEditorReady"
-                @error="handleEditorError"
-                @uploading="handleEditorUploading"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </form-dialog>
-  </div>
+        <el-result v-if="detailFailed" status="error" title="通知公告详情加载失败">
+          <template #extra>
+            <el-button type="primary" :icon="Refresh" @click="retryDetail">重新加载</el-button>
+          </template>
+        </el-result>
+        <el-form
+          v-else
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || detailLoading"
+          label-width="88px"
+        >
+          <el-row :gutter="24">
+            <el-col :span="24">
+              <el-form-item label="通知标题" prop="title">
+                <el-input v-model="form.title" placeholder="请输入通知标题" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="通知类型" prop="category">
+                <dict-select
+                  v-model="form.category"
+                  code="notice"
+                  value-type="number"
+                  :disabled="mode === 'view'"
+                  placeholder="请选择通知类型"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="通知日期" prop="releaseTime">
+                <el-date-picker
+                  v-model="form.releaseTime"
+                  type="datetime"
+                  format="YYYY-MM-DD HH:mm:ss"
+                  value-format="YYYY-MM-DD HH:mm:ss"
+                  placeholder="请选择通知日期"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="通知内容">
+                <el-alert
+                  v-if="contentCompatibilityRisk"
+                  class="notice-management-page__editor-alert"
+                  type="warning"
+                  :closable="false"
+                  title="历史内容包含当前安全白名单不支持的结构，仅允许查看，不能直接覆盖保存。"
+                  show-icon
+                />
+                <el-alert
+                  v-if="editorFailed"
+                  class="notice-management-page__editor-alert"
+                  type="error"
+                  :closable="false"
+                  title="富文本编辑器加载失败，已禁止提交。"
+                  show-icon
+                >
+                  <template #default>
+                    <el-button type="primary" link :icon="Refresh" @click="retryEditor">
+                      重新加载编辑器
+                    </el-button>
+                  </template>
+                </el-alert>
+                <notice-editor
+                  v-if="mode === 'add' || detailData"
+                  :key="editorVersion"
+                  v-model="form.content"
+                  :disabled="mode === 'view' || detailLoading"
+                  :rows="3"
+                  @ready="handleEditorReady"
+                  @error="handleEditorError"
+                  @uploading="handleEditorUploading"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -324,8 +332,7 @@ const formUnavailable = computed(
     detailLoading.value ||
     detailFailed.value ||
     contentCompatibilityRisk.value ||
-    (mode.value !== 'view' &&
-      (!editorReady.value || editorFailed.value || editorUploading.value))
+    (mode.value !== 'view' && (!editorReady.value || editorFailed.value || editorUploading.value))
 );
 
 const resetEditorState = () => {
@@ -500,7 +507,7 @@ onMounted(() => {
 
 .notice-management-page__editor-alert {
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: var(--saber-space-3);
 }
 
 :deep(.el-date-editor.el-input) {

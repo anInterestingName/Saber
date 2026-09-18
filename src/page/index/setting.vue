@@ -1,22 +1,29 @@
 <template>
-  <el-tooltip content="界面设置" placement="left">
-    <el-button
-      class="app-setting-trigger"
-      :style="show ? { right: drawerSize } : undefined"
-      type="primary"
-      :icon="Setting"
-      aria-label="打开界面设置"
-      @click="show = true"
-    />
-  </el-tooltip>
+  <el-button
+    ref="triggerRef"
+    class="app-setting-trigger"
+    :class="[
+      `app-setting-trigger--${triggerMode}`,
+      {
+        'is-dragging': isDragging,
+        'is-snapping': isSnapping,
+        'is-snapped-left': snappedSide === 'left',
+      },
+    ]"
+    :style="floatingStyle"
+    :type="isFloating ? 'primary' : undefined"
+    :text="!isFloating"
+    :circle="!isFloating"
+    :icon="Setting"
+    aria-label="打开界面设置"
+    @pointerdown="handlePointerDown"
+    @pointermove="handlePointerMove"
+    @pointerup="handlePointerUp"
+    @pointercancel="handlePointerUp"
+    @click="handleTriggerClick"
+  />
 
-  <el-drawer
-    v-model="show"
-    append-to-body
-    class="app-setting-drawer"
-    title="界面设置"
-    :size="drawerSize"
-  >
+  <detail-drawer v-model="show" class="app-setting-drawer" title="界面设置" size="320px">
     <div class="app-setting">
       <section class="app-setting__section">
         <h3 class="app-setting__title">整体风格设置</h3>
@@ -111,6 +118,18 @@
       <el-divider />
 
       <section class="app-setting__section">
+        <h3 class="app-setting__title">内容区域宽度</h3>
+        <el-segmented
+          :model-value="setting.contentWidth"
+          :options="contentWidthOptions"
+          block
+          @change="setContentWidth"
+        />
+      </section>
+
+      <el-divider />
+
+      <section class="app-setting__section">
         <h3 class="app-setting__title">界面显示</h3>
         <div class="app-setting__switches">
           <div v-for="item in displayOptions" :key="item.key" class="app-setting__switch-row">
@@ -142,7 +161,7 @@
         <el-button :icon="RefreshLeft" @click="resetSetting">恢复默认设置</el-button>
       </div>
     </div>
-  </el-drawer>
+  </detail-drawer>
 </template>
 
 <script setup lang="ts">
@@ -150,9 +169,10 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Check, RefreshLeft, Setting } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import DetailDrawer from '@/components/detail-drawer/main.vue';
 import { useCommonStore } from '@/store/common';
 import { applyTheme, primaryColorOptions } from '@/utils/theme';
-import type { LayoutMode, ThemeMode } from '@/types/setting';
+import type { ContentWidthMode, LayoutMode, ThemeMode } from '@/types/setting';
 
 type BooleanSettingKey = 'tag' | 'collapse' | 'search' | 'fullscreen' | 'lock' | 'debug';
 
@@ -161,13 +181,22 @@ interface SettingOption {
   key: BooleanSettingKey;
 }
 
+const props = withDefaults(
+  defineProps<{
+    triggerMode?: 'floating' | 'inline';
+  }>(),
+  {
+    triggerMode: 'floating',
+  }
+);
+
 const commonStore = useCommonStore();
 const { setting } = storeToRefs(commonStore);
 const show = ref(false);
-const viewportWidth = ref(window.innerWidth);
 
+const triggerMode = computed(() => props.triggerMode);
+const isFloating = computed(() => triggerMode.value === 'floating');
 const themeMode = computed<ThemeMode>(() => setting.value.theme);
-const drawerSize = computed(() => `${Math.min(viewportWidth.value, 320)}px`);
 
 const themeOptions: Array<{ label: string; value: ThemeMode }> = [
   { label: '明亮', value: 'light' },
@@ -180,6 +209,11 @@ const layoutOptions: Array<{ label: string; value: LayoutMode }> = [
   { label: '混合', value: 'mix' },
 ];
 
+const contentWidthOptions: Array<{ label: string; value: ContentWidthMode }> = [
+  { label: '流式', value: 'fluid' },
+  { label: '定宽', value: 'fixed' },
+];
+
 const displayOptions: SettingOption[] = [
   { label: '导航标签', key: 'tag' },
   { label: '菜单折叠', key: 'collapse' },
@@ -187,7 +221,6 @@ const displayOptions: SettingOption[] = [
 ];
 
 const toolOptions: SettingOption[] = [
-  { label: '屏幕全屏', key: 'fullscreen' },
   { label: '屏幕锁定', key: 'lock' },
   { label: '日志调试', key: 'debug' },
 ];
@@ -206,6 +239,11 @@ const setLayout = (layout: LayoutMode) => {
   commonStore.setLayout(layout);
 };
 
+const setContentWidth = (contentWidth: string | number | boolean) => {
+  if (contentWidth !== 'fluid' && contentWidth !== 'fixed') return;
+  commonStore.setSetting({ contentWidth });
+};
+
 const updateSetting = (key: BooleanSettingKey, value: string | number | boolean) => {
   commonStore.setSetting({ [key]: Boolean(value) });
 };
@@ -216,77 +254,213 @@ const resetSetting = () => {
   ElMessage.success('已恢复默认设置');
 };
 
-const updateViewportWidth = () => {
-  viewportWidth.value = window.innerWidth;
+// 悬浮触发器支持拖拽并自动吸附到最近的左右边缘，吸附后保持完整可见、不做隐藏
+const DRAG_THRESHOLD = 4;
+const SNAP_DURATION = 220;
+const triggerRef = ref<{ $el?: HTMLElement } | null>(null);
+const customPosition = ref(false);
+const isDragging = ref(false);
+const isSnapping = ref(false);
+const snappedSide = ref<'left' | 'right'>('right');
+const position = ref({ x: 0, y: 0 });
+let snapTimer = 0;
+let dragOrigin = { x: 0, y: 0, pointerX: 0, pointerY: 0 };
+let dragMoved = false;
+let dragEndedAt = 0;
+
+const triggerElement = () => triggerRef.value?.$el;
+const triggerSize = () => {
+  const el = triggerElement();
+  return { width: el?.offsetWidth || 44, height: el?.offsetHeight || 44 };
 };
 
-onMounted(() => window.addEventListener('resize', updateViewportWidth));
-onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth));
+const floatingStyle = computed(() => {
+  if (!isFloating.value || !customPosition.value) return undefined;
+  return {
+    left: `${position.value.x}px`,
+    top: `${position.value.y}px`,
+    right: 'auto',
+    transform: 'none',
+  };
+});
+
+const clampToViewport = (x: number, y: number) => {
+  const { width, height } = triggerSize();
+  return {
+    x: Math.min(Math.max(x, 0), Math.max(window.innerWidth - width, 0)),
+    y: Math.min(Math.max(y, 0), Math.max(window.innerHeight - height, 0)),
+  };
+};
+
+// 吸附到最近的左右边缘；水平方向保持完整可见，纵向限制在视口内
+const snapToNearestEdge = () => {
+  const { width, height } = triggerSize();
+  const centerX = position.value.x + width / 2;
+  snappedSide.value = centerX < window.innerWidth / 2 ? 'left' : 'right';
+  const target = snappedSide.value === 'left' ? 0 : Math.max(window.innerWidth - width, 0);
+  const targetY = Math.min(Math.max(position.value.y, 0), Math.max(window.innerHeight - height, 0));
+
+  isSnapping.value = true;
+  position.value = { x: target, y: targetY };
+  window.clearTimeout(snapTimer);
+  snapTimer = window.setTimeout(() => {
+    isSnapping.value = false;
+  }, SNAP_DURATION);
+};
+
+const handlePointerDown = (event: PointerEvent) => {
+  if (!isFloating.value) return;
+  const el = triggerElement();
+  if (el && !customPosition.value) {
+    // 首次拖拽时把当前的 CSS 定位换算成绝对坐标，避免起手跳动
+    const rect = el.getBoundingClientRect();
+    position.value = { x: rect.left, y: rect.top };
+    snappedSide.value = rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
+    customPosition.value = true;
+  }
+  el?.setPointerCapture?.(event.pointerId);
+  dragMoved = false;
+  isSnapping.value = false;
+  isDragging.value = true;
+  dragOrigin = {
+    x: position.value.x,
+    y: position.value.y,
+    pointerX: event.clientX,
+    pointerY: event.clientY,
+  };
+};
+
+const handlePointerMove = (event: PointerEvent) => {
+  if (!isDragging.value) return;
+  const dx = event.clientX - dragOrigin.pointerX;
+  const dy = event.clientY - dragOrigin.pointerY;
+  if (!dragMoved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
+  dragMoved = true;
+  position.value = clampToViewport(dragOrigin.x + dx, dragOrigin.y + dy);
+};
+
+const handlePointerUp = (event: PointerEvent) => {
+  if (!isDragging.value) return;
+  isDragging.value = false;
+  triggerElement()?.releasePointerCapture?.(event.pointerId);
+  if (dragMoved) {
+    dragEndedAt = Date.now();
+    snapToNearestEdge();
+  }
+};
+
+// 拖拽结束紧接着触发的 click 不打开抽屉（用时间窗判断，避免重复派发导致误开）
+const handleTriggerClick = () => {
+  if (Date.now() - dragEndedAt < 300) return;
+  show.value = true;
+};
+
+const handleViewportResize = () => {
+  if (!isFloating.value || !customPosition.value) return;
+  const { width, height } = triggerSize();
+  position.value = {
+    x: snappedSide.value === 'left' ? 0 : Math.max(window.innerWidth - width, 0),
+    y: Math.min(Math.max(position.value.y, 0), Math.max(window.innerHeight - height, 0)),
+  };
+};
+
+onMounted(() => window.addEventListener('resize', handleViewportResize));
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleViewportResize);
+  window.clearTimeout(snapTimer);
+});
 </script>
 
 <style lang="scss">
 .app-setting-trigger {
-  position: fixed;
-  top: 42%;
-  right: 0;
-  z-index: 2048;
-  width: 44px;
-  height: 44px;
-  border-radius: 4px 0 0 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
-  transition: right 0.3s;
+  flex: 0 0 auto;
+  transition: color 0.2s, background-color 0.2s;
+
+  &--floating {
+    position: fixed;
+    // 中心点落在视口高度 40% 处（略高于正中），比原来上移一档；拖拽后改为内联 left/top 定位
+    top: 40%;
+    right: 0;
+    z-index: 2048;
+    transform: translateY(-50%);
+    // 边长取视口高度的 4.8%，限制在 44px（点击可达性下限）到 56px（不与主操作抢视觉）
+    width: clamp(44px, 4.8vh, 56px);
+    height: clamp(44px, 4.8vh, 56px);
+    font-size: clamp(17px, 1.9vh, 21px);
+    border-radius: var(--saber-radius-control) 0 0 var(--saber-radius-control);
+    box-shadow: var(--saber-shadow-popover);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+
+    .el-icon {
+      font-size: inherit;
+    }
+
+    &.is-dragging {
+      cursor: grabbing;
+    }
+
+    // 吸附动作本身带过渡，拖拽过程中不加过渡以免跟手延迟
+    &.is-snapping {
+      transition: left 220ms var(--saber-nav-ease), top 220ms var(--saber-nav-ease);
+    }
+
+    // 吸附到左侧时圆角镜像
+    &.is-snapped-left {
+      border-radius: 0 var(--saber-radius-control) var(--saber-radius-control) 0;
+    }
+  }
+
+  &--inline {
+    width: 36px;
+    height: 36px;
+    margin-left: var(--saber-space-1);
+    color: var(--saber-text-secondary);
+    background: transparent;
+    border: 0;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--el-color-primary);
+      background-color: var(--saber-surface-muted);
+    }
+  }
 }
 
 .app-setting-drawer {
-  background: var(--saber-surface);
-  box-shadow: var(--saber-shadow-drawer);
-
-  .el-drawer__header {
-    height: 56px;
-    padding: 0 20px;
-    margin: 0;
-    color: var(--saber-text-primary);
-    border-bottom: 1px solid var(--saber-border);
-  }
-
-  .el-drawer__title {
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0;
-  }
-
-  .el-drawer__body {
+  .detail-drawer__body {
     padding: 0;
   }
 }
 
 .app-setting {
   min-height: 100%;
-  padding: 20px;
+  padding: var(--saber-space-5);
   box-sizing: border-box;
   color: var(--saber-text-primary);
 
   .el-divider {
-    margin: 24px 0;
+    margin: var(--saber-space-6) 0;
     border-color: var(--saber-border);
   }
 
   &__title {
-    margin: 0 0 16px;
+    margin: 0 0 var(--saber-space-4);
     font-size: 14px;
     font-weight: 600;
     line-height: 22px;
     letter-spacing: 0;
 
     &--spaced {
-      margin-top: 22px;
+      margin-top: var(--saber-space-5);
     }
   }
 
   &__choices {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: var(--saber-space-3);
   }
 
   &__choice {
@@ -295,7 +469,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     padding: 0;
     background: transparent;
     border: 0;
-    border-radius: 4px;
+    border-radius: var(--saber-radius-xs);
     cursor: pointer;
     transition: transform 0.2s;
 
@@ -320,8 +494,8 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     height: 44px;
     overflow: hidden;
     background: #f5f5f5;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border-radius: var(--saber-radius-xs);
+    box-shadow: var(--saber-shadow-popover);
   }
 
   &__theme-preview {
@@ -392,7 +566,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     right: 8%;
     bottom: 10%;
     left: 32%;
-    border-radius: 2px;
+    border-radius: var(--saber-radius-xs);
   }
 
   &__layout-preview {
@@ -402,7 +576,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
   &__swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--saber-space-2);
   }
 
   &__swatch {
@@ -412,10 +586,10 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     width: 24px;
     height: 24px;
     padding: 0;
-    color: #ffffff;
+    color: var(--saber-text-on-accent);
     background: var(--swatch-color);
     border: 0;
-    border-radius: 3px;
+    border-radius: var(--saber-radius-xs);
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
 
@@ -433,7 +607,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     right: 0;
     left: 0;
     height: 14px;
-    background: var(--saber-sidebar-bg);
+    background: var(--saber-header-bg);
     border-bottom: 1px solid var(--saber-border);
   }
 
@@ -452,14 +626,28 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     bottom: 8px;
     left: 29px;
     background: var(--saber-surface);
-    border-radius: 2px;
+    border-radius: var(--saber-radius-xs);
+  }
+
+  &__layout-preview--side {
+    .app-setting__layout-header {
+      display: none;
+    }
+
+    .app-setting__layout-sidebar {
+      top: 0;
+    }
+
+    .app-setting__layout-content {
+      top: 8px;
+    }
   }
 
   &__layout-preview--top {
     .app-setting__layout-header {
       z-index: 1;
       height: 18px;
-      background: var(--saber-sidebar-bg);
+      background: var(--saber-header-bg);
       border-bottom: 1px solid var(--saber-border);
     }
 
@@ -477,7 +665,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
     .app-setting__layout-header {
       z-index: 2;
       height: 16px;
-      background: var(--saber-sidebar-bg);
+      background: var(--saber-header-bg);
       border-bottom: 1px solid var(--saber-border);
     }
 
@@ -485,7 +673,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
       top: 16px;
       width: 18px;
       background: var(--saber-sidebar-bg);
-      border-right: 1px solid #dcdfe6;
+      border-right: 1px solid var(--saber-border);
     }
 
     .app-setting__layout-content {
@@ -496,7 +684,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
 
   &__switches {
     display: grid;
-    gap: 16px;
+    gap: var(--saber-space-4);
   }
 
   &__switch-row {
@@ -508,7 +696,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewportWidth))
   }
 
   &__footer {
-    padding-top: 28px;
+    padding-top: var(--saber-space-6);
 
     .el-button {
       width: 100%;

@@ -1,201 +1,214 @@
 <template>
-  <div class="post-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="岗位类型">
-          <dict-select
-            v-model="searchForm.category"
-            code="post_category"
-            value-type="number"
-            placeholder="请选择岗位类型"
-          />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="岗位编号">
-          <el-input v-model="searchForm.postCode" clearable placeholder="请输入岗位编号" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="岗位名称">
-          <el-input v-model="searchForm.postName" clearable placeholder="请输入岗位名称" />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="岗位列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
-          删除
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="post-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" fixed="left" width="48" />
-        <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
-        <el-table-column
-          v-if="website.tenantMode"
-          prop="tenantId"
-          label="所属租户"
-          min-width="180"
-          show-overflow-tooltip
-        >
-          <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
-        </el-table-column>
-        <el-table-column prop="category" label="岗位类型" min-width="130">
-          <template #default="{ row }">
-            <dict-tag code="post_category" :value="row.category" value-type="number" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="postCode" label="岗位编号" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="postName" label="岗位名称" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="sort" label="岗位排序" width="110" align="center" />
-        <el-table-column
-          v-if="canView || canEdit || canDelete"
-          label="操作"
-          fixed="right"
-          width="200"
-          align="center"
-        >
-          <template #default="{ row }">
-            <el-button
-              v-if="canView"
-              type="primary"
-              link
-              :icon="View"
-              @click="openDetail(row as PostEntity, 'view')"
-            >
-              查看
-            </el-button>
-            <el-button
-              v-if="canEdit"
-              type="primary"
-              link
-              :icon="Edit"
-              @click="openDetail(row as PostEntity, 'edit')"
-            >
-              编辑
-            </el-button>
-            <el-button
-              v-if="canDelete"
-              type="danger"
-              link
-              :icon="Delete"
-              @click="handleRowDelete(row as PostEntity)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="岗位类型">
+            <dict-select
+              v-model="searchForm.category"
+              code="post_category"
+              value-type="number"
+              placeholder="请选择岗位类型"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="岗位编号">
+            <el-input v-model="searchForm.postCode" clearable placeholder="请输入岗位编号" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="岗位名称">
+            <el-input v-model="searchForm.postName" clearable placeholder="请输入岗位名称" />
+          </el-form-item>
+        </el-col>
+      </search-panel>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
+      <list-panel title="岗位列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
+            删除
+          </el-button>
+        </template>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
 
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="岗位"
-      :submitting="submitting"
-      :loading="formLoading"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || formLoading"
-        label-width="88px"
-      >
-        <el-row :gutter="24">
-          <el-col v-if="website.tenantMode" :xs="24" :sm="12">
-            <el-form-item label="所属租户" prop="tenantId">
-              <el-select
-                v-model="form.tenantId"
-                clearable
-                filterable
-                :loading="tenantLoading"
-                placeholder="请选择所属租户"
-                @visible-change="handleTenantVisibleChange"
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" fixed="left" width="48" />
+          <el-table-column type="index" label="#" fixed="left" width="60" align="center" />
+          <el-table-column
+            v-if="website.tenantMode"
+            prop="tenantId"
+            label="所属租户"
+            min-width="180"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">{{ getTenantName(row.tenantId) }}</template>
+          </el-table-column>
+          <el-table-column prop="category" label="岗位类型" min-width="130">
+            <template #default="{ row }">
+              <dict-tag code="post_category" :value="row.category" value-type="number" />
+            </template>
+          </el-table-column>
+          <el-table-column prop="postCode" label="岗位编号" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="postName" label="岗位名称" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="sort" label="岗位排序" width="110" align="center" />
+          <el-table-column
+            v-if="canView || canEdit || canDelete"
+            label="操作"
+            fixed="right"
+            width="200"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-button
+                v-if="canView"
+                type="primary"
+                link
+                :icon="View"
+                @click="openDetail(row as PostEntity, 'view')"
               >
-                <el-option
-                  v-for="tenant in tenantOptions"
-                  :key="tenant.tenantId"
-                  :label="tenant.tenantName"
-                  :value="tenant.tenantId"
+                查看
+              </el-button>
+              <el-button
+                v-if="canEdit"
+                type="primary"
+                link
+                :icon="Edit"
+                @click="openDetail(row as PostEntity, 'edit')"
+              >
+                编辑
+              </el-button>
+              <el-button
+                v-if="canDelete"
+                type="danger"
+                link
+                :icon="Delete"
+                @click="handleRowDelete(row as PostEntity)"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading"
+            @change="handlePageChange"
+          />
+        </template>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="岗位"
+        :submitting="submitting"
+        :loading="formLoading"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
+      >
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || formLoading"
+          label-width="88px"
+        >
+          <el-row :gutter="24">
+            <el-col v-if="website.tenantMode" :xs="24" :sm="12">
+              <el-form-item label="所属租户" prop="tenantId">
+                <el-select
+                  v-model="form.tenantId"
+                  clearable
+                  filterable
+                  :loading="tenantLoading"
+                  placeholder="请选择所属租户"
+                  @visible-change="handleTenantVisibleChange"
+                >
+                  <el-option
+                    v-for="tenant in tenantOptions"
+                    :key="tenant.tenantId"
+                    :label="tenant.tenantName"
+                    :value="tenant.tenantId"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="岗位类型" prop="category">
+                <dict-select
+                  v-model="form.category"
+                  code="post_category"
+                  value-type="number"
+                  :disabled="mode === 'view'"
+                  placeholder="请选择岗位类型"
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="岗位类型" prop="category">
-              <dict-select
-                v-model="form.category"
-                code="post_category"
-                value-type="number"
-                :disabled="mode === 'view'"
-                placeholder="请选择岗位类型"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="岗位编号" prop="postCode">
-              <el-input v-model="form.postCode" maxlength="100" placeholder="请输入岗位编号" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="岗位名称" prop="postName">
-              <el-input v-model="form.postName" maxlength="100" placeholder="请输入岗位名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="岗位排序" prop="sort">
-              <el-input-number v-model="form.sort" :min="0" :max="9999" controls-position="right" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="岗位描述" prop="remark">
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                :rows="4"
-                maxlength="500"
-                show-word-limit
-                placeholder="请输入岗位描述"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </form-dialog>
-  </div>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="岗位编号" prop="postCode">
+                <el-input v-model="form.postCode" maxlength="100" placeholder="请输入岗位编号" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="岗位名称" prop="postName">
+                <el-input v-model="form.postName" maxlength="100" placeholder="请输入岗位名称" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="岗位排序" prop="sort">
+                <el-input-number
+                  v-model="form.sort"
+                  :min="0"
+                  :max="9999"
+                  controls-position="right"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="岗位描述" prop="remark">
+                <el-input
+                  v-model="form.remark"
+                  type="textarea"
+                  :rows="4"
+                  maxlength="500"
+                  show-word-limit
+                  placeholder="请输入岗位描述"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -411,7 +424,7 @@ onMounted(() => {
 }
 
 :deep(.el-table .el-button + .el-button) {
-  margin-left: 4px;
+  margin-left: var(--saber-space-1);
 }
 
 :deep(.el-input-number) {

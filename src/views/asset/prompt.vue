@@ -1,229 +1,227 @@
 <template>
-  <div class="prompt-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      label-width="64px"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="名称">
-          <el-input v-model="searchForm.name" clearable placeholder="请输入提示词名称" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="编码">
-          <el-input v-model="searchForm.code" clearable placeholder="请输入提示词编码" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="状态">
-          <el-select v-model="searchForm.status" clearable placeholder="全部状态">
-            <el-option label="草稿" :value="0" />
-            <el-option label="已发布" :value="1" />
-            <el-option label="已停用" :value="2" />
-          </el-select>
-        </el-form-item>
-      </el-col>
-    </search-panel>
+  <page-container layout="content">
+    <div class="prompt-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        label-width="64px"
+        @search="handleSearch"
+        @reset="handleReset"
+      >
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="名称">
+            <el-input v-model="searchForm.name" clearable placeholder="请输入提示词名称" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="编码">
+            <el-input v-model="searchForm.code" clearable placeholder="请输入提示词编码" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="状态">
+            <el-select v-model="searchForm.status" clearable placeholder="全部状态">
+              <el-option label="草稿" :value="0" />
+              <el-option label="已发布" :value="1" />
+              <el-option label="已停用" :value="2" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="类型">
+            <el-select v-model="searchForm.promptType" clearable placeholder="全部类型">
+              <el-option
+                v-for="option in promptTypeOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="发布方式">
+            <el-select v-model="searchForm.publishMode" clearable placeholder="全部方式">
+              <el-option
+                v-for="option in promptPublishModeOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </search-panel>
 
-    <list-panel title="提示词列表">
-      <template #actions>
-        <el-button
-          v-if="canAdd"
-          type="primary"
-          :icon="Plus"
-          :disabled="operationRunning"
-          @click="openAdd"
-        >
-          新增
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table v-loading="loading" :data="data" row-key="id">
-        <el-table-column prop="promptName" label="名称" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="promptCode" label="编码" min-width="180" show-overflow-tooltip>
-          <template #default="{ row }"
-            ><code>{{ row.promptCode }}</code></template
+      <list-panel title="提示词列表">
+        <template #actions>
+          <el-button
+            v-if="canAdd"
+            type="primary"
+            :icon="Plus"
+            :disabled="operationRunning"
+            @click="openAdd"
           >
-        </el-table-column>
-        <el-table-column label="状态" width="110" align="center">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">
-              {{ getStatusLabel(row as PromptListItem) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="当前版本" width="110" align="center">
-          <template #default="{ row }">
-            {{ row.currentVersionNo ? `V${row.currentVersionNo}` : '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="草稿状态" width="140" align="center">
-          <template #default="{ row }">
-            <el-tag v-if="row.draftDirty" type="warning">有待发布草稿</el-tag>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="updateTime" label="更新时间" min-width="170" show-overflow-tooltip>
-          <template #default="{ row }">{{ formatTime(row.updateTime) }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="hasAnyRowAction"
-          label="操作"
-          fixed="right"
-          width="230"
-          align="center"
-        >
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit && row.actions.editable"
-              :disabled="isRowBusy(row.id)"
-              @view="openView(row.id)"
-              @edit="openEdit(row.id)"
-            >
-              <template #extra>
-                <el-dropdown
-                  v-if="hasMoreActions(row as PromptListItem)"
-                  trigger="click"
-                  :disabled="isRowBusy(row.id)"
-                  @command="command => handleMoreAction(command, row as PromptListItem)"
-                >
-                  <el-button type="primary" link :loading="isRowBusy(row.id)">
-                    更多<el-icon class="prompt-more-icon"><ArrowDown /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item v-if="canCopy" :icon="CopyDocument" command="copy">
-                        复制
-                      </el-dropdown-item>
-                      <el-dropdown-item v-if="canPreview" :icon="View" command="preview">
-                        预览
-                      </el-dropdown-item>
-                      <el-dropdown-item v-if="canView" :icon="Clock" command="versions">
-                        版本历史
-                      </el-dropdown-item>
-                      <el-dropdown-item
-                        v-if="canPublish && row.actions.publishable"
-                        :icon="Promotion"
-                        command="publish"
-                      >
-                        {{ row.status === 2 ? '重新发布' : '发布' }}
-                      </el-dropdown-item>
-                      <el-dropdown-item
-                        v-if="canDisable && row.actions.disableable"
-                        :icon="CircleClose"
-                        command="disable"
-                      >
-                        停用
-                      </el-dropdown-item>
-                      <el-dropdown-item
-                        v-if="canDelete && row.actions.removable"
-                        divided
-                        :icon="Delete"
-                        command="delete"
-                      >
-                        <span class="prompt-danger-action">删除</span>
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </template>
-            </row-actions>
-          </template>
-        </el-table-column>
-
-        <template #empty>
-          <div class="prompt-empty">
-            <el-empty description="暂无提示词" :image-size="88" />
-            <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">
-              新增提示词
-            </el-button>
-          </div>
+            新增
+          </el-button>
         </template>
-      </el-table>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
 
-      <template #footer>
-        <list-pagination
-          v-model:current-page="page.currentPage"
-          v-model:page-size="page.pageSize"
-          :total="page.total"
-          :disabled="loading"
-          @change="handlePageChange"
-        />
-      </template>
-    </list-panel>
+        <el-table v-loading="loading" :data="data" row-key="id">
+          <el-table-column prop="promptName" label="名称" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="promptCode" label="编码" min-width="160" show-overflow-tooltip>
+            <template #default="{ row }"
+              ><code>{{ row.promptCode }}</code></template
+            >
+          </el-table-column>
+          <el-table-column label="类型" min-width="100" align="center">
+            <template #default="{ row }">
+              {{ getPromptTypeLabel(row as PromptListItem) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="发布方式" min-width="120" align="center">
+            <template #default="{ row }">
+              <el-tag :type="row.publishMode === 2 ? 'success' : 'info'" effect="plain">
+                {{ getPublishModeLabel(row as PromptListItem) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" min-width="100" align="center">
+            <template #default="{ row }">
+              <el-tag :type="getStatusType(row.status)">
+                {{ getStatusLabel(row as PromptListItem) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="当前版本" min-width="110" align="center">
+            <template #default="{ row }">
+              {{ row.currentVersionNo ? `V${row.currentVersionNo}` : '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="草稿状态" min-width="140" align="center">
+            <template #default="{ row }">
+              <el-tag v-if="row.draftDirty" type="warning">有待发布草稿</el-tag>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="updateTime" label="更新时间" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">{{ formatTime(row.updateTime) }}</template>
+          </el-table-column>
+          <el-table-column
+            v-if="hasAnyRowAction"
+            label="操作"
+            fixed="right"
+            width="230"
+            align="center"
+          >
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit && row.actions.editable"
+                :actions="getVisibleCustomActions(row as PromptListItem)"
+                :disabled="isRowBusy(row.id)"
+                @view="openView(row.id)"
+                @edit="openEdit(row.id)"
+                @action="action => handleRowAction(action, row as PromptListItem)"
+              />
+            </template>
+          </el-table-column>
 
-    <prompt-editor-dialog
-      v-model="editorVisible"
-      :mode="editorMode"
-      :prompt-id="editorPromptId"
-      :can-preview="canPreview"
-      :can-create="canAdd"
-      :can-edit="canEdit"
-      @saved="handleEditorSaved"
-    />
+          <template #empty>
+            <div class="prompt-empty">
+              <el-empty description="暂无提示词" :image-size="88" />
+              <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">
+                新增提示词
+              </el-button>
+            </div>
+          </template>
+        </el-table>
 
-    <prompt-preview-drawer v-model="previewVisible" :snapshot="previewSnapshot" />
-
-    <prompt-version-drawer
-      v-model="versionVisible"
-      :prompt-id="versionPromptId"
-      :can-rollback="canRollback"
-      :refresh-key="versionRefreshKey"
-      @rollback-request="openRollback"
-    />
-
-    <prompt-action-dialog
-      v-model="actionVisible"
-      :action="actionType"
-      :detail="actionDetail"
-      :target-version="actionTargetVersion"
-      @completed="handleActionCompleted"
-    />
-
-    <form-dialog
-      v-model="copyVisible"
-      mode="add"
-      entity-name="提示词副本"
-      :submitting="copying"
-      width="560px"
-      destroy-on-close
-      @confirm="submitCopy"
-      @cancel="resetCopy"
-    >
-      <el-form ref="copyFormRef" :model="copyForm" :rules="copyRules" label-width="88px">
-        <el-form-item label="来源提示词">
-          <span>{{ copySourceName }}</span>
-        </el-form-item>
-        <el-form-item label="新名称" prop="promptName">
-          <el-input v-model="copyForm.promptName" maxlength="100" placeholder="请输入新名称" />
-        </el-form-item>
-        <el-form-item label="新编码" prop="promptCode">
-          <el-input
-            v-model="copyForm.promptCode"
-            maxlength="64"
-            placeholder="请输入新编码"
-            @blur="normalizeCopyCode"
+        <template #footer>
+          <list-pagination
+            v-model:current-page="page.currentPage"
+            v-model:page-size="page.pageSize"
+            :total="page.total"
+            :disabled="loading"
+            @change="handlePageChange"
           />
-        </el-form-item>
-      </el-form>
-    </form-dialog>
-  </div>
+        </template>
+      </list-panel>
+
+      <prompt-editor-dialog
+        v-model="editorVisible"
+        :mode="editorMode"
+        :prompt-id="editorPromptId"
+        :can-preview="canPreview"
+        :can-publish="canPublish"
+        :can-create="canAdd"
+        :can-edit="canEdit"
+        @saved="handleEditorSaved"
+      />
+
+      <prompt-preview-drawer v-model="previewVisible" :snapshot="previewSnapshot" />
+
+      <prompt-version-drawer
+        v-model="versionVisible"
+        :prompt-id="versionPromptId"
+        :can-rollback="canRollback"
+        :refresh-key="versionRefreshKey"
+        @rollback-request="openRollback"
+      />
+
+      <prompt-action-dialog
+        v-model="actionVisible"
+        :action="actionType"
+        :detail="actionDetail"
+        :target-version="actionTargetVersion"
+        @completed="handleActionCompleted"
+      />
+
+      <form-dialog
+        v-model="copyVisible"
+        mode="add"
+        entity-name="提示词副本"
+        :submitting="copying"
+        size="sm"
+        destroy-on-close
+        @confirm="submitCopy"
+        @cancel="resetCopy"
+      >
+        <el-form ref="copyFormRef" :model="copyForm" :rules="copyRules" label-width="88px">
+          <el-form-item label="来源提示词">
+            <span>{{ copySourceName }}</span>
+          </el-form-item>
+          <el-form-item label="新名称" prop="promptName">
+            <el-input v-model="copyForm.promptName" maxlength="100" placeholder="请输入新名称" />
+          </el-form-item>
+          <el-form-item label="新编码" prop="promptCode">
+            <el-input
+              v-model="copyForm.promptCode"
+              maxlength="64"
+              placeholder="请输入新编码"
+              @blur="normalizeCopyCode"
+            />
+          </el-form-item>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, type Component } from 'vue';
 import { storeToRefs } from 'pinia';
 import {
-  ArrowDown,
   CircleClose,
   Clock,
   CopyDocument,
@@ -252,6 +250,8 @@ import {
   copyPrompt,
   getPromptDetail,
   getPromptList,
+  promptPublishModeOptions,
+  promptTypeOptions,
   removePrompt,
   type PromptDetail,
   type PromptDraftPayload,
@@ -266,6 +266,13 @@ import { normalizePromptVariable } from './promptVariable';
 
 type PromptListResponse = Awaited<ReturnType<typeof getPromptList>>;
 type MoreAction = 'copy' | 'preview' | 'versions' | 'publish' | 'disable' | 'delete';
+
+interface PromptRowAction {
+  key: MoreAction;
+  label: string;
+  icon: Component;
+  danger?: boolean;
+}
 
 interface CopyForm {
   promptName: string;
@@ -360,21 +367,46 @@ const getStatusLabel = (row: PromptListItem) => {
   if (row.status === 2) return '已停用';
   return `未知状态 (${row.status})`;
 };
+const getPromptTypeLabel = (row: PromptListItem) =>
+  row.promptTypeName ||
+  promptTypeOptions.find(option => option.value === row.promptType)?.label ||
+  row.promptType;
+const getPublishModeLabel = (row: PromptListItem) =>
+  row.publishModeName ||
+  promptPublishModeOptions.find(option => option.value === row.publishMode)?.label ||
+  `未知方式 (${row.publishMode})`;
 const formatTime = (value?: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-');
 const isRowBusy = (_id: string) => operationRunning.value;
-const hasMoreActions = (row: PromptListItem) =>
-  canCopy.value ||
-  canPreview.value ||
-  canView.value ||
-  (canPublish.value && row.actions.publishable) ||
-  (canDisable.value && row.actions.disableable) ||
-  (canDelete.value && row.actions.removable);
+const getVisibleCustomActions = (row: PromptListItem): PromptRowAction[] => {
+  const actions: PromptRowAction[] = [];
+  if (canCopy.value) actions.push({ key: 'copy', label: '复制', icon: CopyDocument });
+  if (canPreview.value) actions.push({ key: 'preview', label: '预览', icon: View });
+  if (canView.value) actions.push({ key: 'versions', label: '版本历史', icon: Clock });
+  if (canPublish.value && row.actions.publishable) {
+    actions.push({
+      key: 'publish',
+      label: row.status === 2 ? '重新发布' : '发布',
+      icon: Promotion,
+    });
+  }
+  if (canDisable.value && row.actions.disableable) {
+    actions.push({ key: 'disable', label: '停用', icon: CircleClose });
+  }
+  if (canDelete.value && row.actions.removable) {
+    actions.push({ key: 'delete', label: '删除', icon: Delete, danger: true });
+  }
+  return actions;
+};
+const handleRowAction = (action: string, row: PromptListItem) =>
+  handleMoreAction(action as MoreAction, row);
 
 const handleSearch = () => {
   void search({
     name: searchForm.value.name?.trim() || undefined,
     code: searchForm.value.code?.trim().toLowerCase() || undefined,
     status: searchForm.value.status,
+    promptType: searchForm.value.promptType,
+    publishMode: searchForm.value.publishMode,
   });
 };
 
@@ -416,6 +448,8 @@ const openPreview = async (promptId: string) => {
   previewSnapshot.value = {
     promptName: detail.promptName,
     promptCode: detail.promptCode,
+    promptType: detail.promptType,
+    publishMode: detail.publishMode,
     fixedInstruction: detail.fixedInstruction ?? '',
     userTemplate: detail.userTemplate ?? '',
     variables: detail.variables.map(normalizePromptVariable),
@@ -583,25 +617,11 @@ onMounted(() => {
   min-width: 0;
 }
 
-.prompt-more-icon {
-  margin-left: 4px;
-}
-
-.prompt-danger-action {
-  color: var(--el-color-danger);
-}
-
 .prompt-empty {
   display: flex;
-  padding-bottom: 20px;
+  padding-bottom: var(--saber-space-5);
   align-items: center;
   flex-direction: column;
-}
-
-:deep(.row-actions .el-dropdown .el-button) {
-  min-width: 52px;
-  height: 32px;
-  padding: 4px 6px;
 }
 
 @media (max-width: 767px) {

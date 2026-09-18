@@ -1,10 +1,10 @@
 <template>
-  <basic-container>
-    <h3>请打开浏览器控制台，然后点击下面的按钮</h3>
-    <el-button type="danger"
-               @click="handleNewError">触发一个错误
-    </el-button>
-  </basic-container>
+  <page-container layout="content">
+    <basic-container>
+      <h3>请打开浏览器控制台，然后点击下面的按钮</h3>
+      <el-button type="danger" @click="handleNewError">触发一个错误 </el-button>
+    </basic-container>
+  </page-container>
 </template>
 
 <script setup lang="ts">

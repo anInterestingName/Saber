@@ -69,7 +69,7 @@ defineExpose({ retry: load });
   min-height: 24px;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--saber-space-1);
   color: var(--saber-text-secondary);
 }
 

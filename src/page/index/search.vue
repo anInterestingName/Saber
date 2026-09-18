@@ -115,21 +115,21 @@ export default {
 
 <style lang="scss" scoped>
 .saber-menu-search {
-  padding-top: 50px;
+  padding-top: var(--saber-space-9);
   width: 100%;
   height: 100%;
   color: var(--saber-text-primary);
   background-color: var(--saber-surface);
   z-index: 1024;
   &__title {
-    margin-bottom: 40px;
+    margin-bottom: var(--saber-space-8);
     text-align: center;
     font-size: 28px;
     font-weight: bold;
     letter-spacing: 0;
   }
   &__form {
-    margin: 0 auto 50px auto;
+    margin: 0 auto var(--saber-space-9) auto;
     width: 50%;
     text-align: center;
   }
@@ -138,22 +138,22 @@ export default {
   }
   &__list {
     box-sizing: border-box;
-    padding: 20px 30px;
+    padding: var(--saber-space-5) var(--saber-space-7);
     margin: 0 auto;
     width: 70%;
-    border-radius: 4px;
+    border-radius: var(--saber-radius-xs);
     border: 1px solid var(--saber-border);
     background-color: var(--saber-surface-elevated);
     overflow: hidden;
     color: var(--saber-text-primary);
     transition: 0.3s;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: var(--saber-shadow-popover);
   }
   &__item {
-    padding: 5px 0;
+    padding: var(--saber-space-2) 0;
     border-bottom: 1px dashed var(--saber-border);
     &-icon {
-      margin-right: 5px;
+      margin-right: var(--saber-space-2);
       font-size: 18px;
     }
     &-title {

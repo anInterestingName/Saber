@@ -1,23 +1,25 @@
 <template>
-  <list-panel title="表格示例">
-    <el-table :data="pageRows" row-key="id">
-      <el-table-column type="index" label="#" width="60" align="center" />
-      <el-table-column prop="username" label="用户名" min-width="150" show-overflow-tooltip />
-      <el-table-column prop="name" label="姓名" min-width="130" show-overflow-tooltip />
-      <el-table-column prop="date" label="申请日期" width="130" align="center" />
-      <el-table-column prop="signature" label="个性签名" min-width="280" show-overflow-tooltip />
-    </el-table>
+  <page-container layout="content">
+    <list-panel title="表格示例">
+      <el-table :data="pageRows" row-key="id">
+        <el-table-column type="index" label="#" width="60" align="center" />
+        <el-table-column prop="username" label="用户名" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="name" label="姓名" min-width="130" show-overflow-tooltip />
+        <el-table-column prop="date" label="申请日期" width="130" align="center" />
+        <el-table-column prop="signature" label="个性签名" min-width="280" show-overflow-tooltip />
+      </el-table>
 
-    <template #footer>
-      <list-pagination
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :page-sizes="[5, 10, 20]"
-        :total="rows.length"
-        @change="handlePageChange"
-      />
-    </template>
-  </list-panel>
+      <template #footer>
+        <list-pagination
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :page-sizes="[5, 10, 20]"
+          :total="rows.length"
+          @change="handlePageChange"
+        />
+      </template>
+    </list-panel>
+  </page-container>
 </template>
 
 <script setup lang="ts">

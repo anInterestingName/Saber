@@ -1,142 +1,156 @@
 <template>
-  <div class="tree-management-page">
-    <search-panel
-      :model="searchForm"
-      :loading="loading"
-      @search="handleSearch"
-      @reset="handleReset"
-    >
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="字典编号">
-          <el-input v-model="searchForm.code" clearable placeholder="请输入字典编号" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="字典名称">
-          <el-input v-model="searchForm.dictValue" clearable placeholder="请输入字典名称" />
-        </el-form-item>
-      </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
-        <el-form-item label="字典备注">
-          <el-input v-model="searchForm.remark" clearable placeholder="请输入字典备注" />
-        </el-form-item>
-      </el-col>
-    </search-panel>
-
-    <list-panel title="字典列表">
-      <template #actions>
-        <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
-        <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
-          删除
-        </el-button>
-      </template>
-      <template #tools>
-        <el-tooltip content="刷新" placement="top">
-          <el-button circle :icon="Refresh" :loading="loading" aria-label="刷新" @click="refresh" />
-        </el-tooltip>
-      </template>
-
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="data"
-        row-key="id"
-        :expand-row-keys="tableExpandedRowKeys"
-        :tree-props="{ children: 'children' }"
-        @expand-change="handleTableExpandChange"
-        @selection-change="handleSelectionChange"
+  <page-container layout="workspace">
+    <div class="tree-management-page">
+      <search-panel
+        :model="searchForm"
+        :loading="loading"
+        @search="handleSearch"
+        @reset="handleReset"
       >
-        <el-table-column type="selection" width="48" />
-        <el-table-column type="index" label="#" width="60" align="center" />
-        <el-table-column prop="code" label="字典编号" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="dictValue" label="字典名称" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="dictKey" label="字典键值" width="120" align="center" />
-        <el-table-column prop="sort" label="字典排序" width="110" align="center" />
-        <el-table-column prop="remark" label="字典备注" min-width="180" show-overflow-tooltip />
-        <el-table-column label="操作" fixed="right" width="300" align="center">
-          <template #default="{ row }">
-            <row-actions
-              :show-view="canView"
-              :show-edit="canEdit"
-              :show-delete="canDelete"
-              @view="openDetail(row as DictEntity, 'view')"
-              @edit="openDetail(row as DictEntity, 'edit')"
-              @delete="handleRowDelete(row as DictEntity)"
-            >
-              <template v-if="isAdmin" #extra>
-                <el-button type="primary" link :icon="Plus" @click="openChild(row as DictEntity)">
-                  新增子项
-                </el-button>
-              </template>
-            </row-actions>
-          </template>
-        </el-table-column>
-      </el-table>
-    </list-panel>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="字典编号">
+            <el-input v-model="searchForm.code" clearable placeholder="请输入字典编号" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="字典名称">
+            <el-input v-model="searchForm.dictValue" clearable placeholder="请输入字典名称" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="6">
+          <el-form-item label="字典备注">
+            <el-input v-model="searchForm.remark" clearable placeholder="请输入字典备注" />
+          </el-form-item>
+        </el-col>
+      </search-panel>
 
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="字典"
-      :submitting="submitting"
-      :loading="formLoading"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-alert v-if="detailFailed || parentOptionsFailed" type="error" :closable="false" show-icon>
-        <template #title>数据加载失败，请关闭后重试</template>
-      </el-alert>
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || formLoading || detailFailed || parentOptionsFailed"
-        label-width="88px"
+      <list-panel title="字典列表">
+        <template #actions>
+          <el-button v-if="canAdd" type="primary" :icon="Plus" @click="openAdd">新增</el-button>
+          <el-button v-if="canDelete" type="danger" plain :icon="Delete" @click="handleBatchDelete">
+            删除
+          </el-button>
+        </template>
+        <template #tools>
+          <el-tooltip content="刷新" placement="top">
+            <el-button
+              circle
+              :icon="Refresh"
+              :loading="loading"
+              aria-label="刷新"
+              @click="refresh"
+            />
+          </el-tooltip>
+        </template>
+
+        <el-table
+          ref="tableRef"
+          v-loading="loading"
+          :data="data"
+          row-key="id"
+          :expand-row-keys="tableExpandedRowKeys"
+          :tree-props="{ children: 'children' }"
+          @expand-change="handleTableExpandChange"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column type="selection" width="48" />
+          <el-table-column type="index" label="#" width="60" align="center" />
+          <el-table-column prop="code" label="字典编号" min-width="180" show-overflow-tooltip />
+          <el-table-column
+            prop="dictValue"
+            label="字典名称"
+            min-width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column prop="dictKey" label="字典键值" width="120" align="center" />
+          <el-table-column prop="sort" label="字典排序" width="110" align="center" />
+          <el-table-column prop="remark" label="字典备注" min-width="180" show-overflow-tooltip />
+          <el-table-column label="操作" fixed="right" width="300" align="center">
+            <template #default="{ row }">
+              <row-actions
+                :show-view="canView"
+                :show-edit="canEdit"
+                :show-delete="canDelete"
+                :actions="isAdmin ? [{ key: 'add-child', label: '新增子项', icon: Plus }] : []"
+                @view="openDetail(row as DictEntity, 'view')"
+                @edit="openDetail(row as DictEntity, 'edit')"
+                @delete="handleRowDelete(row as DictEntity)"
+                @action="openChild(row as DictEntity)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+      </list-panel>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="字典"
+        :submitting="submitting"
+        :loading="formLoading"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
       >
-        <el-form-item label="字典编号" prop="code">
-          <el-input v-model="form.code" :disabled="Boolean(parentContext)" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="字典名称" prop="dictValue">
-          <el-input v-model="form.dictValue" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="上级字典" prop="parentId">
-          <el-tree-select
-            v-model="form.parentId"
-            :data="parentOptions"
-            :props="parentTreeProps"
-            node-key="id"
-            check-strictly
-            clearable
-            filterable
-            :disabled="Boolean(parentContext)"
-            placeholder="请选择上级字典"
-          />
-        </el-form-item>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="字典键值" prop="dictKey">
-              <el-input-number v-model="form.dictKey" :min="0" controls-position="right" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="字典排序" prop="sort">
-              <el-input-number v-model="form.sort" :min="0" controls-position="right" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="字典备注" prop="remark">
-          <el-input
-            v-model="form.remark"
-            type="textarea"
-            :rows="4"
-            maxlength="500"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-    </form-dialog>
-  </div>
+        <el-alert
+          v-if="detailFailed || parentOptionsFailed"
+          type="error"
+          :closable="false"
+          show-icon
+        >
+          <template #title>数据加载失败，请关闭后重试</template>
+        </el-alert>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || formLoading || detailFailed || parentOptionsFailed"
+          label-width="88px"
+        >
+          <el-form-item label="字典编号" prop="code">
+            <el-input v-model="form.code" :disabled="Boolean(parentContext)" maxlength="100" />
+          </el-form-item>
+          <el-form-item label="字典名称" prop="dictValue">
+            <el-input v-model="form.dictValue" maxlength="100" />
+          </el-form-item>
+          <el-form-item label="上级字典" prop="parentId">
+            <el-tree-select
+              v-model="form.parentId"
+              :data="parentOptions"
+              :props="parentTreeProps"
+              node-key="id"
+              check-strictly
+              clearable
+              filterable
+              :disabled="Boolean(parentContext)"
+              placeholder="请选择上级字典"
+            />
+          </el-form-item>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="字典键值" prop="dictKey">
+                <el-input-number v-model="form.dictKey" :min="0" controls-position="right" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="字典排序" prop="sort">
+                <el-input-number v-model="form.sort" :min="0" controls-position="right" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="字典备注" prop="remark">
+            <el-input
+              v-model="form.remark"
+              type="textarea"
+              :rows="4"
+              maxlength="500"
+              show-word-limit
+            />
+          </el-form-item>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -263,9 +277,7 @@ watch(data, clearTableSelection, { flush: 'post' });
 
 const handleSearch = () => void search({ ...searchForm.value });
 const handleTableExpandChange = (row: DictEntity, expanded: boolean | DictEntity[]) => {
-  const isExpanded = Array.isArray(expanded)
-    ? expanded.some(item => item.id === row.id)
-    : expanded;
+  const isExpanded = Array.isArray(expanded) ? expanded.some(item => item.id === row.id) : expanded;
   handleExpandChange(row, isExpanded);
 };
 const handleReset = () => {

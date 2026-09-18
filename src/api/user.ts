@@ -1,5 +1,36 @@
 import request from '@/axios';
-import website from "@/config/website";
+import website from '@/config/website';
+import type { BladeResponse } from '@/types/option';
+
+interface RegisterResponse<T> extends BladeResponse<T> {
+  success: boolean;
+}
+
+export interface RegisterConfig {
+  enabled: boolean;
+  defaultTenantId: string;
+  captchaEnabled: boolean;
+  accountMinLength: number;
+  accountMaxLength: number;
+  passwordMinLength: number;
+  passwordMaxLength: number;
+}
+
+export interface RegisterPayload {
+  tenantId: string;
+  account: string;
+  name: string;
+  password: string;
+  confirmPassword: string;
+  captchaKey: string;
+  captchaCode: string;
+}
+
+export interface RegisterResult {
+  tenantId: string;
+  account: string;
+  nextAction: 'LOGIN';
+}
 
 // password 之后的入参按登录链路各自缺省：type 仅切换角色部门时下发，key / code 仅验证码模式下发；
 // 手机验证码链路（store 的 LoginByPhone）只透传前两位，故 password 亦为可选
@@ -77,6 +108,19 @@ export const registerGuest = (form, oauthId) => request({
 export const getCaptcha = () => request({
   url: '/blade-auth/captcha',
   method: 'get'
+});
+
+export const getRegisterConfig = () => request<RegisterResponse<RegisterConfig>>({
+  url: '/blade-auth/register/config',
+  method: 'get',
+  meta: { isToken: false }
+});
+
+export const registerUser = (data: RegisterPayload) => request<RegisterResponse<RegisterResult>>({
+  url: '/blade-auth/register',
+  method: 'post',
+  data,
+  meta: { isToken: false }
 });
 
 export const sendLogs = (list) => request({

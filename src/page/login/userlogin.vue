@@ -68,6 +68,10 @@
         $t('login.submit')
       }}</el-button>
     </el-form-item>
+    <div v-if="registrationEnabled" class="login-register-entry">
+      <span>{{ $t('login.noAccount') }}</span>
+      <el-button link type="primary" @click="$emit('register')">{{ $t('login.register') }}</el-button>
+    </div>
   </el-form>
 </template>
 
@@ -81,6 +85,17 @@ import { useTagsStore } from '@/store/tags';
 import { useUserStore } from '@/store/user';
 export default {
   name: 'userlogin',
+  emits: ['register'],
+  props: {
+    registrationEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    prefill: {
+      type: Object,
+      default: null,
+    },
+  },
   data() {
     return {
       tenantMode: website.tenantMode,
@@ -119,6 +134,18 @@ export default {
     this.getTenant();
     this.refreshCode();
   },
+  watch: {
+    prefill: {
+      deep: true,
+      handler(value) {
+        if (!value) return;
+        this.loginForm.tenantId = value.tenantId || this.loginForm.tenantId;
+        this.loginForm.username = value.username || '';
+        this.loginForm.password = '';
+        this.loginForm.code = '';
+      },
+    },
+  },
   mounted() {},
   computed: {
     ...mapState(useTagsStore, {
@@ -141,7 +168,7 @@ export default {
           const loading = this.$loading({
             lock: true,
             text: '登录中,请稍后',
-            background: 'rgba(0, 0, 0, 0.7)',
+            background: 'var(--saber-backdrop)',
           });
           this.LoginByUsername(this.loginForm)
             .then(() => {

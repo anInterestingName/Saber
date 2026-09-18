@@ -66,7 +66,7 @@ export default {
 .language-switch__trigger {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--saber-space-2);
   padding: 0;
   border: 0;
   color: inherit;

@@ -1,19 +1,9 @@
 <template>
-  <div class="saber-logo">
-    <transition name="fade" mode="out-in">
-      <div
-        v-if="isCompact"
-        key="compact"
-        class="saber-logo_brand saber-logo_brand--compact"
-        :aria-label="website.indexTitle"
-      >
-        <img class="saber-logo_mark" src="/img/staratlas-mark.svg" alt="" />
-      </div>
-      <div v-else key="expanded" class="saber-logo_brand" :aria-label="website.indexTitle">
-        <img class="saber-logo_mark" src="/img/staratlas-mark.svg" alt="" />
-        <span class="saber-logo_title">{{ website.indexTitle }}</span>
-      </div>
-    </transition>
+  <div class="saber-logo" :class="{ 'saber-logo--compact': isCompact }">
+    <div class="saber-logo_brand" :aria-label="website.indexTitle">
+      <img class="saber-logo_mark" src="/img/staratlas-mark.svg" alt="" />
+      <span class="saber-logo_title">{{ website.indexTitle }}</span>
+    </div>
   </div>
 </template>
 
@@ -23,6 +13,17 @@ import { storeToRefs } from 'pinia';
 import website from '@/config/website';
 import { useCommonStore } from '@/store/common';
 
+const props = withDefaults(
+  defineProps<{
+    forceExpanded?: boolean;
+  }>(),
+  {
+    forceExpanded: false,
+  }
+);
+
 const { isCollapse, isHorizontal, isMobile } = storeToRefs(useCommonStore());
-const isCompact = computed(() => !isHorizontal.value && !isMobile.value && isCollapse.value);
+const isCompact = computed(() => {
+  return !props.forceExpanded && !isHorizontal.value && !isMobile.value && isCollapse.value;
+});
 </script>

@@ -1,236 +1,237 @@
 <template>
-  <div class="scope-page">
-    <scope-menu-browser
-      title="数据权限菜单"
-      :can-configure="canConfigure"
-      @configure="openDrawer"
-    />
+  <page-container layout="workspace">
+    <div class="scope-page">
+      <scope-menu-browser
+        title="数据权限菜单"
+        :can-configure="canConfigure"
+        @configure="openDrawer"
+      />
 
-    <el-drawer
-      v-model="drawerVisible"
-      class="scope-drawer"
-      :title="`[${activeMenu?.name || '菜单'}] 数据权限配置`"
-      direction="rtl"
-      append-to-body
-      destroy-on-close
-      size="min(1000px, 100vw)"
-      :close-on-click-modal="!drawerLocked"
-      :close-on-press-escape="!drawerLocked"
-      :show-close="!drawerLocked"
-      :before-close="handleDrawerBeforeClose"
-    >
-      <div class="scope-drawer__body">
-        <search-panel
-          :model="searchForm"
-          :loading="loading"
-          @search="handleSearch"
-          @reset="handleReset"
-        >
-          <el-col :xs="24" :sm="12" :md="8">
-            <el-form-item label="权限名称">
-              <el-input v-model="searchForm.scopeName" clearable placeholder="请输入权限名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="8">
-            <el-form-item label="权限编号">
-              <el-input v-model="searchForm.resourceCode" clearable placeholder="请输入权限编号" />
-            </el-form-item>
-          </el-col>
-        </search-panel>
-
-        <list-panel title="数据权限规则" compact>
-          <template #actions>
-            <el-button
-              v-if="canConfigure"
-              type="primary"
-              :icon="Plus"
-              :disabled="loading || deleting"
-              @click="openAdd"
-            >
-              新增
-            </el-button>
-            <el-button
-              v-if="canConfigure"
-              type="danger"
-              plain
-              :icon="Delete"
-              :loading="deleting"
-              :disabled="loading"
-              @click="handleBatchDelete"
-            >
-              删除
-            </el-button>
-          </template>
-          <template #tools>
-            <el-tooltip content="刷新" placement="top">
-              <el-button
-                circle
-                :icon="Refresh"
-                :loading="loading"
-                :disabled="deleting"
-                aria-label="刷新"
-                @click="refreshList"
-              />
-            </el-tooltip>
-          </template>
-
-          <el-table
-            ref="tableRef"
-            v-loading="loading"
-            :data="data"
-            row-key="id"
-            @selection-change="handleSelectionChange"
+      <detail-drawer
+        v-model="drawerVisible"
+        class="scope-drawer"
+        :title="`[${activeMenu?.name || '菜单'}] 数据权限配置`"
+        size="xl"
+        :submitting="drawerLocked"
+        @close="invalidateDrawerContext"
+      >
+        <div class="scope-drawer__body">
+          <search-panel
+            :model="searchForm"
+            :loading="loading"
+            @search="handleSearch"
+            @reset="handleReset"
           >
-            <el-table-column type="selection" width="48" />
-            <el-table-column type="index" label="#" width="60" align="center" />
-            <el-table-column
-              prop="scopeName"
-              label="权限名称"
-              min-width="180"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="resourceCode"
-              label="权限编号"
-              min-width="150"
-              show-overflow-tooltip
-            />
-            <el-table-column
-              prop="scopeColumn"
-              label="权限字段"
-              min-width="140"
-              show-overflow-tooltip
-            />
-            <el-table-column label="规则类型" width="170" align="center">
-              <template #default="{ row }">
-                <dict-tag code="data_scope_type" :value="row.scopeType" value-type="number" />
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" fixed="right" width="210" align="center">
-              <template #default="{ row }">
-                <row-actions
-                  :show-view="canConfigure"
-                  :show-edit="canConfigure"
-                  :show-delete="canConfigure"
-                  :disabled="deleting || loading"
-                  @view="openDetail(row as DataScopeEntity, 'view')"
-                  @edit="openDetail(row as DataScopeEntity, 'edit')"
-                  @delete="handleRowDelete(row as DataScopeEntity)"
+            <el-col :xs="24" :sm="12" :md="8">
+              <el-form-item label="权限名称">
+                <el-input v-model="searchForm.scopeName" clearable placeholder="请输入权限名称" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8">
+              <el-form-item label="权限编号">
+                <el-input
+                  v-model="searchForm.resourceCode"
+                  clearable
+                  placeholder="请输入权限编号"
                 />
-              </template>
-            </el-table-column>
-          </el-table>
+              </el-form-item>
+            </el-col>
+          </search-panel>
 
-          <template #footer>
-            <list-pagination
-              :current-page="page.currentPage"
-              :page-size="page.pageSize"
-              :total="page.total"
-              :disabled="loading || deleting"
-              @change="handlePaginationChange"
-            />
+          <list-panel title="数据权限规则" compact>
+            <template #actions>
+              <el-button
+                v-if="canConfigure"
+                type="primary"
+                :icon="Plus"
+                :disabled="loading || deleting"
+                @click="openAdd"
+              >
+                新增
+              </el-button>
+              <el-button
+                v-if="canConfigure"
+                type="danger"
+                plain
+                :icon="Delete"
+                :loading="deleting"
+                :disabled="loading"
+                @click="handleBatchDelete"
+              >
+                删除
+              </el-button>
+            </template>
+            <template #tools>
+              <el-tooltip content="刷新" placement="top">
+                <el-button
+                  circle
+                  :icon="Refresh"
+                  :loading="loading"
+                  :disabled="deleting"
+                  aria-label="刷新"
+                  @click="refreshList"
+                />
+              </el-tooltip>
+            </template>
+
+            <el-table
+              ref="tableRef"
+              v-loading="loading"
+              :data="data"
+              row-key="id"
+              @selection-change="handleSelectionChange"
+            >
+              <el-table-column type="selection" width="48" />
+              <el-table-column type="index" label="#" width="60" align="center" />
+              <el-table-column
+                prop="scopeName"
+                label="权限名称"
+                min-width="180"
+                show-overflow-tooltip
+              />
+              <el-table-column
+                prop="resourceCode"
+                label="权限编号"
+                min-width="150"
+                show-overflow-tooltip
+              />
+              <el-table-column
+                prop="scopeColumn"
+                label="权限字段"
+                min-width="140"
+                show-overflow-tooltip
+              />
+              <el-table-column label="规则类型" width="170" align="center">
+                <template #default="{ row }">
+                  <dict-tag code="data_scope_type" :value="row.scopeType" value-type="number" />
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" fixed="right" width="210" align="center">
+                <template #default="{ row }">
+                  <row-actions
+                    :show-view="canConfigure"
+                    :show-edit="canConfigure"
+                    :show-delete="canConfigure"
+                    :disabled="deleting || loading"
+                    @view="openDetail(row as DataScopeEntity, 'view')"
+                    @edit="openDetail(row as DataScopeEntity, 'edit')"
+                    @delete="handleRowDelete(row as DataScopeEntity)"
+                  />
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <template #footer>
+              <list-pagination
+                :current-page="page.currentPage"
+                :page-size="page.pageSize"
+                :total="page.total"
+                :disabled="loading || deleting"
+                @change="handlePaginationChange"
+              />
+            </template>
+          </list-panel>
+        </div>
+      </detail-drawer>
+
+      <form-dialog
+        v-model="dialogVisible"
+        :mode="mode"
+        entity-name="数据权限"
+        :submitting="submitting"
+        :loading="detailLoading"
+        :confirm-disabled="formUnavailable"
+        size="lg"
+        destroy-on-close
+        @confirm="handleSubmit"
+        @cancel="handleDialogCancel"
+      >
+        <el-alert
+          v-if="detailFailed || dictionaryFailed"
+          class="scope-form__alert"
+          type="error"
+          :closable="false"
+          show-icon
+        >
+          <template #title>
+            {{
+              detailFailed ? '详情加载失败，请关闭后重试' : '规则类型加载失败，请在规则类型字段重试'
+            }}
           </template>
-        </list-panel>
-      </div>
-    </el-drawer>
-
-    <form-dialog
-      v-model="dialogVisible"
-      :mode="mode"
-      entity-name="数据权限"
-      :submitting="submitting"
-      :loading="detailLoading"
-      :confirm-disabled="formUnavailable"
-      width="820px"
-      destroy-on-close
-      @confirm="handleSubmit"
-      @cancel="handleDialogCancel"
-    >
-      <el-alert
-        v-if="detailFailed || dictionaryFailed"
-        class="scope-form__alert"
-        type="error"
-        :closable="false"
-        show-icon
-      >
-        <template #title>
-          {{
-            detailFailed ? '详情加载失败，请关闭后重试' : '规则类型加载失败，请在规则类型字段重试'
-          }}
-        </template>
-      </el-alert>
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="formRules"
-        :disabled="mode === 'view' || detailLoading || detailFailed"
-        label-width="88px"
-      >
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="权限名称" prop="scopeName">
-              <el-input v-model="form.scopeName" maxlength="255" show-word-limit />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="权限编号" prop="resourceCode">
-              <el-input v-model="form.resourceCode" maxlength="255" show-word-limit />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="权限字段" prop="scopeColumn">
-              <el-input v-model="form.scopeColumn" maxlength="255" show-word-limit />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
-            <el-form-item label="规则类型" prop="scopeType">
-              <dict-select
-                :model-value="form.scopeType"
-                code="data_scope_type"
-                value-type="number"
-                placeholder="请选择规则类型"
-                @update:model-value="handleScopeTypeChange"
-                @load-error="dictionaryFailed = true"
-                @load-success="dictionaryFailed = false"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="可见字段" prop="scopeField">
-              <el-input v-model="form.scopeField" maxlength="255" show-word-limit />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="权限类名" prop="scopeClass">
-              <el-input v-model="form.scopeClass" maxlength="500" show-word-limit />
-            </el-form-item>
-          </el-col>
-          <el-col v-if="form.scopeType === 5" :span="24">
-            <el-form-item label="规则值" prop="scopeValue">
-              <el-input
-                v-model="form.scopeValue"
-                type="textarea"
-                :rows="5"
-                maxlength="2000"
-                show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                :rows="3"
-                maxlength="255"
-                show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </form-dialog>
-  </div>
+        </el-alert>
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="formRules"
+          :disabled="mode === 'view' || detailLoading || detailFailed"
+          label-width="88px"
+        >
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="权限名称" prop="scopeName">
+                <el-input v-model="form.scopeName" maxlength="255" show-word-limit />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="权限编号" prop="resourceCode">
+                <el-input v-model="form.resourceCode" maxlength="255" show-word-limit />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="权限字段" prop="scopeColumn">
+                <el-input v-model="form.scopeColumn" maxlength="255" show-word-limit />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12">
+              <el-form-item label="规则类型" prop="scopeType">
+                <dict-select
+                  :model-value="form.scopeType"
+                  code="data_scope_type"
+                  value-type="number"
+                  placeholder="请选择规则类型"
+                  @update:model-value="handleScopeTypeChange"
+                  @load-error="dictionaryFailed = true"
+                  @load-success="dictionaryFailed = false"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="可见字段" prop="scopeField">
+                <el-input v-model="form.scopeField" maxlength="255" show-word-limit />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="权限类名" prop="scopeClass">
+                <el-input v-model="form.scopeClass" maxlength="500" show-word-limit />
+              </el-form-item>
+            </el-col>
+            <el-col v-if="form.scopeType === 5" :span="24">
+              <el-form-item label="规则值" prop="scopeValue">
+                <el-input
+                  v-model="form.scopeValue"
+                  type="textarea"
+                  :rows="5"
+                  maxlength="2000"
+                  show-word-limit
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="24">
+              <el-form-item label="备注" prop="remark">
+                <el-input
+                  v-model="form.remark"
+                  type="textarea"
+                  :rows="3"
+                  maxlength="255"
+                  show-word-limit
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </form-dialog>
+    </div>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -244,6 +245,7 @@ import ListPanel from '@/components/list-panel/main.vue';
 import ListPagination from '@/components/list-pagination/main.vue';
 import RowActions from '@/components/row-actions/main.vue';
 import FormDialog from '@/components/form-dialog/main.vue';
+import DetailDrawer from '@/components/detail-drawer/main.vue';
 import { useUserStore } from '@/store/user';
 import DictSelect from '@/components/dict-select/main.vue';
 import DictTag from '@/components/dict-tag/main.vue';
@@ -407,12 +409,6 @@ const openDrawer = (menu: ScopeMenuEntity) => {
   void load();
 };
 
-const handleDrawerBeforeClose = (done: () => void) => {
-  if (drawerLocked.value) return;
-  invalidateDrawerContext();
-  done();
-};
-
 const handleSearch = () => void search({ ...searchForm.value });
 const handleReset = () => {
   searchForm.value = createInitialQuery();
@@ -562,25 +558,10 @@ const handleBatchDelete = () => {
 }
 
 .scope-form__alert {
-  margin-bottom: 18px;
+  margin-bottom: var(--saber-space-4);
 }
 
 :deep(.el-select) {
   width: 100%;
-}
-</style>
-
-<style lang="scss">
-.scope-drawer .el-drawer__header {
-  flex: 0 0 auto;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--saber-border);
-  margin-bottom: 0;
-}
-
-.scope-drawer .el-drawer__body {
-  min-height: 0;
-  padding: 16px;
-  overflow: auto;
 }
 </style>

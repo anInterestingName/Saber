@@ -1,54 +1,56 @@
 <template>
-  <basic-container>
-    <div class="capability-page">
-      <header class="capability-page__header">
-        <div>
-          <h2>平台能力矩阵</h2>
-          <p>按使用场景查看当前前端能力及适用边界。</p>
+  <page-container layout="content">
+    <basic-container>
+      <div class="capability-page">
+        <header class="capability-page__header">
+          <div>
+            <h2>平台能力矩阵</h2>
+            <p>按使用场景查看当前前端能力及适用边界。</p>
+          </div>
+          <el-segmented v-model="activeGroup" :options="groupOptions" />
+        </header>
+
+        <div class="capability-page__content">
+          <section class="capability-page__table" aria-label="能力列表">
+            <el-table :data="visibleItems" row-key="name">
+              <el-table-column prop="name" label="能力名称" min-width="180" />
+              <el-table-column prop="scope" label="适用范围" min-width="260" />
+              <el-table-column label="状态" width="96" align="center">
+                <template #default="{ row }">
+                  <el-tag :type="statusType[row.status]" effect="light">
+                    {{ row.status }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
+          </section>
+
+          <aside class="capability-page__summary" aria-label="分组摘要">
+            <h3>{{ activeSummary.title }}</h3>
+            <el-descriptions :column="1" border>
+              <el-descriptions-item label="定位">{{ activeSummary.purpose }}</el-descriptions-item>
+              <el-descriptions-item label="可用能力">
+                {{ statusCount.available }} 项
+              </el-descriptions-item>
+              <el-descriptions-item label="规划能力">
+                {{ statusCount.planned }} 项
+              </el-descriptions-item>
+              <el-descriptions-item label="受限能力">
+                {{ statusCount.restricted }} 项
+              </el-descriptions-item>
+            </el-descriptions>
+            <el-alert
+              class="capability-page__note"
+              :title="activeSummary.note"
+              type="info"
+              :closable="false"
+              show-icon
+            />
+          </aside>
         </div>
-        <el-segmented v-model="activeGroup" :options="groupOptions" />
-      </header>
-
-      <div class="capability-page__content">
-        <section class="capability-page__table" aria-label="能力列表">
-          <el-table :data="visibleItems" row-key="name">
-            <el-table-column prop="name" label="能力名称" min-width="180" />
-            <el-table-column prop="scope" label="适用范围" min-width="260" />
-            <el-table-column label="状态" width="96" align="center">
-              <template #default="{ row }">
-                <el-tag :type="statusType[row.status]" effect="light">
-                  {{ row.status }}
-                </el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </section>
-
-        <aside class="capability-page__summary" aria-label="分组摘要">
-          <h3>{{ activeSummary.title }}</h3>
-          <el-descriptions :column="1" border>
-            <el-descriptions-item label="定位">{{ activeSummary.purpose }}</el-descriptions-item>
-            <el-descriptions-item label="可用能力">
-              {{ statusCount.available }} 项
-            </el-descriptions-item>
-            <el-descriptions-item label="规划能力">
-              {{ statusCount.planned }} 项
-            </el-descriptions-item>
-            <el-descriptions-item label="受限能力">
-              {{ statusCount.restricted }} 项
-            </el-descriptions-item>
-          </el-descriptions>
-          <el-alert
-            class="capability-page__note"
-            :title="activeSummary.note"
-            type="info"
-            :closable="false"
-            show-icon
-          />
-        </aside>
       </div>
-    </div>
-  </basic-container>
+    </basic-container>
+  </page-container>
 </template>
 
 <script setup lang="ts">
@@ -172,8 +174,8 @@ const statusCount = computed(() => ({
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
-  padding-bottom: 18px;
+  gap: var(--saber-space-5);
+  padding-bottom: var(--saber-space-4);
   border-bottom: 1px solid var(--saber-border);
 
   h2,
@@ -188,7 +190,7 @@ const statusCount = computed(() => ({
   }
 
   p {
-    margin-top: 4px;
+    margin-top: var(--saber-space-1);
     color: var(--saber-text-secondary);
     line-height: 22px;
   }
@@ -197,8 +199,8 @@ const statusCount = computed(() => ({
 .capability-page__content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
-  padding-top: 20px;
+  gap: var(--saber-space-6);
+  padding-top: var(--saber-space-5);
 }
 
 .capability-page__table {
@@ -210,7 +212,7 @@ const statusCount = computed(() => ({
   min-width: 0;
 
   h3 {
-    margin: 0 0 12px;
+    margin: 0 0 var(--saber-space-3);
     color: var(--saber-text-primary);
     font-size: 16px;
     line-height: 24px;
@@ -218,7 +220,7 @@ const statusCount = computed(() => ({
 }
 
 .capability-page__note {
-  margin-top: 16px;
+  margin-top: var(--saber-space-4);
 }
 
 @media (max-width: 1100px) {

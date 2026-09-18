@@ -1,5 +1,5 @@
 <template>
-  <basic-container class="list-panel" :class="{ 'list-panel--compact': compact }">
+  <section class="list-panel" :class="{ 'list-panel--compact': compact }">
     <div v-if="title || $slots.actions || $slots.tools" class="list-panel__header">
       <h2 v-if="title" class="list-panel__title">{{ title }}</h2>
       <div class="list-panel__toolbar">
@@ -17,12 +17,10 @@
     <div v-if="$slots.footer" class="list-panel__footer">
       <slot name="footer" />
     </div>
-  </basic-container>
+  </section>
 </template>
 
 <script setup lang="ts">
-import BasicContainer from '@/components/basic-container/main.vue';
-
 interface ListPanelProps {
   title: string;
   compact?: boolean;
@@ -35,39 +33,32 @@ withDefaults(defineProps<ListPanelProps>(), {
 
 <style scoped lang="scss">
 .list-panel {
-  :deep(.basic-container__card) {
-    border: 0;
-    border-radius: 6px;
-    box-shadow: none;
-    background: var(--saber-surface);
-  }
+  min-width: 0;
+  padding: var(--saber-space-5) var(--saber-space-6) var(--saber-space-4);
+  background: var(--saber-surface);
+}
 
-  :deep(.el-card__body) {
-    padding: 18px 24px 16px;
-  }
-
-  &--compact :deep(.el-card__body) {
-    padding: 16px;
-  }
+.list-panel--compact {
+  padding: var(--saber-space-4);
 }
 
 .list-panel__header {
   display: flex;
   min-width: 0;
-  min-height: 32px;
-  margin-bottom: 16px;
+  min-height: var(--saber-control-height);
+  margin-bottom: var(--saber-space-4);
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--saber-space-4);
 }
 
 .list-panel__title {
   flex: 0 0 auto;
   margin: 0;
   color: var(--saber-text-primary);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 32px;
+  line-height: var(--saber-control-height);
   letter-spacing: 0;
 }
 
@@ -79,7 +70,7 @@ withDefaults(defineProps<ListPanelProps>(), {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--saber-space-2);
 
   :deep(.el-button + .el-button) {
     margin-left: 0;
@@ -88,9 +79,13 @@ withDefaults(defineProps<ListPanelProps>(), {
 
 .list-panel__content {
   min-width: 0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
 
   :deep(.el-table) {
+    min-width: 100%;
     --el-table-border-color: var(--saber-border);
     --el-table-header-bg-color: var(--saber-surface-muted);
     --el-table-row-hover-bg-color: var(--saber-surface-muted);
@@ -104,13 +99,13 @@ withDefaults(defineProps<ListPanelProps>(), {
   }
 
   :deep(.el-table th.el-table__cell) {
-    padding: 12px 0;
+    padding: var(--saber-table-header-padding-y) 0;
     color: var(--saber-text-primary);
     font-weight: 600;
   }
 
   :deep(.el-table td.el-table__cell) {
-    padding: 8px 0;
+    padding: var(--saber-table-cell-padding-y, var(--saber-space-2)) 0;
   }
 
   :deep(.el-table-fixed-column--left),
@@ -129,32 +124,30 @@ withDefaults(defineProps<ListPanelProps>(), {
 }
 
 .list-panel__footer {
-  min-height: 32px;
-  margin-top: 18px;
+  min-height: var(--saber-control-height);
+  margin-top: var(--saber-space-5);
 }
 
 @media (max-width: 767px) {
   .list-panel {
-    :deep(.el-card__body) {
-      padding: 16px;
-    }
+    padding: var(--saber-space-4);
   }
 
   .list-panel__header {
     align-items: flex-start;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--saber-space-3);
   }
 
   .list-panel__toolbar,
   .list-panel__actions {
     width: 100%;
     justify-content: flex-start;
-    gap: 6px;
+    gap: var(--saber-space-2);
   }
 
   .list-panel__footer {
-    margin-top: 16px;
+    margin-top: var(--saber-space-4);
   }
 }
 </style>

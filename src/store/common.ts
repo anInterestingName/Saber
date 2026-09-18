@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import website from '@/config/website';
-import type { AppSetting, LayoutMode } from '@/types/setting';
+import type { AppSetting, ContentWidthMode, LayoutMode } from '@/types/setting';
 import { getStore, removeStore, setStore } from '@/utils/store';
 import { normalizePrimaryColor } from '@/utils/theme';
 import { SIDEBAR_MOBILE_BREAKPOINT } from '@/utils/util';
@@ -21,14 +21,19 @@ const isLayoutMode = (value: string | undefined): value is LayoutMode => {
   return value === 'side' || value === 'top' || value === 'mix';
 };
 
-const createSetting = (
-  storedSetting?: object | string | number | boolean | null
-): AppSetting => {
+const isContentWidthMode = (value: string | undefined): value is ContentWidthMode => {
+  return value === 'fluid' || value === 'fixed';
+};
+
+const createSetting = (storedSetting?: object | string | number | boolean | null): AppSetting => {
   const stored = isSetting(storedSetting) ? storedSetting : {};
   const legacyLayout: LayoutMode =
     stored.sidebar === 'horizontal' ? 'top' : stored.menu === false ? 'side' : 'mix';
   const layout = isLayoutMode(stored.layout) ? stored.layout : legacyLayout;
   const theme = stored.theme === 'dark' ? 'dark' : 'light';
+  const contentWidth = isContentWidthMode(stored.contentWidth)
+    ? stored.contentWidth
+    : website.setting.contentWidth;
 
   return {
     ...website.setting,
@@ -36,6 +41,7 @@ const createSetting = (
     theme,
     colorPrimary: normalizePrimaryColor(stored.colorPrimary),
     layout,
+    contentWidth,
     ...layoutSetting[layout],
   };
 };
@@ -73,6 +79,8 @@ export const useCommonStore = defineStore('common', {
   getters: {
     layoutMode: state => state.setting.layout,
     isHorizontal: state => state.setting.layout === 'top',
+    isMixed: state => state.setting.layout === 'mix',
+    sidebarMode: state => layoutSetting[state.setting.layout].sidebar,
   },
   actions: {
     setLanguage(language: AppLanguage) {
