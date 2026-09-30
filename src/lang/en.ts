@@ -52,6 +52,8 @@ export default {
   route: {
     asset: 'Asset Management',
     prompt: 'Prompt Management',
+    ai_provider: 'Provider Configuration',
+    ai_model: 'Model Configuration',
     tag_manage: 'Tag Management',
     setting: 'setting',
     detail: 'detail',

@@ -50,6 +50,8 @@ export default {
   route: {
     asset: '资产管理',
     prompt: '提示词管理',
+    ai_provider: '供应商配置',
+    ai_model: '模型配置',
     tag_manage: '标签管理',
     info: '个人信息',
     website: 'bladex官网',
