@@ -30,7 +30,7 @@ cp compose.env.example compose.env
 
 ```dotenv
 SABER_IMAGE_TAG=v5.0.1
-SABER_BIND_ADDRESS=127.0.0.1
+SABER_BIND_ADDRESS=0.0.0.0
 SABER_HTTP_PORT=8080
 ```
 
@@ -54,9 +54,11 @@ docker compose --env-file compose.env -f docker-compose.yaml ps
 curl http://127.0.0.1:8080/healthz
 ```
 
-健康检查预期返回 `ok`。默认仅绑定 `127.0.0.1:8080`，需要由宿主机 Nginx、Traefik 或 Ingress
-对外提供 HTTPS，并优先把 `/api/*` 请求去除 `/api` 前缀后转发到 SpringBlade 网关，其余请求转发到
-Saber。这样与生产构建使用的 `VITE_APP_API=/api` 保持一致。
+健康检查预期返回 `ok`。默认监听宿主机全部网卡的 `8080` 端口，入站访问由服务器安全组控制；
+`0.0.0.0` 是监听地址，不是服务间连接目标。由 Nginx、Traefik 或 Ingress 对外提供 HTTPS，并把
+`/api/*` 请求去除 `/api` 前缀后转发到 SpringBlade 网关，其余请求转发到 Saber。这样与生产构建
+使用的 `VITE_APP_API=/api` 保持一致。同机运行 Gateway 的默认 `8080` 端口时，需修改
+`SABER_HTTP_PORT`，或采用容器化入口方案使 Web 不发布宿主机端口。
 
 ## 5. 升级与回滚
 

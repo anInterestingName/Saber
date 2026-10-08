@@ -6,14 +6,14 @@
 | --- | --- |
 | 需求名称 | GitHub Actions 构建并发布公开 GHCR 测试镜像 |
 | 需求编号 | REQ-2026-008 |
-| 文档版本 | 0.4 |
+| 文档版本 | 0.5 |
 | 所属模块 | CI/CD、Docker、Nginx、GHCR |
 | 目标版本/迭代 | Saber 5.x / 容器化发布 |
 | 文档状态 | 开发中 |
 | 产品负责人 | 用户 |
 | 技术负责人 | Codex |
 | 创建日期 | 2026-09-04 |
-| 最后更新日期 | 2026-09-04 |
+| 最后更新日期 | 2026-09-29 |
 | 关联事项 | [需求索引](../requirements-index.md)；[详细设计](../design/DESIGN-REQ-2026-008-ghcr-image-publishing.md)；[测试文档](../test/TEST-REQ-2026-008-ghcr-image-publishing.md)；数据库设计不涉及 |
 
 ## 2. 摘要与目标
@@ -33,6 +33,7 @@
 5. GHCR 发布使用仓库自带 `GITHUB_TOKEN`，权限限制为读取代码和写入 Packages。
 6. GitHub Actions、Dockerfile、Nginx 和 `.dockerignore` 的每个有效配置行均有中文解释。
 7. 提供服务器可下载的 Docker Compose 清单、非敏感变量示例及拉取、启动、升级和回滚说明。
+8. 独立 Web Compose 对宿主机发布的端口默认绑定全部网卡，入站访问范围由服务器安全组控制。
 
 ### 2.3 非目标
 
@@ -113,8 +114,8 @@ flowchart TD
 - `AC-011`：Given GHCR 包已设置为 Public，When 未登录 GHCR 的服务器使用变量文件执行
   `docker compose pull`，Then 按
   `SABER_IMAGE_TAG` 拉取 `ghcr.io/aninterestingname/saber` 镜像。
-- `AC-012`：Given 镜像拉取成功，When 执行 `docker compose up -d`，Then 服务默认只绑定
-  `127.0.0.1:8080`，继承镜像健康检查并配置自动重启。
+- `AC-012`：Given 镜像拉取成功，When 渲染并启动独立 Web Compose，Then 服务默认绑定
+  `0.0.0.0:8080`，继承镜像健康检查并配置自动重启；部署前由服务器安全组限定入站来源。
 - `AC-013`：Given 需要升级或回滚，When 修改 `SABER_IMAGE_TAG` 后再次执行 pull 和 up，Then
   Compose 使用目标版本重建服务，不需要修改清单文件。
 
@@ -127,6 +128,7 @@ flowchart TD
 | BR-003 | Actions 不保存长期 GHCR 写凭据 | 工作流认证 | 安全审查不通过 |
 | BR-004 | Public 测试镜像允许匿名拉取 | 服务器拉取 | 不要求保存 GitHub Token 或 PAT |
 | BR-005 | TLS 在外部反向代理或 Ingress 终止 | 运行容器 | 容器只监听 HTTP 80 |
+| BR-006 | `0.0.0.0` 仅用于宿主机端口监听，不能作为代理或 API 访问目标 | 部署配置 | 连接目标必须改为实际可达地址 |
 
 GitHub Actions 通过仓库 `GITHUB_TOKEN` 写入 Packages。包切换为 Public 后，服务器匿名拉取，不需要
 保存 GitHub Token 或 PAT；写权限令牌仍只存在于 GitHub Actions 运行期间。
@@ -148,22 +150,27 @@ GitHub Actions 通过仓库 `GITHUB_TOKEN` 写入 Packages。包切换为 Public
 | 可维护性 | 配置有效行均有中文解释 | 人工逐行审查 |
 | 可用性 | History 路由回退和 `/healthz` 探活 | 容器请求验证 |
 
-开放项：首次真实推送后，需要仓库管理员在 GitHub Packages 页面将镜像可见性确认为 Public，并验证
-未登录 GHCR 的目标服务器可以匿名拉取。Public 为不可逆设置，后续需要私有镜像时应使用新的包名。
+开放项：需核对当前运行的 `manual` 镜像所对应的 Actions 发布记录与 digest，并由仓库管理员确认
+GitHub Packages 的 Public 可见性及无凭据拉取结果。Public 为不可逆设置，后续需要私有镜像时
+应使用新的包名。
 
 ## 9. 实施与变更记录
 
 - 当前完成范围：GHCR 工作流、多阶段 Dockerfile、Nginx History 回退、缓存、健康检查、
   `.dockerignore`、Docker Compose 清单、变量示例和服务器操作说明已实现，每个有效配置行均具有
   紧邻中文解释。
+- 2026-09-29 变更：独立 Web Compose 默认绑定改为 `0.0.0.0`，并补充与 Gateway 同机部署时的
+  端口冲突处理和容器化入口代理说明；新默认值待配置及目标环境验收。
 - 本地验证结果：`pnpm run type-check`、actionlint 1.7.12、Linux Docker 多阶段构建、`nginx -t`、
   `/healthz`、History 子路由回退和缓存响应头均通过。最终镜像约 33.2 MB，不包含 Node.js 和源码目录。
-- 未完成验收项：公开模式尚未合并到默认分支 `main` 并触发工作流，真实 GHCR 发布、Packages
-  Public 可见性和目标服务器匿名拉取尚未执行，因此需求保持“开发中（开发完成，待远端验收）”。
+- 2026-09-04 的历史未完成项是公开模式未合并并触发工作流。2026-09-29 只读服务器检查可见
+  `ghcr.io/aninterestingname/saber:manual` 运行中，但未取得 Packages Public 可见性、匿名拉取和
+  当前版本业务验收证据；需求继续保持“开发中（待远端验收）”。
 - 数据库设计：不涉及。
 
 | 日期 | 版本 | 变更内容 | 修改人 |
 | --- | --- | --- | --- |
+| 2026-09-29 | 0.5 | 默认监听全部宿主机网卡，安全组负责入站控制，补充 Gateway 同机部署说明 | Codex |
 | 2026-09-04 | 0.4 | 测试阶段改为 Public 包和匿名拉取，移除部署端 PAT 依赖 | Codex |
 | 2026-09-04 | 0.3 | 增加 Docker Compose 清单、变量示例和服务器拉取、启动、升级及回滚流程 | Codex |
 | 2026-09-04 | 0.2 | 完成配置实现和本地容器验证，记录真实 GHCR 发布待验收 | Codex |

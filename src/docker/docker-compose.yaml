@@ -13,8 +13,8 @@ services:
     restart: unless-stopped
     # 定义宿主机与容器之间的端口映射列表。
     ports:
-      # 默认只监听宿主机回环地址 8080，并转发到容器内的 Nginx 80 端口。
-      - '${SABER_BIND_ADDRESS:-127.0.0.1}:${SABER_HTTP_PORT:-8080}:80'
+      # 默认监听宿主机全部网卡 8080，并转发到容器内的 Nginx 80 端口。
+      - '${SABER_BIND_ADDRESS:-0.0.0.0}:${SABER_HTTP_PORT:-8080}:80'
     # 禁止容器内进程通过 setuid 或类似机制获得额外权限。
     security_opt:
       # 启用 Linux 内核的 no-new-privileges 安全限制。

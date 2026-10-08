@@ -30,7 +30,7 @@ Saber 静态前端
 | --- | --- | --- |
 | 80 | HTTP、Let's Encrypt 验证和跳转 HTTPS | 是 |
 | 443 | HTTPS | 是 |
-| 9090 | 前端容器内部调试端口 | 否 |
+| 8080 | SpringBlade Gateway 参考宿主机端口，由入口代理访问 | 仅允许入口代理来源 |
 
 本文默认使用域名申请受浏览器信任的证书，例如：
 
@@ -111,8 +111,11 @@ services:
     depends_on:
       - web
     ports:
-      - "80:80"
-      - "443:443"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    # Linux 容器通过宿主机网关名访问已发布端口的 SpringBlade Gateway。
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./certbot/www:/var/www/certbot:ro
@@ -399,7 +402,7 @@ sudo systemctl status saber-certbot-renew.timer
 
 ```nginx
 location /api/ {
-    proxy_pass http://实际后端服务名:实际后端端口;
+    proxy_pass http://host.docker.internal:8080/;
 
     proxy_http_version 1.1;
     proxy_set_header Host $host;
@@ -409,10 +412,15 @@ location /api/ {
 }
 ```
 
-如果后端也在同一个 Compose 网络中，可以使用服务名：
+`proxy_pass` 末尾的 `/` 会去除 `/api/` 前缀，保持与生产构建的 `VITE_APP_API=/api` 一致。
+`host.docker.internal` 依赖上文 `edge.extra_hosts`，同机 Gateway 需已把端口发布到宿主机。
+若后端在另一台服务器，将代理目标换成入口容器可达的内网地址或域名，并配置对应安全组规则。
+`0.0.0.0` 只用于监听，不能作为代理目标。
+
+如果后端也在入口容器可访问的同一个 Docker 网络中，可以使用服务名：
 
 ```nginx
-proxy_pass http://springblade-api:8080;
+proxy_pass http://blade-gateway:80/;
 ```
 
 不要直接把当前服务器的 `18080` 当成 SpringBlade 后端端口；当前部署中它是 Nacos 容器的映射端口，必须先确认真实后端服务地址。
@@ -484,7 +492,7 @@ sudo ufw status
 sudo ss -lntp | grep ':80'
 ```
 
-此外，还需要确认腾讯云安全组允许公网访问 TCP 80。
+此外，还需要确认服务器安全组允许证书验证来源访问 TCP 80。
 
 ## 11. 发布、升级和回滚
 
