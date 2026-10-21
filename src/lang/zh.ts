@@ -1,4 +1,7 @@
+import { authZh } from './auth';
+
 export default {
+  auth: authZh,
   tip: '提示',
   title: '星图企业级开发平台',
   logoutTip: '退出系统, 是否继续?',

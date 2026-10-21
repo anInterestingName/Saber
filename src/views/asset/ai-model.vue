@@ -282,7 +282,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const { view: canView } = useCrudPermission('ai_model');
 const { view: canProviderView } = useCrudPermission('ai_provider');
-const canRead = computed(() => !!userStore.token && !!userStore.userInfo?.userId && canView.value);
+const canRead = computed(() => userStore.hasUserInfo && canView.value);
 const listReady = ref(false);
 const searchForm = ref<ModelQuery>({});
 const providerContextError = ref('');
@@ -457,7 +457,7 @@ watch(
   { flush: 'sync' }
 );
 const contextSources = [
-  () => userStore.token,
+  () => userStore.userInfo?.tenantId,
   () => userStore.userInfo?.userId,
   () => userStore.userInfo?.authority,
   () => userStore.roles.join(','),

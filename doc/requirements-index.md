@@ -20,7 +20,7 @@
 
 | 年份 | 下一个编号 | 最后分配日期 | 维护人 |
 | --- | --- | --- | --- |
-| 2026 | `REQ-2026-015` | 2026-09-30 | Codex |
+| 2026 | `REQ-2026-016` | 2026-10-10 | Codex |
 
 > 分配需求编号后，立即将“下一个编号”加一。例如分配 `REQ-2026-002` 后，本表更新为 `REQ-2026-003`。
 
@@ -42,6 +42,16 @@
 | [REQ-2026-012](requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | Saber 界面基础归一化与松散型中前台视觉升级 | 前端基础能力、主题与主布局、公共组件、活动业务页面 | 0.6 | 开发中 | Saber 5.x / 界面基础治理与视觉升级单阶段 | [需求文档 0.6（内容宽度改为全局可选并默认流式）](requirements/REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | 不涉及 | [详细设计 0.6（行操作按实际权限数量折叠）](design/DESIGN-REQ-2026-012-ui-normalization-spacious-visual-refresh.md)；[测试文档 0.3（32 通过/1 失败/8 未执行/1 阻塞）](test/TEST-REQ-2026-012-ui-normalization-spacious-visual-refresh.md) | Codex | 2026-09-16 |
 | [REQ-2026-013](requirements/REQ-2026-013-image-prompt-reverse.md) | Saber 图片提示词反推 | 资产管理、图片分析、标签结果与提示词复制 | 0.3 | 待评审 | [需求文档 0.3](requirements/REQ-2026-013-image-prompt-reverse.md) | 不涉及 | [详细设计 0.1](design/DESIGN-REQ-2026-013-image-prompt-reverse.md)；[测试文档 0.1](test/TEST-REQ-2026-013-image-prompt-reverse.md) | 待指定 | 2026-09-16 |
 | [REQ-2026-014](requirements/REQ-2026-014-ai-model-configuration-frontend.md) | Saber 大模型供应商与模型配置管理 | 资产管理、供应商接入、独立模型配置 | 0.3 | 开发中 | Saber 5.x / 模型配置管理首期，与后端 REQ-2026-008 协同 | [需求文档 0.3（API基础、只读页面及菜单种子已实现，完整契约待确认）](requirements/REQ-2026-014-ai-model-configuration-frontend.md) | 不涉及；后端建表由 SpringBlade REQ-2026-008 承接 | [详细设计 0.3（第一阶段工程检查通过，只读菜单种子已补，数据库授权生效待验收）](design/DESIGN-REQ-2026-014-ai-model-configuration-frontend.md)；[测试文档 0.3（待执行，22 项未执行）](test/TEST-REQ-2026-014-ai-model-configuration-frontend.md) | 待指定 | 2026-09-30 |
+| [REQ-2026-015](requirements/REQ-2026-015-authorization-frontend-adaptation.md) | Saber 新认证服务与 BFF 前端适配 | 认证页面、会话、请求层、动态路由、权限初始化、OAuth 客户端管理 | 0.13 | 开发中 | Saber 5.x / SpringBlade OAuth2/OIDC 唯一认证链路第一阶段 | [需求文档0.13（登录与确权界面改版，待验收）](requirements/REQ-2026-015-authorization-frontend-adaptation.md) | 不涉及；认证、授权状态、客户端和会话由SpringBlade REQ-2026-010承接 | [详细设计0.11](design/DESIGN-REQ-2026-015-authorization-frontend-adaptation.md)；[测试文档0.9（新增界面与恢复流程验收待执行，历史阶段结果保留）](test/TEST-REQ-2026-015-authorization-frontend-adaptation.md) | 待指定 | 2026-10-15 |
+
+## 跨仓库验证关联
+
+此处登记后端统一维护的验证任务，不分配或复用 Saber 本地需求编号。本阶段沿用后端已记录的最小验证文档约定。
+
+| 后端需求 | 内容 | 版本 | 状态 | 本仓库说明 | 统一测试 | 最后更新 |
+| --- | --- | --- | --- | --- | --- | --- |
+| SpringBlade REQ-2026-009 | Vue 认证页面替换与 BFF 验证；初始同名分支 codex/authorization-frontend-poc | 0.8 | 开发中 | [前端运行说明0.6（登录与确权改版，新增验收待执行）](authorization-poc.md) | [测试文档 0.8](../../SpringBlade/doc/test/TEST-REQ-2026-009-bff-validation.md) | 2026-10-15 |
+| SpringBlade REQ-2026-010 | 标准Bearer、JWT身份桥与BFF正式化；前端由Saber REQ-2026-015承接 | 0.15 | 开发中 | [前端需求0.13](requirements/REQ-2026-015-authorization-frontend-adaptation.md)；[详细设计0.11](design/DESIGN-REQ-2026-015-authorization-frontend-adaptation.md) | [后端测试文档0.15（历史证据不替代前端验收）](../../SpringBlade/doc/test/TEST-REQ-2026-010-production-authentication.md) | 2026-10-15 |
 
 ## 状态说明
 

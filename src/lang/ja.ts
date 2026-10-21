@@ -1,4 +1,7 @@
+import { authJa } from './auth';
+
 export default {
+  auth: authJa,
   tip: 'ヒント',
   title: 'staratlas エンタープライズプラットフォーム',
   logoutTip: 'システムを終了します。続けますか？',

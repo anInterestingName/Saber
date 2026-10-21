@@ -1,6 +1,8 @@
 import request from '@/axios';
 import type { BladeResponse } from '@/types/option';
 import type { TreeKey, TreeNode } from '@/types/tree';
+import type { AuthResponse } from '@/types/auth';
+import type { MenuItem } from '@/types/menu';
 
 export const getList = <T extends TreeNode>(params: object) =>
   request<BladeResponse<T[]>>({
@@ -56,15 +58,17 @@ export const getLazyMenuList = <T extends TreeNode = TreeNode>(
     },
   });
 
-export const getTopMenu = () =>
-  request({
+export const getTopMenu = (meta?: { silent?: boolean }) =>
+  request<AuthResponse<MenuItem[]>>({
     url: '/blade-system/menu/top-menu',
     method: 'get',
+    meta,
   });
 
-export const getRoutes = (topMenuId: string) =>
-  request({
+export const getRoutes = (topMenuId?: string, meta?: { silent?: boolean }) =>
+  request<AuthResponse<MenuItem[]>>({
     url: '/blade-system/menu/routes',
     method: 'get',
     params: { topMenuId },
+    meta,
   });

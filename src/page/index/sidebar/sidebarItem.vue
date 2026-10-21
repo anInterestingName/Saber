@@ -20,13 +20,13 @@
                 :key="child[labelKey]">
         <el-menu-item :index="getPath(child)"
                       @click="open(child)"
-                      v-if="validateNull(child[childrenKey])">
+                      v-if="validateNull(child[childrenKey]) && validRoles(child)">
           <i :class="child[iconKey]"></i>
           <template #title>
             <span>{{getTitle(child)}}</span>
           </template>
         </el-menu-item>
-        <sidebar-item v-else
+        <sidebar-item v-else-if="!validateNull(child[childrenKey]) && validRoles(child)"
                       :menu="[child]"
                       :key="cindex"></sidebar-item>
       </template>
@@ -78,7 +78,9 @@ export default {
     },
     validRoles (item) {
       item.meta = item.meta || {};
-      return item.meta.roles ? item.meta.roles.includes(this.roles) : true;
+      return item.meta.roles
+        ? Array.isArray(item.meta.roles) && item.meta.roles.some(role => this.roles.includes(role))
+        : true;
     },
     open (item) {
       this.$router.push({

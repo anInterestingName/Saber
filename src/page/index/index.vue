@@ -45,7 +45,6 @@
 </template>
 
 <script>
-import index from '@/mixins/index';
 import { validateNull } from 'utils/validate';
 import { mapActions, mapState } from 'pinia';
 import { useCommonStore } from '@/store/common';
@@ -57,7 +56,6 @@ import logo from './logo.vue';
 import top from './top/index.vue';
 import sidebar from './sidebar/index.vue';
 export default {
-  mixins: [index],
   components: {
     top,
     logo,
@@ -122,7 +120,7 @@ export default {
             this.$router.push({ path: item.path });
           }
         }
-      });
+      }).catch(() => {});
     },
   },
 };

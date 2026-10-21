@@ -1,7 +1,6 @@
 <template>
   <page-container layout="content">
     <basic-container>
-      <third-register></third-register>
       <p style="text-align: center">
         <img src="https://img.shields.io/badge/Release-V5.0.1-green.svg" alt="Downloads" />
         <img src="https://img.shields.io/badge/JDK-21+-green.svg" alt="Build Status" />
@@ -837,7 +836,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Star } from '@element-plus/icons-vue';
-import thirdRegister from '@/components/third-register/main.vue';
 
 defineOptions({ name: 'wel' });
 

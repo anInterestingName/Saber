@@ -10,8 +10,8 @@ import { createAppI18n, messages } from './lang/';
 import { createAppRouter } from './router/';
 import { pinia } from './store';
 import { useCommonStore } from './store/common';
-import { useUserStore } from './store/user';
-import { setUnauthorizedHandler } from './axios';
+import { createAuthSession } from './composables/useAuthSession';
+import { clearLegacyAuthStorage } from './utils/auth';
 import { setupPermissionGuards } from './permission';
 import { createErrorPlugin } from './error';
 import { getScreen } from './utils/util';
@@ -22,17 +22,11 @@ import pageContainer from 'components/page-container/main.vue';
 import App from './App.vue';
 import 'styles/common.scss';
 
+clearLegacyAuthStorage();
 const commonStore = useCommonStore(pinia);
 const i18n = createAppI18n(commonStore.language);
 const router = createAppRouter(pinia, i18n);
-const userStore = useUserStore(pinia);
-
-setUnauthorizedHandler(async () => {
-  await userStore.FedLogOut();
-  if (router.currentRoute.value.path !== '/login') {
-    await router.replace('/login');
-  }
-});
+createAuthSession(router, pinia);
 setupPermissionGuards(router, pinia);
 applyTheme(commonStore.setting);
 

@@ -4,10 +4,6 @@
       <i class="icon-rizhi1"></i>
     </el-badge>
     <app-dialog v-model="box" title="日志" size="lg">
-      <el-button type="primary" @click="send">
-        <el-icon><Upload /></el-icon>
-        <span>上传服务器</span>
-      </el-button>
       <el-button type="danger" @click="clear">
         <el-icon><Delete /></el-icon>
         <span>清空本地日志</span>
@@ -26,12 +22,12 @@
 
 <script>
 import { mapActions, mapState } from 'pinia';
-import { Delete, Upload } from '@element-plus/icons-vue';
+import { Delete } from '@element-plus/icons-vue';
 import { useLogsStore } from '@/store/logs';
 import AppDialog from '@/components/app-dialog/main.vue';
 export default {
   name: 'top-logs',
-  components: { AppDialog, Delete, Upload },
+  components: { AppDialog, Delete },
   data() {
     return {
       box: false,
@@ -48,26 +44,9 @@ export default {
   },
   props: [],
   methods: {
-    ...mapActions(useLogsStore, ['SendLogs', 'clearLogs']),
+    ...mapActions(useLogsStore, ['clearLogs']),
     handleOpen() {
       this.box = true;
-    },
-    send() {
-      this.$confirm('确定上传本地日志到服务器?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-        .then(() => {
-          this.SendLogs().then(() => {
-            this.box = false;
-            this.$message({
-              type: 'success',
-              message: '发送成功!',
-            });
-          });
-        })
-        .catch(() => {});
     },
     clear() {
       this.$confirm('确定清空本地日志记录?', '提示', {

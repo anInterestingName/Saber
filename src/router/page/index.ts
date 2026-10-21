@@ -2,14 +2,32 @@ import type { RouteRecordRaw } from 'vue-router';
 // 显式标注为路由记录数组：字面量推断出的联合类型会与 RouteRecordRaw 的重定向分支互斥而无法赋值
 const routes: RouteRecordRaw[] = [
   {
+    path: '/auth/login',
+    name: '认证登录',
+    component: () => import('@/page/auth/login.vue'),
+    meta: { isAuth: false, isTab: false, authorization: true },
+  },
+  {
+    path: '/auth/consent',
+    name: '授权确认',
+    component: () => import('@/page/auth/consent.vue'),
+    meta: { isAuth: false, isTab: false, authorization: true },
+  },
+  {
+    path: '/auth/verify',
+    name: '登录验证',
+    component: () => import('@/page/auth/verify.vue'),
+    meta: { isAuth: false, isTab: false, authorization: true },
+  },
+  {
+    path: '/auth/register',
+    name: '注册',
+    component: () => import('@/page/auth/register.vue'),
+    meta: { isAuth: false, isTab: false, authorization: true },
+  },
+  {
     path: '/login',
-    name: '登录页',
-    component: () => import('@/page/login/index.vue'),
-    meta: {
-      keepAlive: true,
-      isTab: false,
-      isAuth: false,
-    },
+    redirect: '/auth/login',
   },
   {
     path: '/lock',
@@ -18,7 +36,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       keepAlive: true,
       isTab: false,
-      isAuth: false,
+      isAuth: true,
     },
   },
   {

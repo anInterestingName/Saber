@@ -1,6 +1,7 @@
 <template>
   <basic-container>
-    <iframe :src="src"
+    <el-alert v-if="!src" title="外链地址不可用，请联系管理员更新为安全地址" type="warning" :closable="false" />
+    <iframe v-else :src="src"
             class="iframe"
             ref="iframe" />
   </basic-container>
@@ -9,6 +10,7 @@
 <script>
 import NProgress from "nprogress"; // progress bar
 import "nprogress/nprogress.css"; // progress bar style
+import { getSafeExternalUrl } from '@/router/menu';
 export default {
   name: "SaberIframe",
   data () {
@@ -27,7 +29,7 @@ export default {
   },
   computed: {
     src () {
-      return this.$route.query.url.replace(/#/g, "&")
+      return typeof this.$route.query.url === 'string' ? getSafeExternalUrl(this.$route.query.url) : null;
     }
   },
   methods: {

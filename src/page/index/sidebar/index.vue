@@ -68,7 +68,6 @@ export default {
     };
   },
   created() {
-    this.index.openMenu();
     this.menuObserver = null;
   },
   mounted() {

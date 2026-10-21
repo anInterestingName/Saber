@@ -243,7 +243,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const { view: canView } = useCrudPermission('ai_provider');
 const { view: canModelView } = useCrudPermission('ai_model');
-const canRead = computed(() => !!userStore.token && !!userStore.userInfo?.userId && canView.value);
+const canRead = computed(() => userStore.hasUserInfo && canView.value);
 const modelActions = computed(() =>
   canModelView.value ? [{ key: 'models', label: '模型配置' }] : []
 );
@@ -358,7 +358,7 @@ watch(
   { flush: 'sync' }
 );
 const contextSources = [
-  () => userStore.token,
+  () => userStore.userInfo?.tenantId,
   () => userStore.userInfo?.userId,
   () => userStore.userInfo?.authority,
   () => userStore.roles.join(','),

@@ -1,5 +1,6 @@
 import request from '@/axios';
 import type { BladeResponse } from '@/types/option';
+import type { AuthResponse, UserProfile } from '@/types/auth';
 
 interface PageData<T> {
   records: T[];
@@ -48,10 +49,11 @@ export const getUser = <T>(id: string) =>
     params: { id },
   });
 
-export const getUserInfo = () =>
-  request({
+export const getUserInfo = (meta?: { silent?: boolean }) =>
+  request<AuthResponse<UserProfile>>({
     url: '/blade-system/user/info',
     method: 'get',
+    meta,
   });
 
 export const resetPassword = (userIds: string) =>
@@ -61,11 +63,11 @@ export const resetPassword = (userIds: string) =>
     params: { userIds },
   });
 
-export const updatePassword = (oldPassword: string, newPassword: string, newPassword1: string) =>
+export const updatePassword = (oldPassword: string, newPassword: string, confirmPassword: string) =>
   request({
     url: '/blade-system/user/update-password',
     method: 'post',
-    params: { oldPassword, newPassword, newPassword1 },
+    data: { oldPassword, newPassword, confirmPassword },
   });
 
 export const updateInfo = (row: object) =>

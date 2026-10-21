@@ -5,7 +5,13 @@
         <el-tabs v-model="activeTab" @tab-change="handleTabChange">
           <!-- 个人信息 Tab -->
           <el-tab-pane label="个人信息" name="info">
-            <el-form ref="infoFormRef" :model="infoForm" label-width="100px">
+            <el-form
+              ref="infoFormRef"
+              :model="infoForm"
+              :rules="infoRules"
+              :disabled="detailLoading || infoSubmitting"
+              label-width="100px"
+            >
               <el-form-item label="头像">
                 <div class="avatar-upload-container">
                   <div class="avatar-wrapper" v-if="infoForm.avatar">
@@ -18,10 +24,9 @@
                   <el-upload
                     v-else
                     class="avatar-uploader"
-                    action="/api/blade-resource/oss/endpoint/put-file"
-                    :headers="uploadHeaders"
+                    :http-request="handleAvatarRequest"
+                    :disabled="uploading || detailLoading || infoSubmitting"
                     :show-file-list="false"
-                    :on-success="handleAvatarSuccess"
                     :before-upload="beforeAvatarUpload"
                     accept=".jpg,.jpeg,.png,.gif"
                   >
@@ -37,7 +42,7 @@
                   </template>
                 </el-input>
               </el-form-item>
-              <el-form-item label="用户名">
+              <el-form-item label="用户名" prop="name">
                 <el-input v-model="infoForm.name" placeholder="请输入用户名">
                   <template #prefix>
                     <el-icon><User /></el-icon>
@@ -60,7 +65,12 @@
               </el-form-item>
               <el-form-item>
                 <div class="button-group">
-                  <el-button type="primary" @click="submitInfo" :loading="loading">
+                  <el-button
+                    type="primary"
+                    @click="submitInfo"
+                    :loading="infoSubmitting"
+                    :disabled="detailLoading || uploading || !infoForm.id"
+                  >
                     <el-icon><Check /></el-icon>
                     <span>提交</span>
                   </el-button>
@@ -75,8 +85,14 @@
 
           <!-- 修改密码 Tab -->
           <el-tab-pane label="修改密码" name="password">
-            <el-form ref="passwordFormRef" :model="passwordForm" label-width="100px">
-              <el-form-item label="原密码">
+            <el-form
+              ref="passwordFormRef"
+              :model="passwordForm"
+              :rules="passwordRules"
+              :disabled="passwordSubmitting"
+              label-width="100px"
+            >
+              <el-form-item label="原密码" prop="oldPassword">
                 <el-input
                   v-model="passwordForm.oldPassword"
                   type="password"
@@ -88,7 +104,7 @@
                   </template>
                 </el-input>
               </el-form-item>
-              <el-form-item label="新密码">
+              <el-form-item label="新密码" prop="newPassword">
                 <el-input
                   v-model="passwordForm.newPassword"
                   type="password"
@@ -100,9 +116,9 @@
                   </template>
                 </el-input>
               </el-form-item>
-              <el-form-item label="确认密码">
+              <el-form-item label="确认密码" prop="confirmPassword">
                 <el-input
-                  v-model="passwordForm.newPassword1"
+                  v-model="passwordForm.confirmPassword"
                   type="password"
                   placeholder="请确认新密码"
                   show-password
@@ -114,7 +130,7 @@
               </el-form-item>
               <el-form-item>
                 <div class="button-group">
-                  <el-button type="primary" @click="submitPassword" :loading="loading">
+                  <el-button type="primary" @click="submitPassword" :loading="passwordSubmitting">
                     <el-icon><Check /></el-icon>
                     <span>提交</span>
                   </el-button>
@@ -142,8 +158,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ElForm, ElImageViewer, ElMessage, ElMessageBox } from 'element-plus';
+import { onBeforeUnmount, ref } from 'vue';
+import {
+  ElForm,
+  ElImageViewer,
+  ElMessage,
+  ElMessageBox,
+  type FormRules,
+  type UploadRequestOptions,
+} from 'element-plus';
 import {
   Plus,
   Bell,
@@ -157,9 +180,11 @@ import {
   Delete,
 } from '@element-plus/icons-vue';
 import { getUserInfo, updateInfo, updatePassword } from '@/api/system/user';
-import { getToken } from '@/utils/auth';
+import { uploadFile } from '@/api/resource/file';
+import { BladeBusinessError, getRequestSessionVersion } from '@/axios';
+import { validateNewPassword } from '@/utils/password';
+import { useUserStore } from '@/store/user';
 
-// 个人信息表单模型
 interface UserInfoForm {
   id: string;
   avatar: string;
@@ -168,27 +193,12 @@ interface UserInfoForm {
   phone: string;
   email: string;
 }
-
-// 修改密码表单模型
 interface PasswordForm {
   oldPassword: string;
   newPassword: string;
-  newPassword1: string;
+  confirmPassword: string;
 }
-
-// 头像上传接口返回结构
-interface UploadResult {
-  data?: { link?: string } | string;
-}
-
-// 标签页与加载状态
-const activeTab = ref('info');
-const loading = ref(false);
-
-// 表单实例与模型
-const infoFormRef = ref<InstanceType<typeof ElForm>>();
-const passwordFormRef = ref<InstanceType<typeof ElForm>>();
-const infoForm = ref<UserInfoForm>({
+const createInfoForm = (): UserInfoForm => ({
   id: '',
   avatar: '',
   name: '',
@@ -196,183 +206,172 @@ const infoForm = ref<UserInfoForm>({
   phone: '',
   email: '',
 });
-const passwordForm = ref<PasswordForm>({
+const createPasswordForm = (): PasswordForm => ({
   oldPassword: '',
   newPassword: '',
-  newPassword1: '',
+  confirmPassword: '',
 });
-
-// 头像预览与上传请求头
+const userStore = useUserStore();
+const activeTab = ref('info');
+const detailLoading = ref(false);
+const infoSubmitting = ref(false);
+const passwordSubmitting = ref(false);
+const uploading = ref(false);
+const infoFormRef = ref<InstanceType<typeof ElForm>>();
+const passwordFormRef = ref<InstanceType<typeof ElForm>>();
+const infoForm = ref(createInfoForm());
+const passwordForm = ref(createPasswordForm());
 const showAvatarPreview = ref(false);
 const avatarPreviewList = ref<string[]>([]);
-const uploadHeaders = {
-  'Blade-Auth': `bearer ${getToken()}`,
-  'Blade-Requested-With': 'BladeHttpRequest',
+let active = true;
+let detailVersion = 0;
+const infoRules: FormRules = {
+  name: [{ required: true, whitespace: true, message: '请输入用户名', trigger: 'blur' }],
+};
+const passwordRules: FormRules = {
+  oldPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
+  newPassword: [
+    {
+      validator: (_rule, value: string, callback) => {
+        const message = validateNewPassword(value, userStore.userInfo?.account || '');
+        callback(message ? new Error(message) : undefined);
+      },
+      trigger: 'blur',
+    },
+  ],
+  confirmPassword: [
+    {
+      validator: (_rule, value: string, callback) =>
+        callback(
+          value && value === passwordForm.value.newPassword
+            ? undefined
+            : new Error('两次输入的新密码不一致')
+        ),
+      trigger: 'blur',
+    },
+  ],
 };
 
-// 加载用户信息
-const loadUserInfo = () => {
-  getUserInfo().then(res => {
-    const user = res.data.data;
+const loadUserInfo = async () => {
+  const version = ++detailVersion;
+  detailLoading.value = true;
+  infoForm.value = createInfoForm();
+  try {
+    const response = await getUserInfo();
+    if (!active || version !== detailVersion) return;
+    const user = response.data.data;
     infoForm.value = {
       id: user.id,
-      avatar: user.avatar,
-      name: user.name,
-      realName: user.realName,
-      phone: user.phone,
-      email: user.email,
+      avatar: user.avatar || '',
+      name: user.name || '',
+      realName: user.realName || '',
+      phone: user.phone || '',
+      email: user.email || '',
     };
-  });
+  } catch {
+    // 统一请求层展示错误，空资料禁止提交。
+  } finally {
+    if (active && version === detailVersion) detailLoading.value = false;
+  }
 };
-
-// 切换标签页
 const handleTabChange = (name: string | number) => {
-  if (name === 'info') {
-    loadUserInfo();
-  }
+  passwordForm.value = createPasswordForm();
+  passwordFormRef.value?.clearValidate();
+  if (name === 'info') void loadUserInfo();
 };
-
-// 提交个人信息
-const submitInfo = () => {
-  loading.value = true;
-  updateInfo(infoForm.value).then(
-    res => {
-      if (res.data.success) {
-        ElMessage({
-          type: 'success',
-          message: '修改信息成功!',
-        });
-      } else {
-        ElMessage({
-          type: 'error',
-          message: res.data.msg,
-        });
-      }
-      loading.value = false;
-    },
-    error => {
-      window.console.log(error);
-      loading.value = false;
+const submitInfo = async () => {
+  if (infoSubmitting.value || detailLoading.value || uploading.value || !infoForm.value.id) return;
+  infoSubmitting.value = true;
+  const version = getRequestSessionVersion();
+  try {
+    if (!(await infoFormRef.value?.validate().catch(() => false))) return;
+    if (!active || version !== getRequestSessionVersion()) return;
+    await updateInfo({ ...infoForm.value });
+    if (!active) return;
+    if (userStore.userInfo) {
+      userStore.userInfo.userName = infoForm.value.name;
+      userStore.userInfo.avatar = infoForm.value.avatar;
     }
-  );
-};
-
-// 修改密码
-const submitPassword = () => {
-  const { oldPassword, newPassword, newPassword1 } = passwordForm.value;
-  if (!oldPassword || !newPassword || !newPassword1) {
-    ElMessage.warning('请完整填写原密码、新密码与确认密码');
-    return;
-  }
-  if (newPassword !== newPassword1) {
-    ElMessage.warning('两次输入的新密码不一致');
-    return;
-  }
-  loading.value = true;
-  updatePassword(
-    passwordForm.value.oldPassword,
-    passwordForm.value.newPassword,
-    passwordForm.value.newPassword1
-  ).then(
-    res => {
-      if (res.data.success) {
-        ElMessage({
-          type: 'success',
-          message: '修改密码成功!',
-        });
-        // 清空密码表单
-        passwordForm.value = {
-          oldPassword: '',
-          newPassword: '',
-          newPassword1: '',
-        };
-      } else {
-        ElMessage({
-          type: 'error',
-          message: res.data.msg,
-        });
-      }
-      loading.value = false;
-    },
-    error => {
-      window.console.log(error);
-      loading.value = false;
-    }
-  );
-};
-
-// 头像上传成功回调
-const handleAvatarSuccess = (response: UploadResult) => {
-  if (response && response.data) {
-    infoForm.value.avatar = (response.data as { link?: string }).link || (response.data as string);
+    ElMessage.success('修改信息成功');
+  } catch {
+    // 失败保留输入，提交锁由 finally 恢复。
+  } finally {
+    infoSubmitting.value = false;
   }
 };
-
-// 头像上传前校验
+const submitPassword = async () => {
+  if (passwordSubmitting.value) return;
+  passwordSubmitting.value = true;
+  const version = getRequestSessionVersion();
+  try {
+    if (!(await passwordFormRef.value?.validate().catch(() => false))) return;
+    if (!active || version !== getRequestSessionVersion()) return;
+    const value = passwordForm.value;
+    await updatePassword(value.oldPassword, value.newPassword, value.confirmPassword);
+    if (!active) return;
+    passwordForm.value = createPasswordForm();
+    passwordFormRef.value?.clearValidate();
+    ElMessage.success('修改密码成功');
+  } catch {
+    // 普通接口错误由 Axios 展示，不记录密码或完整请求。
+  } finally {
+    passwordSubmitting.value = false;
+  }
+};
+const handleAvatarRequest = async (options: UploadRequestOptions) => {
+  if (uploading.value) throw new Error('头像正在上传');
+  uploading.value = true;
+  try {
+    const result = await uploadFile(options.file);
+    if (active) infoForm.value.avatar = result.link;
+    return result;
+  } catch (error) {
+    if (!(error instanceof BladeBusinessError)) ElMessage.error('头像上传未完成，请重试');
+    throw error;
+  } finally {
+    uploading.value = false;
+  }
+};
 const beforeAvatarUpload = (file: File) => {
-  const isValidType = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type);
-  const isLt1M = file.size / 1024 < 1024;
-
-  if (!isValidType) {
-    ElMessage.error('上传头像只支持 JPG/PNG/GIF 格式!');
+  if (uploading.value || infoSubmitting.value || detailLoading.value || !infoForm.value.id)
+    return false;
+  if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+    ElMessage.error('上传头像只支持 JPG/PNG/GIF 格式');
+    return false;
   }
-  if (!isLt1M) {
-    ElMessage.error('上传头像大小不能超过 1MB!');
+  if (file.size >= 1024 * 1024) {
+    ElMessage.error('上传头像大小须小于1MB');
+    return false;
   }
-  return isValidType && isLt1M;
+  return true;
 };
-
-// 预览头像
 const previewAvatar = () => {
-  if (infoForm.value.avatar) {
-    avatarPreviewList.value = [infoForm.value.avatar];
-    showAvatarPreview.value = true;
-  } else {
-    ElMessage.warning('暂无头像可预览');
+  if (!infoForm.value.avatar) return;
+  avatarPreviewList.value = [infoForm.value.avatar];
+  showAvatarPreview.value = true;
+};
+const deleteAvatar = async () => {
+  if (infoSubmitting.value) return;
+  try {
+    await ElMessageBox.confirm('移除当前头像？保存个人信息后生效。', '提示', { type: 'warning' });
+    if (active) infoForm.value.avatar = '';
+  } catch {
+    /* 取消时保留头像。 */
   }
 };
-
-// 删除头像
-const deleteAvatar = () => {
-  ElMessageBox.confirm('确定要删除头像吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      infoForm.value.avatar = '';
-      ElMessage.success('头像已删除');
-    })
-    .catch(() => {});
-};
-
-// 重置当前表单
 const resetForm = () => {
-  if (activeTab.value === 'info') {
-    // 清空个人信息表单，但保留id
-    const id = infoForm.value.id;
-    infoForm.value = {
-      id: id,
-      avatar: '',
-      name: '',
-      realName: '',
-      phone: '',
-      email: '',
-    };
-  } else if (activeTab.value === 'password') {
-    // 清空密码表单
-    passwordForm.value = {
-      oldPassword: '',
-      newPassword: '',
-      newPassword1: '',
-    };
-  }
+  if (infoSubmitting.value || passwordSubmitting.value) return;
+  if (activeTab.value === 'info') infoForm.value = { ...createInfoForm(), id: infoForm.value.id };
+  else passwordForm.value = createPasswordForm();
+  infoFormRef.value?.clearValidate();
+  passwordFormRef.value?.clearValidate();
 };
-
-// 初始化时根据默认标签页加载数据
-if (activeTab.value === 'info') {
-  loadUserInfo();
-}
+void loadUserInfo();
+onBeforeUnmount(() => {
+  active = false;
+  detailVersion += 1;
+  passwordForm.value = createPasswordForm();
+});
 </script>
 
 <style scoped>

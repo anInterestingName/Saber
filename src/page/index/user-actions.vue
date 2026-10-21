@@ -33,7 +33,9 @@
             <el-dropdown-item>
               <router-link to="/info/index">{{ t('navbar.userinfo') }}</router-link>
             </el-dropdown-item>
-            <el-dropdown-item divided @click="logout">{{ t('navbar.logOut') }}</el-dropdown-item>
+            <el-dropdown-item divided :disabled="busy" @click="logout">{{
+              t('navbar.logOut')
+            }}</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -45,12 +47,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ArrowDown } from '@element-plus/icons-vue';
-import { ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { getRequestSessionVersion } from '@/axios';
 import { useCommonStore } from '@/store/common';
 import { useUserStore } from '@/store/user';
 import topLang from './top/top-lang.vue';
@@ -72,6 +75,11 @@ const props = withDefaults(
 const router = useRouter();
 const { t } = useI18n();
 const userStore = useUserStore();
+const busy = ref(false);
+let active = true;
+onBeforeUnmount(() => {
+  active = false;
+});
 const { setting } = storeToRefs(useCommonStore());
 const { userInfo } = storeToRefs(userStore);
 
@@ -83,17 +91,23 @@ const dropdownPlacement = computed(() =>
 );
 
 const logout = async () => {
+  if (busy.value) return;
+  busy.value = true;
+  const version = getRequestSessionVersion();
   try {
     await ElMessageBox.confirm(t('logoutTip'), t('tip'), {
       confirmButtonText: t('submitText'),
       cancelButtonText: t('cancelText'),
       type: 'warning',
     });
-  } catch {
-    return;
+    if (!active || version !== getRequestSessionVersion()) return;
+    await userStore.LogOut();
+    await router.replace({ path: '/auth/login', query: { reason: 'logout' } });
+  } catch (error) {
+    if (error instanceof Error) ElMessage.warning(t('auth.logoutFailed'));
+  } finally {
+    busy.value = false;
   }
-
-  await userStore.LogOut();
-  await router.push('/login');
 };
+
 </script>

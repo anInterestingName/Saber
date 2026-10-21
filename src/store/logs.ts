@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia';
 import dayjs from 'dayjs';
-import { sendLogs } from '@/api/user';
-import { getStore, setStore } from '@/utils/store';
 
 export interface LogItem {
   type?: string;
@@ -19,13 +17,8 @@ export interface LogPayload {
   info?: object | string | number | boolean | null;
 }
 
-const getStoredLogs = () => {
-  const value = getStore({ name: 'logsList' });
-  return Array.isArray(value) ? (value as LogItem[]) : [];
-};
-
 export const useLogsStore = defineStore('logs', {
-  state: () => ({ logsList: getStoredLogs() }),
+  state: () => ({ logsList: [] as LogItem[] }),
   getters: {
     logCount: state => state.logsList.length,
     isEmpty(): boolean {
@@ -39,18 +32,12 @@ export const useLogsStore = defineStore('logs', {
         message: payload.message,
         stack: payload.stack,
         info: String(payload.info ?? ''),
-        url: window.location.href,
+        url: window.location.pathname,
         time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       });
-      setStore({ name: 'logsList', content: this.logsList });
     },
     clearLogs() {
       this.logsList = [];
-      setStore({ name: 'logsList', content: this.logsList });
-    },
-    async SendLogs() {
-      await sendLogs(this.logsList);
-      this.clearLogs();
     },
   },
 });

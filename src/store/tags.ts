@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import type { LocationQueryRaw, RouteParamsRaw } from 'vue-router';
 import website from '@/config/website';
 import type { MenuMeta } from '@/types/menu';
-import { getStore, removeStore, setStore } from '@/utils/store';
+import { removeStore, setStore } from '@/utils/store';
 
 export interface TagItem {
   name?: string;
@@ -17,31 +17,14 @@ interface TagInput extends Omit<TagItem, 'name'> {
   name?: string | ((query?: LocationQueryRaw) => string);
 }
 
-const isTagItem = (
-  value: object | string | number | boolean | null | undefined
-): value is TagItem => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
-  return (
-    typeof Reflect.get(value, 'path') === 'string' &&
-    typeof Reflect.get(value, 'fullPath') === 'string'
-  );
-};
-
-const getStoredTagList = () => {
-  const value = getStore({ name: 'tagList' });
-  return Array.isArray(value) ? value.filter(isTagItem) : [];
-};
-
-const storedTag = getStore({ name: 'tag' });
-
 export const useTagsStore = defineStore('tags', {
   state: () => ({
     homeTag: {
       ...website.firstPage,
       fullPath: website.firstPage.path,
     } as TagItem,
-    currentTag: isTagItem(storedTag) ? storedTag : null,
-    tagList: getStoredTagList(),
+    currentTag: null as TagItem | null,
+    tagList: [] as TagItem[],
   }),
   getters: {
     keepAliveNames: state =>

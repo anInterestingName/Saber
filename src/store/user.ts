@@ -1,302 +1,203 @@
 import { defineStore } from 'pinia';
-import { ElMessage } from 'element-plus';
-import {
-  getButtons,
-  getUserInfo,
-  loginBySocial,
-  loginByUsername,
-  logout,
-  refreshToken,
-} from '@/api/user';
+import { getButtons } from '@/api/user';
+import { getUserInfo } from '@/api/system/user';
 import { getRoutes, getTopMenu } from '@/api/system/menu';
-import type { MenuItem } from '@/types/menu';
+import { logoutBff } from '@/api/authorization';
+import { getRequestSessionVersion, resetRequestSession, SessionChangedError } from '@/axios';
 import { formatMenuPaths } from '@/router/menu';
-import { removeRefreshToken, removeToken, setRefreshToken, setToken } from '@/utils/auth';
-import { encrypt } from '@/utils/sm2';
-import { getStore, removeStore, setStore } from '@/utils/store';
-import { deepClone } from '@/utils/util';
+import type { MenuItem } from '@/types/menu';
+import type { PermissionNode, UserProfile } from '@/types/auth';
+import { clearReturnPath } from '@/utils/auth';
 import { useCommonStore } from './common';
 import { useTagsStore } from './tags';
+import { useLogsStore } from './logs';
 
 export interface UserInfo {
-  userId?: string | number;
-  userName?: string;
-  account?: string;
+  userId: string;
+  tenantId: string;
+  userName: string;
+  account: string;
   avatar?: string;
-  authority?: string;
-  oauthId?: string | number;
-  accessToken?: string;
-  refreshToken?: string;
+  authority: string[];
 }
 
 export interface PermissionMap {
   [code: string]: boolean | undefined;
 }
 
-export interface LoginPayload {
-  tenantId?: string;
-  username?: string;
-  password?: string;
-  type?: string;
-  key?: string;
-  code?: string;
-  source?: string;
-  state?: string;
-  phone?: string;
-}
-
-interface PermissionNode {
-  code?: string;
-  children?: PermissionNode[];
-}
-
-interface UserContextResponse extends UserInfo {
-  roles?: string[];
-  user?: UserInfo;
-  userInfo?: UserInfo;
-}
-
-const userInfoKeys: Array<keyof UserInfo> = [
-  'userId',
-  'userName',
-  'account',
-  'avatar',
-  'authority',
-  'oauthId',
-  'accessToken',
-  'refreshToken',
-];
-
-const normalizeUserInfo = (
-  value: object | string | number | boolean | null | undefined
-): UserInfo | null => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
-  return userInfoKeys.some(key => Reflect.has(value, key)) ? (value as UserInfo) : null;
+let sessionCleanup: () => void;
+let menuRequestVersion = 0;
+let logoutTask: Promise<void> | null = null;
+export const setSessionCleanupHandler = (handler: () => void) => {
+  sessionCleanup = handler;
 };
 
-const normalizePermission = (
-  value: object | string | number | boolean | null | undefined
-): PermissionMap => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? (value as PermissionMap)
-    : {};
+const normalizeUserInfo = (profile: UserProfile): UserInfo => {
+  if (
+    !profile ||
+    typeof profile.id !== 'string' ||
+    !profile.id ||
+    typeof profile.tenantId !== 'string' ||
+    !profile.tenantId ||
+    typeof profile.account !== 'string' ||
+    !profile.account ||
+    !Array.isArray(profile.roles) ||
+    profile.roles.some(role => typeof role !== 'string' || !role)
+  )
+    throw new Error('用户资料或角色编码不完整，请重新加载');
+  return {
+    userId: profile.id,
+    tenantId: profile.tenantId,
+    userName: profile.name || profile.account,
+    account: profile.account,
+    avatar: profile.avatar,
+    authority: [...new Set(profile.roles)],
+  };
 };
 
-const normalizeMenu = (value: object | string | number | boolean | null | undefined) => {
-  return Array.isArray(value) ? (value as MenuItem[]) : [];
+const normalizeMenu = (value: MenuItem[]) => {
+  if (!Array.isArray(value)) throw new Error('菜单响应不完整，请重新加载');
+  const menu = structuredClone(value);
+  menu.forEach(item => formatMenuPaths(item, true));
+  return menu;
 };
 
-const getStoredString = (name: string) => {
-  const value = getStore({ name });
-  return typeof value === 'string' ? value : '';
-};
-
-const buildPermissionMap = (nodes: PermissionNode[] = []) => {
+const buildPermissionMap = (nodes: PermissionNode[]) => {
+  if (!Array.isArray(nodes)) throw new Error('按钮权限响应不完整，请重新加载');
   const permission: PermissionMap = {};
   const collect = (list: PermissionNode[]) => {
-    list.forEach(node => {
-      if (node.children?.length) {
-        collect(node.children);
-      } else if (node.code) {
-        permission[node.code] = true;
+    for (const node of list) {
+      if (!node || (node.children !== undefined && !Array.isArray(node.children))) {
+        throw new Error('按钮权限响应不完整，请重新加载');
       }
-    });
+      if (node.children?.length) collect(node.children);
+      else if (node.code) permission[node.code] = true;
+    }
   };
   collect(nodes);
   return permission;
 };
 
+const assertVersion = (version: number) => {
+  if (version !== getRequestSessionVersion()) throw new SessionChangedError();
+};
+
 export const useUserStore = defineStore('user', {
   state: () => ({
-    userInfo: normalizeUserInfo(getStore({ name: 'userInfo' })),
-    permission: normalizePermission(getStore({ name: 'permission' })),
+    userInfo: null as UserInfo | null,
+    permission: {} as PermissionMap,
     roles: [] as string[],
-    menu: normalizeMenu(getStore({ name: 'menu' })),
-    menuAll: normalizeMenu(getStore({ name: 'menuAll' })),
-    token: getStoredString('token'),
-    refreshToken: getStoredString('refreshToken'),
+    menu: [] as MenuItem[],
+    menuAll: [] as MenuItem[],
+    topMenu: [] as MenuItem[],
   }),
   getters: {
     hasUserInfo: state => state.userInfo !== null,
-    isAdmin: state => state.userInfo?.authority?.includes('admin') ?? false,
+    // 与后端 RoleConstant.HAS_ROLE_ADMIN 保持一致，原始角色别名不做转换。
+    isAdmin: state =>
+      state.userInfo?.authority.some(role => role === 'administrator' || role === 'admin') ?? false,
   },
   actions: {
-    setTokenValue(token: string) {
-      this.token = token;
-      setToken(token);
-      setStore({ name: 'token', content: token });
-    },
-    setRefreshTokenValue(token: string) {
-      this.refreshToken = token;
-      setRefreshToken(token);
-      setStore({ name: 'refreshToken', content: token });
-    },
-    setUserInfo(userInfo: UserInfo | null) {
-      this.userInfo = userInfo;
-      if (userInfo) {
-        setStore({ name: 'userInfo', content: userInfo });
-      } else {
-        removeStore({ name: 'userInfo' });
-      }
-    },
-    setRoles(roles: string[]) {
-      this.roles = Array.isArray(roles) ? roles : [];
-    },
-    setMenu(menu: MenuItem[]) {
-      this.menu = menu;
-      setStore({ name: 'menu', content: menu });
-    },
-    mergeMenuAll(menuAll: MenuItem[]) {
-      const merged = [...this.menuAll];
-      menuAll.forEach(menuItem => {
-        const index = merged.findIndex(item => item.path === menuItem.path);
-        if (index === -1) merged.push(menuItem);
-        else merged[index] = menuItem;
+    async initializeContext(subject: string) {
+      const version = getRequestSessionVersion();
+      const profile = normalizeUserInfo((await getUserInfo({ silent: true })).data.data);
+      assertVersion(version);
+      if (profile.userId !== subject) throw new Error('当前身份与用户资料不一致，请重新登录');
+      const [routes, top, buttons] = await Promise.all([
+        getRoutes(undefined, { silent: true }),
+        getTopMenu({ silent: true }),
+        getButtons(),
+      ]);
+      assertVersion(version);
+      const menu = normalizeMenu(routes.data.data);
+      if (!Array.isArray(top.data.data)) throw new Error('顶部菜单响应不完整，请重新加载');
+      const permission = buildPermissionMap(buttons.data.data);
+      // 资料、角色、菜单和按钮全部成功后，才提交同一代次的业务上下文。
+      this.$patch({
+        userInfo: profile,
+        roles: profile.authority,
+        menu,
+        menuAll: menu,
+        topMenu: structuredClone(top.data.data),
+        permission,
       });
-      this.menuAll = merged;
-      setStore({ name: 'menuAll', content: merged });
-    },
-    setPermission(permission: PermissionMap) {
-      this.permission = permission;
-      if (Object.keys(permission).length > 0) {
-        setStore({ name: 'permission', content: permission, type: 'session' });
-      } else {
-        removeStore({ name: 'permission', type: 'session' });
-      }
-    },
-    completeLogin(data: UserInfo) {
-      if (!data.accessToken) throw new Error('登录响应缺少访问令牌');
-      this.clearSession();
-      this.setTokenValue(data.accessToken);
-      if (data.refreshToken) this.setRefreshTokenValue(data.refreshToken);
-      this.setUserInfo(data);
-      this.setPermission({});
-      useTagsStore().resetTags();
-      useCommonStore().clearLock();
-    },
-    async LoginByUsername(userInfo: LoginPayload = {}) {
-      const response = await loginByUsername(
-        userInfo.tenantId,
-        userInfo.username,
-        encrypt(userInfo.password),
-        userInfo.type,
-        userInfo.key,
-        userInfo.code
-      );
-      const result = response.data;
-      if (!result.success) {
-        const message = result.msg || '登录失败';
-        ElMessage.error(message);
-        throw new Error(message);
-      }
-      this.completeLogin(result.data);
-    },
-    async LoginBySocial(userInfo: LoginPayload) {
-      const response = await loginBySocial(
-        userInfo.tenantId,
-        userInfo.source,
-        userInfo.code,
-        userInfo.state
-      );
-      const result = response.data;
-      if (!result.success) {
-        const message = result.msg || '登录失败';
-        ElMessage.error(message);
-        throw new Error(message);
-      }
-      this.completeLogin(result.data);
-    },
-    async LoginByPhone(userInfo: LoginPayload) {
-      const response = await loginByUsername(userInfo.phone, userInfo.code);
-      const result = response.data;
-      if (result.success === false) {
-        const message = result.msg || '登录失败';
-        ElMessage.error(message);
-        throw new Error(message);
-      }
-      const data = result.data;
-      if (typeof data === 'string') {
-        this.clearSession();
-        this.setTokenValue(data);
-        this.setPermission({});
-        useTagsStore().resetTags();
-        useCommonStore().clearLock();
-        return;
-      }
-      this.completeLogin(data);
     },
     async GetUserInfo() {
-      try {
-        const response = await getUserInfo();
-        const data = response.data.data as UserContextResponse;
-        const roles = Array.isArray(data.roles) ? data.roles : [];
-        const recoveredUser =
-          normalizeUserInfo(data.userInfo) || normalizeUserInfo(data.user) || normalizeUserInfo(data);
-        this.setRoles(roles);
-        if (recoveredUser) {
-          this.setUserInfo({ ...this.userInfo, ...recoveredUser });
-        } else if (!this.userInfo) {
-          this.setUserInfo({ authority: roles.join(',') });
-        }
-        return data;
-      } catch (error) {
-        this.setUserInfo(null);
-        this.setRoles([]);
-        throw error;
-      }
-    },
-    async RefreshToken() {
-      const response = await refreshToken(this.refreshToken);
-      const data = response.data.data;
-      this.setTokenValue(data.accessToken);
-      this.setRefreshTokenValue(data.refreshToken);
-      this.setUserInfo(data);
-      return response.data;
+      const version = getRequestSessionVersion();
+      const response = await getUserInfo();
+      const profile = normalizeUserInfo(response.data.data);
+      assertVersion(version);
+      this.userInfo = profile;
+      this.roles = profile.authority;
+      return response.data.data;
     },
     clearSession() {
-      removeToken();
-      removeRefreshToken();
-      this.token = '';
-      this.refreshToken = '';
-      this.userInfo = null;
-      this.permission = {};
-      this.roles = [];
-      this.menu = [];
-      this.menuAll = [];
-      removeStore({ name: 'token' });
-      removeStore({ name: 'refreshToken' });
-      removeStore({ name: 'userInfo' });
-      removeStore({ name: 'permission', type: 'session' });
-      removeStore({ name: 'menu' });
-      removeStore({ name: 'menuAll' });
+      resetRequestSession();
+      menuRequestVersion += 1;
+      this.$patch({
+        userInfo: null,
+        permission: {},
+        roles: [],
+        menu: [],
+        menuAll: [],
+        topMenu: [],
+      });
       useTagsStore().resetTags();
       useCommonStore().clearLock();
+      useLogsStore().clearLogs();
+      sessionCleanup?.();
     },
-    async LogOut() {
-      await logout();
-      this.clearSession();
+    LogOut(): Promise<void> {
+      if (!logoutTask) {
+        const version = getRequestSessionVersion();
+        const task = logoutBff().then(() => {
+          assertVersion(version);
+          clearReturnPath();
+          this.clearSession();
+        });
+        logoutTask = task;
+        void task.then(
+          () => {
+            if (logoutTask === task) logoutTask = null;
+          },
+          () => {
+            if (logoutTask === task) logoutTask = null;
+          }
+        );
+      }
+      return logoutTask;
     },
     async FedLogOut() {
       this.clearSession();
     },
     async GetTopMenu() {
-      const response = await getTopMenu();
-      return response.data.data || [];
+      return this.topMenu;
     },
     async GetMenu(topMenuId?: string | number) {
-      const response = await getRoutes(topMenuId === undefined ? undefined : String(topMenuId));
-      const menu = deepClone(response.data.data || []) as MenuItem[];
-      menu.forEach(menuItem => formatMenuPaths(menuItem, true));
-      this.setMenu(menu);
-      this.mergeMenuAll(menu);
-      void this.GetButtons().catch(() => undefined);
+      const version = getRequestSessionVersion();
+      const requestVersion = ++menuRequestVersion;
+      const [routes, buttons] = await Promise.all([
+        getRoutes(topMenuId === undefined ? undefined : String(topMenuId)),
+        getButtons(),
+      ]);
+      assertVersion(version);
+      if (requestVersion !== menuRequestVersion) throw new SessionChangedError();
+      const menu = normalizeMenu(routes.data.data);
+      const permission = buildPermissionMap(buttons.data.data);
+      const menuAll = [...this.menuAll];
+      for (const item of menu) {
+        const index = menuAll.findIndex(existing => existing.path === item.path);
+        if (index === -1) menuAll.push(item);
+        else menuAll[index] = item;
+      }
+      this.$patch({ menu, menuAll, permission });
       return menu;
     },
     async GetButtons() {
-      this.setPermission({});
+      const version = getRequestSessionVersion();
       const response = await getButtons();
-      const nodes = Array.isArray(response.data.data) ? response.data.data : [];
-      this.setPermission(buildPermissionMap(nodes));
+      assertVersion(version);
+      this.permission = buildPermissionMap(response.data.data);
     },
   },
 });

@@ -73,8 +73,8 @@ export const useCommonStore = defineStore('common', {
     isMenu: true,
     isSearch: false,
     isRefresh: true,
-    isLock: getStore({ name: 'isLock' }) === true,
-    lockPassword: getStoredString('lockPasswd'),
+    isLock: false,
+    lockPassword: '',
   }),
   getters: {
     layoutMode: state => state.setting.layout,
@@ -134,11 +134,9 @@ export const useCommonStore = defineStore('common', {
     },
     lock() {
       this.isLock = true;
-      setStore({ name: 'isLock', content: true, type: 'session' });
     },
     setLockPassword(password: string) {
       this.lockPassword = password;
-      setStore({ name: 'lockPasswd', content: password, type: 'session' });
     },
     clearLock() {
       this.isLock = false;

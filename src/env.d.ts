@@ -24,10 +24,15 @@ declare module 'vue-router' {
 declare module 'axios' {
   // src/axios.ts 拦截器约定的自定义配置字段
   interface AxiosRequestConfig {
-    /** 请求元信息：isToken 是否携带令牌（默认携带）；isSerialize 是否表单序列化提交 */
-    meta?: { isToken?: boolean; isSerialize?: boolean };
-    /** 以 AES 加密令牌头（crypto 前缀） */
-    cryptoToken?: boolean;
+    /** 同源接口所属会话；公开接口与主动会话探测由调用方处理 401。 */
+    meta?: {
+      scope?: 'business' | 'public' | 'bff' | 'auth';
+      silent?: boolean;
+      sessionProbe?: boolean;
+      isSerialize?: boolean;
+    };
+    /** 请求层内部会话代次，防止退出后的迟到响应恢复旧 UI。 */
+    sessionVersion?: number;
   }
 }
 

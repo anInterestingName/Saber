@@ -1,4 +1,7 @@
+import { authEn } from './auth';
+
 export default {
+  auth: authEn,
   title: 'staratlas enterprise platform',
   tip: 'tip',
   logoutTip: 'Exit the system, do you want to continue?',

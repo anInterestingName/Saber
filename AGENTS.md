@@ -131,7 +131,7 @@ doc/                     # 需求、设计、测试、模板与迁移指南
 
 - 字典显示与选择优先使用 `useDictionary`、`DictSelect` 和 `DictTag`；远程字典必须显式映射 label/value，保留后端约定的字符串或数值类型，不做真假值隐式转换。
 - 标准按钮权限使用 `useCrudPermission` 或 `useUserStore().permission`，权限码保持 `{module}_{action}`。自定义入口同时执行可见性和操作前校验；后端仍是最终安全边界。
-- 超级管理员专项入口沿用 `userInfo.authority.includes('admin')`，不得把管理员身份等同于普通按钮权限。
+- 管理员专项入口统一复用 `useUserStore().isAdmin`，按后端 `RoleConstant.HAS_ROLE_ADMIN` 精确识别 `administrator` 或 `admin`；`authority` 保留 `/user/info` 返回的原始 `role_alias`，不得从角色名称、ID 或 OAuth scope 推导管理员身份，也不得把管理员身份等同于普通按钮权限。
 - 授权树优先使用 `TreeCheckPanel`；树数据、已选 keys、联动、半选和提交状态必须相互隔离，任一加载失败时不得展示不完整授权为当前结果。
 - 上传使用 Element Plus Upload 和现有 Axios 请求；下载使用 Axios Blob 与标准认证头。不得把 Token 放入 URL，也不得把文件内容、密码或授权 keys 写入日志。
 - 内联排序、授权、重置、解锁、复制、导入导出和代码生成等专项操作必须有独立执行锁、明确确认、成功判定和失败恢复；有服务端副作用时不得宣称前端已自动回滚。

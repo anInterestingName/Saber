@@ -432,6 +432,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
+import { BladeBusinessError } from '@/axios';
 import {
   ArrowDown,
   Delete,
@@ -1007,7 +1008,7 @@ const closeImport = () => {
   uploadRef.value?.clearFiles();
 };
 const showDownloadError = (error: object) => {
-  if (!axios.isAxiosError(error) && error instanceof Error) ElMessage.error(error.message);
+  if (!(error instanceof BladeBusinessError) && !axios.isAxiosError(error) && error instanceof Error) ElMessage.error(error.message);
 };
 const handleExport = async () => {
   try {

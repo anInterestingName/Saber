@@ -21,6 +21,7 @@ export interface DynamicRouterManager {
     props?: { query?: string; label?: string; meta?: string }
   ) => string;
   formatRoutes: (menu?: MenuItem[], first?: boolean) => RouteRecordRaw[] | void;
+  clearRoutes: () => void;
 }
 
 type DynamicRouteRecord = RouteRecordRaw & {
@@ -30,6 +31,11 @@ type DynamicRouteRecord = RouteRecordRaw & {
 
 export const installDynamicRouter = (options: InstallOptions) => {
   const { router, tagsStore, i18n, keepAlive } = options;
+  const routeRemovers = new Map<string, () => void>();
+  const clearRoutes = () => {
+    routeRemovers.forEach(remove => remove());
+    routeRemovers.clear();
+  };
   const setTitle = (title?: string) => {
     const defaultTitle = i18n.global.t('title');
     document.title = title ? `${title} | ${defaultTitle}` : defaultTitle;
@@ -84,6 +90,8 @@ export const installDynamicRouter = (options: InstallOptions) => {
       };
 
       if (!isChild && first) {
+        const childName = route.name;
+        route.name = `${String(childName)}-layout`;
         menuItem.path = path;
         if (viewModule) {
           void viewModule().then(module => {
@@ -95,7 +103,7 @@ export const installDynamicRouter = (options: InstallOptions) => {
         const childRoute: DynamicRouteRecord = {
           path: '',
           component: viewModule,
-          name: route.name,
+          name: childName,
           icon: menuItem.source,
           meta,
           query: menuItem.query,
@@ -109,7 +117,10 @@ export const installDynamicRouter = (options: InstallOptions) => {
       if (!isURL(path)) routes.push(route);
     }
     if (first) {
-      routes.forEach(route => router.addRoute(route));
+      routes.forEach(route => {
+        routeRemovers.get(route.path)?.();
+        routeRemovers.set(route.path, router.addRoute(route));
+      });
       return;
     }
     return routes;
@@ -120,6 +131,7 @@ export const installDynamicRouter = (options: InstallOptions) => {
     closeTag,
     generateTitle,
     formatRoutes,
+    clearRoutes,
   };
   router.$dynamicRouter = manager;
 };

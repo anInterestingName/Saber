@@ -8,7 +8,7 @@
         prop="passwd"
         :rules="[{ required: true, message: '锁屏密码不能为空' }]"
       >
-        <el-input v-model="form.passwd" placeholder="请输入锁屏密码">
+        <el-input v-model="form.passwd" type="password" show-password autocomplete="new-password" placeholder="请输入锁屏密码">
           <template #append>
             <el-button aria-label="确认锁屏密码" @click="handleSetLock">
               <el-icon><Lock /></el-icon>
@@ -44,6 +44,7 @@ export default {
       lockPasswd: store => store.lockPassword,
     }),
   },
+  watch: { box(visible) { if (!visible) this.form.passwd = ''; } },
   props: {
     text: String,
   },
@@ -63,6 +64,8 @@ export default {
         return;
       }
       this.lock();
+      this.box = false;
+      this.form.passwd = '';
       setTimeout(() => {
         this.$router.push({ path: '/lock' });
       }, 100);
